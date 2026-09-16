@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+:root {
+  --bg-color: #0d0e12;
+  --surface-color: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-main: #f0f1f5;
+  --text-dim: #94a3b8;
+  --primary-accent: #6366f1;
+  --secondary-accent: #10b981;
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --glass-blur: blur(16px);
+  --select-option-bg: #1e1e2e;
+  --select-option-text: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --title-gradient: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+  /* Canal RGB usado por los rgba(var(--tint-rgb), X) de fondos/hover sutiles en
+     App.css — mismo blanco de siempre en oscuro, invertido a oscuro en claro. */
+  --tint-rgb: 255, 255, 255;
+  /* Modales. La superficie es OPACA en ambos temas: si hereda el fondo
+     translúcido de .glass-card, el panel se pinta con lo que haya detrás del
+     overlay — y en claro eso deja texto oscuro sobre un velo oscuro, que era
+     por lo que el perfil del estudiante no se leía. */
+  --overlay-color: rgba(0, 0, 0, 0.8);
+  --modal-surface: #15171e;
+  --modal-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+  /* Fondo hundido (iframes de PDF, textareas): más oscuro que la superficie en
+     oscuro, más gris que el papel en claro. */
+  --sunken-bg: rgba(0, 0, 0, 0.2);
+  /* Semánticos: los hex pastel solo contrastan sobre fondo oscuro, así que en
+     claro bajan de luminosidad. */
+  /* Malla curricular: el diagrama vive dentro de un lienzo propio, así que
+     necesita sus propios tonos y no los de las tarjetas. */
+  --malla-fondo: #0b0d13;
+  --malla-linea: rgba(255, 255, 255, 0.22);
+  --malla-nodo-fondo: #161a24;
+  --malla-nodo-texto: #e8eaf0;
+  --malla-nodo-meta: #8b93a7;
+  --malla-ciclo-fondo: rgba(99, 102, 241, 0.18);
+  --malla-ciclo-borde: rgba(99, 102, 241, 0.45);
+  --malla-ciclo-texto: #c7d2fe;
+  --malla-electivo-fondo: rgba(16, 185, 129, 0.10);
+  --malla-electivo-borde: rgba(16, 185, 129, 0.45);
+  --malla-electivo-texto: #6ee7b7;
+  --ok-color: #34d399;
+  --danger-color: #f87171;
+  --warn-color: #fbbf24;
+  --info-color: #818cf8;
+  /* "Aceptado parcialmente": naranja, entre el verde del aceptado y el rojo del
+     rechazado. No se reusa el ámbar de pendiente para no confundir un reclamo
+     ya resuelto con uno que nadie ha tocado. */
+  --partial-color: #fb923c;
+  /* MATRICULADO: cierre del caso. Verde azulado, para no confundirlo con el
+     verde de aceptado ni con el naranja del parcial. */
+  --final-color: #2dd4bf;
+  --bg-gradient:
+    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0.15) 0, transparent 50%);
+}
+
+:root[data-theme="light"] {
+  --bg-color: #f2f3f8;
+  --surface-color: rgba(20, 24, 40, 0.035);
+  --surface-hover: rgba(20, 24, 40, 0.07);
+  --border-color: rgba(20, 24, 40, 0.12);
+  --text-main: #14161f;
+  --text-dim: #5b6472;
+  --select-option-bg: #ffffff;
+  --select-option-text: #14161f;
+  --shadow-color: rgba(30, 41, 59, 0.1);
+  --title-gradient: linear-gradient(135deg, #14161f 0%, #5b6472 100%);
+  --tint-rgb: 20, 24, 40;
+  /* Al 0.42 dejaba ver el fondo a medias por debajo del desenfoque: con
+     un fondo claro detrás, eso se lee como una capa rota, no como un velo.
+     En oscuro el 0.8 ya oscurece casi del todo antes de difuminar. */
+  --overlay-color: rgba(23, 28, 48, 0.62);
+  --modal-surface: #ffffff;
+  --modal-shadow: 0 30px 80px rgba(23, 28, 48, 0.25);
+  --sunken-bg: rgba(20, 24, 40, 0.05);
+  --malla-fondo: #fbfbfe;
+  --malla-linea: rgba(20, 24, 40, 0.28);
+  --malla-nodo-fondo: #ffffff;
+  --malla-nodo-texto: #14161f;
+  --malla-nodo-meta: #5b6472;
+  --malla-ciclo-fondo: rgba(79, 70, 229, 0.10);
+  --malla-ciclo-borde: rgba(79, 70, 229, 0.35);
+  --malla-ciclo-texto: #4338ca;
+  --malla-electivo-fondo: rgba(4, 120, 87, 0.07);
+  --malla-electivo-borde: rgba(4, 120, 87, 0.40);
+  --malla-electivo-texto: #047857;
+  --ok-color: #047857;
+  --danger-color: #dc2626;
+  --warn-color: #b45309;
+  --info-color: #4f46e5;
+  --partial-color: #c2410c;
+  --final-color: #0f766e;
+  --bg-gradient:
+    radial-gradient(at 0% 0%, hsla(230, 60%, 95%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225, 70%, 90%, 0.6) 0, transparent 50%);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Cambio de tema instantáneo: anula cualquier transición mientras se conmuta
+   data-theme, para que no cambie a distinto ritmo por elemento. */
+.theme-switching, .theme-switching * {
+  transition: none !important;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card {
+  background: var(--surface-color);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.premium-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.premium-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.premium-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+
+.premium-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.full-page {
+  width: 100%;
+  min-height: 100vh;
+}
+

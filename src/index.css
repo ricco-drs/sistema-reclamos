@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-claude-bg: #0B1120;
+  --color-claude-panel: #111827;
+  --color-claude-border: #1F2937;
+  --color-claude-text: #F3F4F6;
+  --color-claude-muted: #9CA3AF;
+  --color-claude-accent: #60A5FA;
+
+  --font-serif: "Georgia", "Cambria", "Times New Roman", serif;
+  --font-sans: "Inter", "system-ui", "sans-serif";
+}
+
+:root[data-theme="light"] {
+  --color-claude-bg: #F9FAFB;
+  --color-claude-panel: #FFFFFF;
+  --color-claude-border: #E5E7EB;
+  --color-claude-text: #111827;
+  --color-claude-muted: #6B7280;
+  --color-claude-accent: #2563EB;
+}
+
+/* ── Markdown (prose) ────────────────────────────────────────────────────────
+   El plugin de tipografía trae su propia paleta y por eso se usaba
+   `prose-invert` con `prose-strong:text-white`: en oscuro se veía bien, pero en
+   claro la negrita quedaba blanca sobre blanco y las etiquetas ("Código:",
+   "Nombre:") desaparecían. Aquí sus variables se enganchan a los tokens del
+   tema, así que el markdown sigue al tema solo, sin `prose-invert`. */
+.prose {
+  --tw-prose-body: var(--color-claude-text);
+  --tw-prose-headings: var(--color-claude-text);
+  --tw-prose-lead: var(--color-claude-muted);
+  --tw-prose-links: var(--color-claude-accent);
+  --tw-prose-bold: var(--color-claude-text);
+  --tw-prose-counters: var(--color-claude-muted);
+  --tw-prose-bullets: var(--color-claude-muted);
+  --tw-prose-hr: var(--color-claude-border);
+  --tw-prose-quotes: var(--color-claude-text);
+  --tw-prose-quote-borders: var(--color-claude-border);
+  --tw-prose-captions: var(--color-claude-muted);
+  --tw-prose-code: var(--color-claude-text);
+  --tw-prose-pre-code: var(--color-claude-text);
+  --tw-prose-pre-bg: var(--color-claude-panel);
+  --tw-prose-th-borders: var(--color-claude-border);
+  --tw-prose-td-borders: var(--color-claude-border);
+}
+
+/* ── Mobile viewport fix ── */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-claude-bg);
+  color: var(--color-claude-text);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Keyframe animations ── */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Animation utilities ── */
+.animate-msg-in   { animation: msg-in    0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-up  { animation: fade-up   0.4s  cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-in  { animation: fade-in   0.35s ease both; }
+.animate-slide-down { animation: slide-down 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-modal-in { animation: modal-in  0.2s  cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ── Scrollbar ── */
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0px;
+  height: 0px;
+}
+.custom-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Barra de desplazamiento visible. custom-scrollbar la esconde, que está bien
+   para el chat, pero en un formulario esconder la barra esconde también la
+   única pista de que hay campos más abajo: el estudiante no los ve y no puede
+   corregirlos. Aquí sí se muestra, discreta pero presente. */
+.scrollbar-visible::-webkit-scrollbar {
+  width: 10px;
+}
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background: var(--color-claude-border);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: var(--color-claude-muted);
+  background-clip: content-box;
+}
+.scrollbar-visible {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-claude-border) transparent;
+}
+
+/* ── Mobile chat scroll ── */
+.chat-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}

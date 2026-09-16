@@ -1,0 +1,21 @@
+# Railway solo corre el backend (railway.toml: node backend/server.js). Todo lo
+# que no necesite ese proceso en tiempo de ejecución sobra en el paquete que
+# sube `railway up`, y subirlo hacía que la operación se pasara de tiempo.
+
+# Los reglamentos del RAG solo los lee scripts/seed_rag.js, que corre en local:
+# los documentos se indexan directo contra Gemini, nunca pasan por el servidor.
+documentos_entrenamiento/
+
+# El frontend se despliega en Cloudflare; el backend no sirve archivos estáticos.
+dist/
+
+# Carpeta temporal para las subidas: el servidor la crea al arrancar si no existe.
+uploads/
+
+# Material de trabajo, sin uso en producción.
+docs/
+scratch/
+documentos/
+scripts/outputs/
+test_output.txt
+holasoyyo.md

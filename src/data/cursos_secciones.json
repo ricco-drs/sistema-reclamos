@@ -1,0 +1,1193 @@
+[
+ {
+  "codigo": "BEF01",
+  "nombre": "ETICA Y FILOSOFIA POLITICA",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "BEG01",
+  "nombre": "ECONOMIA GENERAL",
+  "secciones": [
+   "A",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "BFI01",
+  "nombre": "FISICA I",
+  "secciones": [
+   "A",
+   "B",
+   "C",
+   "D",
+   "E",
+   "F",
+   "G",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "BIC01",
+  "nombre": "INTRODUCCION A LA COMPUTACION",
+  "secciones": [
+   "A",
+   "B",
+   "C",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "BMA01",
+  "nombre": "CALCULO DIFERENCIAL",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "BMA02",
+  "nombre": "CALCULO INTEGRAL",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "BMA03",
+  "nombre": "ALGEBRA LINEAL",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "BQU01",
+  "nombre": "QUIMICA I",
+  "secciones": [
+   "A",
+   "B",
+   "C",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "BRC01",
+  "nombre": "REDACCION Y COMUNICACION",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "BRN01",
+  "nombre": "REALIDAD NACIONAL, CONSTITUCION Y DERECHOS HUMANOS",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "FB101",
+  "nombre": "GEOMETRIA ANALITICA",
+  "secciones": [
+   "A",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "FB202",
+  "nombre": "QUIMICA II",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "FB301",
+  "nombre": "MATEMATICA DISCRETA",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "FB303",
+  "nombre": "CALCULO MULTIVARIABLE",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "FB305",
+  "nombre": "ESTADISTICA Y PROBABILIDADES",
+  "secciones": [
+   "A",
+   "B",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "FB401",
+  "nombre": "FISICA II",
+  "secciones": [
+   "A",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "FB402",
+  "nombre": "CALCULO NUMERICO",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "FB403",
+  "nombre": "ECUACIONES DIFERENCIALES",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "FB405",
+  "nombre": "ESTADISTICA APLICADA",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "FB501",
+  "nombre": "MATEMATICA APLICADA",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE003",
+  "nombre": "TALLER DE PROYECTO DE INVESTIGACION",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "GE004",
+  "nombre": "TALLER DE INVESTIGACION",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "GE101",
+  "nombre": "INTRODUCCION A LA INGENIERIA INDUSTRIAL",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE112",
+  "nombre": "TEORIA DE JUEGOS Y LA NEGOCIACION",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "GE113",
+  "nombre": "TALLER DE CONSULTORIA DE EMPRESAS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "GE122",
+  "nombre": "SISTEMA DE COSTOS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "GE124",
+  "nombre": "COMERCIO INTERNACIONAL",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "GE128",
+  "nombre": "DIAGNOSTICO DE EMPRESAS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "GE501",
+  "nombre": "TEORIA ORGANIZACIONAL",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE502",
+  "nombre": "INGENIERIA DEL TRABAJO I",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE602",
+  "nombre": "CONTABILIDAD FINANCIERA",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "GE603",
+  "nombre": "INGENIERIA DEL TRABAJO II",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE604",
+  "nombre": "ADMINISTRACION Y ORGANIZACION",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE605",
+  "nombre": "SISTEMA Y GESTION FINANCIERA",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE701",
+  "nombre": "LOGISTICA EMPRESARIAL",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE702",
+  "nombre": "INGENIERIA ECONOMICA",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE703",
+  "nombre": "SISTEMAS INTEGRADOS EMPRESARIALES",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE704",
+  "nombre": "CONTABILIDAD DE COSTOS Y PRESUPUESTOS",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "GE709",
+  "nombre": "SISTEMAS DE CALIDAD",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE801",
+  "nombre": "PLANEAMIENTO Y GESTION ESTRATEGICA",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "GE802",
+  "nombre": "GESTION DE LA CADENA DE SUMINISTRO",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE803",
+  "nombre": "SISTEMAS ANALITICOS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE805",
+  "nombre": "MERCADOTECNIA",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE901",
+  "nombre": "INNOVACION Y EMPRENDIMIENTO DE NEGOCIOS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE902",
+  "nombre": "DISEÑO Y EVALUACION DE PROYECTOS",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "GE903",
+  "nombre": "GESTION DEL TALENTO HUMANO",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE905",
+  "nombre": "PLANEAMIENTO Y CONTROL DE OPERACIONES",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "GE906",
+  "nombre": "GESTION FINANCIERA",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "HU102",
+  "nombre": "DESARROLLO PERSONAL",
+  "secciones": [
+   "A",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "HU111",
+  "nombre": "LEGISLACION EMPRESARIAL Y TRIBUTARIA",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "HU112",
+  "nombre": "COMPORTAMIENTO ORGANIZACIONAL",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "HU201",
+  "nombre": "SOCIOLOGIA",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "HU301",
+  "nombre": "METODOLOGIA DE LA INVESTIGACION",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "HU501",
+  "nombre": "TALLER DE EFECTIVIDAD PERSONAL",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "IA001",
+  "nombre": "INTRODUCCION A LA INGENIERIA DE INTELIGENCIA ARTIFICIAL",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI036",
+  "nombre": "TALLER DE INVESTIGACION",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "SI055",
+  "nombre": "GESTION DE PROYECTOS",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "SI075",
+  "nombre": "AUDITORIA DE SISTEMAS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI077",
+  "nombre": "INTELIGENCIA ARTIFICIAL",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI085",
+  "nombre": "APLICACION DE NEGOCIOS ELECTRONICOS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI095",
+  "nombre": "INGENIERIA EMPRESARIAL",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI111",
+  "nombre": "TEORIA DE DECISIONES",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI114",
+  "nombre": "BASE DE DATOS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI121",
+  "nombre": "INTRODUCCION A LA INGENIERIA DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI130",
+  "nombre": "GESTION DE LA INFORMACION",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI150",
+  "nombre": "ANALITICA DE DATOS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI155",
+  "nombre": "CIBERSEGURIDAD",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI205",
+  "nombre": "ALGORITMIA Y ESTRUCTURA DE DATOS",
+  "secciones": [
+   "A",
+   "B",
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y",
+   "Z"
+  ]
+ },
+ {
+  "codigo": "SI302",
+  "nombre": "PROGRAMACION ORIENTADA A OBJETOS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI322",
+  "nombre": "INGENIERIA DE REQUISITOS",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "SI401",
+  "nombre": "LENGUAJE DE PROGRAMACION",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI403",
+  "nombre": "METODOLOGIA DE LOS SISTEMAS BLANDOS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI405",
+  "nombre": "MODELADO CONCEPTUAL DE DATOS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI421",
+  "nombre": "ARQUITECTURA DE COMPUTADOR Y SISTEMAS OPERATIVOS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI422",
+  "nombre": "CIENCIA INTEGRATIVA DE SISTEMAS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI501",
+  "nombre": "INVESTIGACION DE OPERACIONES I",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "SI503",
+  "nombre": "INGENIERIA DE PROCESOS",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "SI505",
+  "nombre": "DISEÑO DE BASE DE DATOS",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "SI601",
+  "nombre": "INVESTIGACION DE OPERACIONES II",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "SI602",
+  "nombre": "DINAMICA DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "SI603",
+  "nombre": "MODELADO DE PROCESOS DE CICLO DE VIDA DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI604",
+  "nombre": "ANALISIS Y DISEÑO DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI605",
+  "nombre": "ARQUITECTURA EMPRESARIAL",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI607",
+  "nombre": "ARQUITECTURA COMPUTACIONAL Y REDES",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI701",
+  "nombre": "MODELADO SISTEMICO Y SIMULACION",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "SI702",
+  "nombre": "TALLER DE DINAMICA DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI704",
+  "nombre": "GESTION DE LA INGENIERIA DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI705",
+  "nombre": "ESTANDARES DE LA INGENIERIA DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI707",
+  "nombre": "INGENIERIA DE SOFTWARE",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI801",
+  "nombre": "MODELO DEL SISTEMA VIABLE",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI805",
+  "nombre": "INTEGRACION DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI806",
+  "nombre": "DESARROLLO ADAPTATIVO E INTEGRADO DEL SW",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI807",
+  "nombre": "SISTEMAS DE INTELIGENCIA DE NEGOCIO",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI902",
+  "nombre": "INGENIERIA DE SISTEMAS DE SERVICIO",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SI903",
+  "nombre": "IMPLEMENTACION DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI904",
+  "nombre": "SEGURIDAD DE SISTEMAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SI905",
+  "nombre": "TALLER DE PROYECTO DE INVESTIGACION",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "SW101",
+  "nombre": "INTRODUCCION A LA INGENIERIA DE SOFTWARE",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW112",
+  "nombre": "COMPUTACION GRAFICA",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW301",
+  "nombre": "ARQUITECTURA DE COMPUTADORAS I",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW303",
+  "nombre": "LENGUAJES DE PROGRAMACION I (IMPERATIVO)",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW305",
+  "nombre": "ALGORITMIA Y ESTRUCTURA DE DATOS AVANZADA",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SW403",
+  "nombre": "LENGUAJE DE PROGRAMACION II (ORIENTADA A OBJETOS)",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW405",
+  "nombre": "INGENIERIA DE REQUERIMIENTOS I",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW407",
+  "nombre": "SISTEMAS OPERATIVOS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "SW501",
+  "nombre": "ARQUITECTURA DE COMPUTADORAS II",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW503",
+  "nombre": "ANALISIS Y MODELAMIENTO DE COMPORTAMIENTO",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW505",
+  "nombre": "CONSTRUCCION DE SOFTWARE I (FUNDAMENTOS, PRACTICAS)",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW507",
+  "nombre": "REDES Y COMUNICACIONES",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW603",
+  "nombre": "DISEÑO DE SOFTWARE",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW605",
+  "nombre": "INGENIERIA DE REQUERIMIENTOS II",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW608",
+  "nombre": "LENGUAJES DE DOMINIO ESPECIFICO",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW609",
+  "nombre": "SISTEMAS DE GESTION DE BASE DE DATOS",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW701",
+  "nombre": "GESTION DEL MANTENIMIENTO, CONFIGURACION Y CAMBIOS DE",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW703",
+  "nombre": "SISTEMAS EMBEBIDOS Y EN TIEMPO REAL",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW705",
+  "nombre": "TALLER DE INGENIERIA DE SOFTWARE I",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW707",
+  "nombre": "CONSTRUCCION DE SOFTWARE II (HERRAMIENTAS Y TECNOLOGIAS)",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW708",
+  "nombre": "ARQUITECTURA DE SOLUCIONES DE SOFTWARE",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "SW709",
+  "nombre": "VERFICACION Y VALIDACION DE SOFTWARE",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "TE111",
+  "nombre": "INNOVACION Y GESTION TECNOLOGICA",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "TE121",
+  "nombre": "ERGONOMIA",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "TE122",
+  "nombre": "PROCESOS AGROINDUSTRIALES",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "TE124",
+  "nombre": "GESTION DE LA ENERGIA",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "TE126",
+  "nombre": "GESTION DEL MANTENIMIENTO",
+  "secciones": [
+   "U"
+  ]
+ },
+ {
+  "codigo": "TE205",
+  "nombre": "DIBUJO Y GEOMETRIA DESCRIPTIVA",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X",
+   "Y"
+  ]
+ },
+ {
+  "codigo": "TE301",
+  "nombre": "FISICO QUIMICA Y OPERACIONES UNITARIAS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "TE302",
+  "nombre": "DISEÑO ASISTIDO POR COMPUTADOR",
+  "secciones": [
+   "U",
+   "V",
+   "W",
+   "X"
+  ]
+ },
+ {
+  "codigo": "TE401",
+  "nombre": "TERMODINAMICA",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "TE501",
+  "nombre": "ELECTRICIDAD Y ELECTRONICA INDUSTRIAL",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "TE503",
+  "nombre": "PROCESOS INDUSTRIALES I",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "TE601",
+  "nombre": "INGENIERIA DE MATERIALES",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "TE602",
+  "nombre": "PROCESOS INDUSTRIALES II",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "TE603",
+  "nombre": "CONTROL ESTADISTICO DE PROCESOS",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "TE604",
+  "nombre": "MAQUINARIA E INSTRUMENTACION INDUSTRIAL",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "TE701",
+  "nombre": "ANALISIS DE PROCESOS DE MANUFACTURA",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "TE801",
+  "nombre": "AUTOMATIZACION Y CONTROL DE PROCESOS",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "TE802",
+  "nombre": "INGENIERIA DEL PRODUCTO",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ },
+ {
+  "codigo": "TE803",
+  "nombre": "SISTEMAS INTEGRADOS DE CALIDAD",
+  "secciones": [
+   "U",
+   "V",
+   "W"
+  ]
+ },
+ {
+  "codigo": "TE901",
+  "nombre": "SEGURIDAD Y SALUD OCUPACIONAL",
+  "secciones": [
+   "U",
+   "V"
+  ]
+ }
+]

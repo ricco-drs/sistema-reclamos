@@ -1,0 +1,8 @@
+# Los PDF y las imagenes son binarios: sin esto, autocrlf en Windows les
+# cambia los saltos de linea al clonar y los deja ilegibles.
+*.pdf binary
+*.PDF binary
+*.jpeg binary
+*.jpg binary
+*.png binary
+*.xlsx binary

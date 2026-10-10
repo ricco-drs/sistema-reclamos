@@ -1,0 +1,5 @@
+2	2	version-b/src/main/java/pe/uni/fiis/prestamos/dominio/Prestamo.java
+7	7	version-b/src/main/java/pe/uni/fiis/prestamos/dominio/PrestamoService.java
+9	1	version-b/src/main/java/pe/uni/fiis/prestamos/dominio/ReglasDePrestamo.java
+62	6	version-b/src/test/java/pe/uni/fiis/prestamos/dominio/PrestamoServiceTest.java
+2	1	version-b/src/test/java/pe/uni/fiis/prestamos/infraestructura/RepositorioEnMemoriaTest.java

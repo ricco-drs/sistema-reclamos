@@ -1,3 +1,6 @@
+import { crearGuardarCursosResueltos } from './aplicacion/guardarCursosResueltos.js';
+import { crearRepositorioCursosSupabase } from './infraestructura/repositorioCursosSupabase.js';
+import { crearGuardarCursosHandler } from './presentacion/guardarCursosHandler.js';
 import express from 'express';
 import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
@@ -1201,74 +1204,9 @@ app.patch('/api/admin/reclamos/:id', requireAdminAuth, async (req, res) => {
 // verdad. Es la decisión del Tercio, no lo que pidió el estudiante, y NO se le
 // muestra a él: vive en su propia columna y los dos endpoints que consulta el
 // estudiante piden columnas por nombre, así que esta no sale por ahí.
-const cursosValidos = (lista, campo) => {
-  if (lista === undefined) return [];
-  if (!Array.isArray(lista)) throw new Error(`"${campo}" debe ser una lista.`);
-  if (lista.length > 40) throw new Error(`Demasiados cursos en "${campo}".`);
-  return lista.map((c) => {
-    const codigo = String(c?.codigo || '').trim().toUpperCase();
-    const seccion = String(c?.seccion || '').trim().toUpperCase();
-    // El nombre es solo para leerlo en el panel; el par código-sección es lo
-    // que identifica de verdad, así que es lo único que se exige.
-    if (!codigo || !seccion) throw new Error(`Cada curso de "${campo}" necesita código y sección.`);
-    return { codigo, seccion, nombre: String(c?.nombre || '').trim().slice(0, 120) };
-  });
-};
-
-app.put('/api/admin/reclamos/:id/cursos-resueltos', requireAdminAuth, async (req, res) => {
-  let matricular, desmatricular;
-  try {
-    matricular = cursosValidos(req.body?.matricular, 'matricular');
-    desmatricular = cursosValidos(req.body?.desmatricular, 'desmatricular');
-  } catch (e) {
-    return res.status(400).json({ error: e.message });
-  }
-
-  try {
-    const actual = await sbRest(`/reclamos?id=eq.${encodeURIComponent(req.params.id)}&select=cursos_resueltos`);
-    if (!actual.ok) {
-      const t = await actual.text();
-      // La columna se añade con sql/cursos_resueltos.sql. Sin ella la respuesta
-      // de PostgREST es críptica, así que se traduce.
-      if (t.includes('cursos_resueltos')) {
-        return res.status(500).json({ error: 'Falta la columna cursos_resueltos: ejecuta sql/cursos_resueltos.sql en Supabase.' });
-      }
-      return res.status(500).json({ error: t });
-    }
-    const filas = await actual.json();
-    if (filas.length === 0) return res.status(404).json({ error: 'Ese reclamo no existe.' });
-
-    const previo = filas[0].cursos_resueltos || {};
-    const ahora = new Date().toISOString();
-    // El historial es de solo añadir: cada guardado deja su huella con quién y
-    // cuándo, para poder reconstruir quién decidió qué aunque se cambie luego.
-    const historial = Array.isArray(previo.historial) ? previo.historial.slice(-49) : [];
-    historial.push({ admin: req.adminEmail, fecha: ahora, matricular, desmatricular });
-
-    const valor = { matricular, desmatricular, actualizadoPor: req.adminEmail, actualizadoEn: ahora, historial };
-
-    const r = await sbRest(`/reclamos?id=eq.${encodeURIComponent(req.params.id)}`, {
-      method: 'PATCH',
-      headers: { 'Prefer': 'return=representation' },
-      body: JSON.stringify({ cursos_resueltos: valor }),
-    });
-    if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
-    const actualizadas = await r.json().catch(() => []);
-    if (!Array.isArray(actualizadas) || actualizadas.length === 0) {
-      return res.status(404).json({ error: 'Ese reclamo no existe.' });
-    }
-
-    logActividad({
-      actorEmail: req.adminEmail, actorType: 'admin', accion: 'cursos_resueltos',
-      detalle: {
-        caseId: req.params.id,
-        matricular: matricular.map(c => `${c.codigo}-${c.seccion}`),
-        desmatricular: desmatricular.map(c => `${c.codigo}-${c.seccion}`),
-      },
-    });
-    res.json({ success: true, cursos_resueltos: valor });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
+const guardarCursosResueltos = crearGuardarCursosResueltos(crearRepositorioCursosSupabase(sbRest));
+app.put('/api/admin/reclamos/:id/cursos-resueltos', requireAdminAuth,
+  crearGuardarCursosHandler(guardarCursosResueltos, logActividad));
 
 // Admin: obtener una signed URL para ver el documento de cualquier estudiante
 app.get('/api/admin/docs/signed-url', requireAdminAuth, async (req, res) => {

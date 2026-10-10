@@ -1,0 +1,385 @@
+diff --git a/version-a/src/main/java/pe/uni/fiis/prestamos/Prestamo.java b/version-a/src/main/java/pe/uni/fiis/prestamos/Prestamo.java
+index 1679e9b..35f072a 100644
+--- a/version-a/src/main/java/pe/uni/fiis/prestamos/Prestamo.java
++++ b/version-a/src/main/java/pe/uni/fiis/prestamos/Prestamo.java
+@@ -8,18 +8,20 @@ public class Prestamo {
+     public String id;
+     public String codigoAlumno;
+     public String equipo;
++    public String motivo;
+     public LocalDate fecha;
+     public LocalDate devolucion;
+     public boolean devuelto;
+     public String filaCsv;
+ 
+-    public Prestamo(String id, String codigoAlumno, String equipo, LocalDate fecha, LocalDate devolucion) {
++    public Prestamo(String id, String codigoAlumno, String equipo, String motivo, LocalDate fecha, LocalDate devolucion) {
+         this.id = id;
+         this.codigoAlumno = codigoAlumno;
+         this.equipo = equipo;
++        this.motivo = motivo;
+         this.fecha = fecha;
+         this.devolucion = devolucion;
+         this.devuelto = false;
+-        this.filaCsv = id + ";" + codigoAlumno + ";" + equipo + ";" + fecha + ";" + devolucion + ";false";
++        this.filaCsv = id + ";" + codigoAlumno + ";" + equipo + ";" + fecha + ";" + devolucion + ";false;" + motivo;
+     }
+ }
+diff --git a/version-a/src/main/java/pe/uni/fiis/prestamos/PrestamoService.java b/version-a/src/main/java/pe/uni/fiis/prestamos/PrestamoService.java
+index 62f77cd..7e353af 100644
+--- a/version-a/src/main/java/pe/uni/fiis/prestamos/PrestamoService.java
++++ b/version-a/src/main/java/pe/uni/fiis/prestamos/PrestamoService.java
+@@ -15,26 +15,33 @@ public class PrestamoService {
+         this.base = base;
+     }
+ 
+-    public String prestar(String codigoAlumno, String equipo, LocalDate hoy) {
++    public String prestar(String codigoAlumno, String equipo, String motivo, LocalDate hoy) {
+         if (codigoAlumno == null || codigoAlumno.isBlank()) {
+             throw new IllegalArgumentException("El código del alumno es obligatorio");
+         }
+         if (equipo == null || equipo.isBlank()) {
+             throw new IllegalArgumentException("El equipo es obligatorio");
+         }
++        if (motivo == null || motivo.isBlank()) {
++            throw new IllegalArgumentException("El motivo del préstamo es obligatorio");
++        }
++        long pendientes = base.porAlumno(codigoAlumno).stream().filter(p -> !p.devuelto).count();
++        if (pendientes >= 2) {
++            throw new IllegalStateException("El alumno ya tiene dos equipos sin devolver");
++        }
+         for (Prestamo p : base.todos()) {
+             if (p.equipo.equals(equipo) && !p.devuelto) {
+                 throw new IllegalStateException("El equipo ya está prestado: " + equipo);
+             }
+         }
+-        Prestamo nuevo = new Prestamo(UUID.randomUUID().toString(), codigoAlumno, equipo, hoy, hoy.plusDays(7));
++        Prestamo nuevo = new Prestamo(UUID.randomUUID().toString(), codigoAlumno, equipo, motivo, hoy, hoy.plusDays(7));
+         base.insertar(nuevo);
+         return nuevo.id;
+     }
+ 
+     /** El préstamo urgente lo autoriza el jefe de laboratorio y dura un día.
+      *  Repite las mismas validaciones que prestar(). */
+-    public String prestarUrgente(String codigoAlumno, String equipo, String autoriza, LocalDate hoy) {
++    public String prestarUrgente(String codigoAlumno, String equipo, String autoriza, String motivo, LocalDate hoy) {
+         if (codigoAlumno == null || codigoAlumno.isBlank()) {
+             throw new IllegalArgumentException("El código del alumno es obligatorio");
+         }
+@@ -44,12 +51,19 @@ public class PrestamoService {
+         if (autoriza == null || autoriza.isBlank()) {
+             throw new IllegalArgumentException("Falta quién autoriza");
+         }
++        if (motivo == null || motivo.isBlank()) {
++            throw new IllegalArgumentException("El motivo del préstamo es obligatorio");
++        }
++        long pendientes = base.porAlumno(codigoAlumno).stream().filter(p -> !p.devuelto).count();
++        if (pendientes >= 2) {
++            throw new IllegalStateException("El alumno ya tiene dos equipos sin devolver");
++        }
+         for (Prestamo p : base.todos()) {
+             if (p.equipo.equals(equipo) && !p.devuelto) {
+                 throw new IllegalStateException("El equipo ya está prestado: " + equipo);
+             }
+         }
+-        Prestamo nuevo = new Prestamo(UUID.randomUUID().toString(), codigoAlumno, equipo, hoy, hoy.plusDays(1));
++        Prestamo nuevo = new Prestamo(UUID.randomUUID().toString(), codigoAlumno, equipo, motivo, hoy, hoy.plusDays(1));
+         base.insertar(nuevo);
+         return nuevo.id;
+     }
+@@ -58,7 +72,7 @@ public class PrestamoService {
+         Prestamo p = base.porId(idPrestamo);
+         if (p == null) throw new IllegalArgumentException("No existe el préstamo " + idPrestamo);
+         p.devuelto = true;
+-        p.filaCsv = p.id + ";" + p.codigoAlumno + ";" + p.equipo + ";" + p.fecha + ";" + p.devolucion + ";true";
++        p.filaCsv = p.id + ";" + p.codigoAlumno + ";" + p.equipo + ";" + p.fecha + ";" + p.devolucion + ";true;" + p.motivo;
+     }
+ 
+     public List<Prestamo> prestamosDe(String codigoAlumno) {
+diff --git a/version-a/src/test/java/pe/uni/fiis/prestamos/PrestamoServiceTest.java b/version-a/src/test/java/pe/uni/fiis/prestamos/PrestamoServiceTest.java
+index 7435e5f..4ae28fe 100644
+--- a/version-a/src/test/java/pe/uni/fiis/prestamos/PrestamoServiceTest.java
++++ b/version-a/src/test/java/pe/uni/fiis/prestamos/PrestamoServiceTest.java
+@@ -11,7 +11,7 @@ class PrestamoServiceTest {
+     @Test
+     void presta_un_equipo_libre() {
+         PrestamoService s = new PrestamoService(new BaseDeDatos());
+-        String id = s.prestar("20231234", "proyector-01", hoy);
++        String id = s.prestar("20231234", "proyector-01", "clase de redes", hoy);
+         assertNotNull(id);
+         assertEquals(1, s.prestamosDe("20231234").size());
+     }
+@@ -19,21 +19,78 @@ class PrestamoServiceTest {
+     @Test
+     void no_presta_un_equipo_que_ya_esta_prestado() {
+         PrestamoService s = new PrestamoService(new BaseDeDatos());
+-        s.prestar("20231234", "proyector-01", hoy);
+-        assertThrows(IllegalStateException.class, () -> s.prestar("20235678", "proyector-01", hoy));
++        s.prestar("20231234", "proyector-01", "clase de redes", hoy);
++        assertThrows(IllegalStateException.class, () -> s.prestar("20235678", "proyector-01", "clase de redes", hoy));
+     }
+ 
+     @Test
+     void el_urgente_tambien_exige_quien_autoriza() {
+         PrestamoService s = new PrestamoService(new BaseDeDatos());
+-        assertThrows(IllegalArgumentException.class, () -> s.prestarUrgente("20231234", "laptop-03", "", hoy));
++        assertThrows(IllegalArgumentException.class, () -> s.prestarUrgente("20231234", "laptop-03", "", "clase de redes", hoy));
+     }
+ 
+     @Test
+     void al_devolver_el_equipo_queda_libre() {
+         PrestamoService s = new PrestamoService(new BaseDeDatos());
+-        String id = s.prestar("20231234", "laptop-03", hoy);
++        String id = s.prestar("20231234", "laptop-03", "clase de redes", hoy);
+         s.devolver(id);
+-        assertDoesNotThrow(() -> s.prestar("20235678", "laptop-03", hoy));
++        assertDoesNotThrow(() -> s.prestar("20235678", "laptop-03", "clase de redes", hoy));
++    }
++
++    @Test
++    void rechaza_tercer_equipo_normal_y_urgente() {
++        PrestamoService s = new PrestamoService(new BaseDeDatos());
++        s.prestar("20231234", "equipo-1", "clase", hoy);
++        s.prestarUrgente("20231234", "equipo-2", "jefe", "proyecto", hoy);
++        IllegalStateException normal = assertThrows(IllegalStateException.class,
++                () -> s.prestar("20231234", "equipo-3", "clase", hoy));
++        assertTrue(normal.getMessage().contains("dos equipos"));
++        IllegalStateException urgente = assertThrows(IllegalStateException.class,
++                () -> s.prestarUrgente("20231234", "equipo-3", "jefe", "clase", hoy));
++        assertTrue(urgente.getMessage().contains("dos equipos"));
++        assertEquals(2, s.prestamosDe("20231234").size());
++    }
++
++    @Test
++    void rechaza_motivo_nulo_vacio_y_solo_espacios() {
++        PrestamoService s = new PrestamoService(new BaseDeDatos());
++        for (String motivo : new String[]{null, "", "   "}) {
++            assertThrows(IllegalArgumentException.class,
++                    () -> s.prestar("20231234", "equipo-1", motivo, hoy));
++            assertThrows(IllegalArgumentException.class,
++                    () -> s.prestarUrgente("20231234", "equipo-1", "jefe", motivo, hoy));
++        }
++        assertEquals(0, s.prestamosDe("20231234").size());
++    }
++
++    @Test
++    void devolver_libera_un_cupo_y_conserva_el_motivo() {
++        PrestamoService s = new PrestamoService(new BaseDeDatos());
++        String id = s.prestar("20231234", "equipo-1", "clase de redes", hoy);
++        s.prestar("20231234", "equipo-2", "proyecto", hoy);
++        s.devolver(id);
++        assertEquals("clase de redes", s.prestamosDe("20231234").getFirst().motivo);
++        assertTrue(s.prestamosDe("20231234").getFirst().filaCsv.endsWith(";clase de redes"));
++        assertDoesNotThrow(() -> s.prestar("20231234", "equipo-3", "sustentación", hoy));
++        assertEquals(3, s.prestamosDe("20231234").size());
++    }
++
++    @Test
++    void el_tope_es_independiente_para_cada_alumno() {
++        PrestamoService s = new PrestamoService(new BaseDeDatos());
++        s.prestar("20231234", "equipo-1", "clase", hoy);
++        s.prestar("20231234", "equipo-2", "proyecto", hoy);
++        assertDoesNotThrow(() -> s.prestar("20235678", "equipo-3", "clase", hoy));
++    }
++
++    @Test
++    void guarda_motivo_y_conserva_plazos_normal_y_urgente() {
++        PrestamoService s = new PrestamoService(new BaseDeDatos());
++        s.prestar("20231234", "equipo-1", "clase", hoy);
++        s.prestarUrgente("20231234", "equipo-2", "jefe", "proyecto", hoy);
++        assertEquals("clase", s.prestamosDe("20231234").get(0).motivo);
++        assertEquals("proyecto", s.prestamosDe("20231234").get(1).motivo);
++        assertEquals(hoy.plusDays(7), s.prestamosDe("20231234").get(0).devolucion);
++        assertEquals(hoy.plusDays(1), s.prestamosDe("20231234").get(1).devolucion);
+     }
+ }
+diff --git a/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/Prestamo.java b/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/Prestamo.java
+index 0d07d56..1d729df 100644
+--- a/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/Prestamo.java
++++ b/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/Prestamo.java
+@@ -3,11 +3,11 @@ package pe.uni.fiis.prestamos.dominio;
+ import java.time.LocalDate;
+ 
+ /** Un préstamo, en el lenguaje del laboratorio. No sabe cómo se guarda. */
+-public record Prestamo(String id, String codigoAlumno, String equipo,
++public record Prestamo(String id, String codigoAlumno, String equipo, String motivo,
+                        LocalDate fecha, LocalDate devolucion, boolean devuelto) {
+ 
+     public Prestamo devolver() {
+-        return new Prestamo(id, codigoAlumno, equipo, fecha, devolucion, true);
++        return new Prestamo(id, codigoAlumno, equipo, motivo, fecha, devolucion, true);
+     }
+ 
+     public boolean esDelEquipo(String otroEquipo) {
+diff --git a/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/PrestamoService.java b/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/PrestamoService.java
+index c109975..ebf6531 100644
+--- a/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/PrestamoService.java
++++ b/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/PrestamoService.java
+@@ -13,21 +13,21 @@ public class PrestamoService {
+         this.repositorio = repositorio;
+     }
+ 
+-    public String prestar(String codigoAlumno, String equipo, LocalDate hoy) {
+-        return registrar(codigoAlumno, equipo, hoy, hoy.plusDays(7));
++    public String prestar(String codigoAlumno, String equipo, String motivo, LocalDate hoy) {
++        return registrar(codigoAlumno, equipo, motivo, hoy, hoy.plusDays(7));
+     }
+ 
+     /** El préstamo urgente dura un día y necesita quién lo autoriza. */
+-    public String prestarUrgente(String codigoAlumno, String equipo, String autoriza, LocalDate hoy) {
++    public String prestarUrgente(String codigoAlumno, String equipo, String autoriza, String motivo, LocalDate hoy) {
+         if (autoriza == null || autoriza.isBlank()) {
+             throw new IllegalArgumentException("Falta quién autoriza");
+         }
+-        return registrar(codigoAlumno, equipo, hoy, hoy.plusDays(1));
++        return registrar(codigoAlumno, equipo, motivo, hoy, hoy.plusDays(1));
+     }
+ 
+-    private String registrar(String codigoAlumno, String equipo, LocalDate fecha, LocalDate devolucion) {
+-        ReglasDePrestamo.validar(codigoAlumno, equipo, repositorio.todos());
+-        Prestamo nuevo = new Prestamo(UUID.randomUUID().toString(), codigoAlumno, equipo, fecha, devolucion, false);
++    private String registrar(String codigoAlumno, String equipo, String motivo, LocalDate fecha, LocalDate devolucion) {
++        ReglasDePrestamo.validar(codigoAlumno, equipo, motivo, repositorio.todos());
++        Prestamo nuevo = new Prestamo(UUID.randomUUID().toString(), codigoAlumno, equipo, motivo, fecha, devolucion, false);
+         repositorio.guardar(nuevo);
+         return nuevo.id();
+     }
+diff --git a/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/ReglasDePrestamo.java b/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/ReglasDePrestamo.java
+index 915db36..9b9ab50 100644
+--- a/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/ReglasDePrestamo.java
++++ b/version-b/src/main/java/pe/uni/fiis/prestamos/dominio/ReglasDePrestamo.java
+@@ -9,13 +9,21 @@ public final class ReglasDePrestamo {
+     private ReglasDePrestamo() {
+     }
+ 
+-    public static void validar(String codigoAlumno, String equipo, List<Prestamo> yaRegistrados) {
++    public static void validar(String codigoAlumno, String equipo, String motivo, List<Prestamo> yaRegistrados) {
+         if (codigoAlumno == null || codigoAlumno.isBlank()) {
+             throw new IllegalArgumentException("El código del alumno es obligatorio");
+         }
+         if (equipo == null || equipo.isBlank()) {
+             throw new IllegalArgumentException("El equipo es obligatorio");
+         }
++        if (motivo == null || motivo.isBlank()) {
++            throw new IllegalArgumentException("El motivo del préstamo es obligatorio");
++        }
++        long pendientes = yaRegistrados.stream()
++                .filter(p -> p.codigoAlumno().equals(codigoAlumno) && p.sigueAfuera()).count();
++        if (pendientes >= 2) {
++            throw new IllegalStateException("El alumno ya tiene dos equipos sin devolver");
++        }
+         boolean ocupado = yaRegistrados.stream().anyMatch(p -> p.esDelEquipo(equipo) && p.sigueAfuera());
+         if (ocupado) {
+             throw new IllegalStateException("El equipo ya está prestado: " + equipo);
+diff --git a/version-b/src/test/java/pe/uni/fiis/prestamos/dominio/PrestamoServiceTest.java b/version-b/src/test/java/pe/uni/fiis/prestamos/dominio/PrestamoServiceTest.java
+index af3f490..d211c2b 100644
+--- a/version-b/src/test/java/pe/uni/fiis/prestamos/dominio/PrestamoServiceTest.java
++++ b/version-b/src/test/java/pe/uni/fiis/prestamos/dominio/PrestamoServiceTest.java
+@@ -25,28 +25,84 @@ class PrestamoServiceTest {
+     @Test
+     void presta_un_equipo_libre() {
+         PrestamoService s = new PrestamoService(new RepositorioFalso());
+-        assertNotNull(s.prestar("20231234", "proyector-01", hoy));
++        assertNotNull(s.prestar("20231234", "proyector-01", "clase de redes", hoy));
+         assertEquals(1, s.prestamosDe("20231234").size());
+     }
+ 
+     @Test
+     void no_presta_un_equipo_que_ya_esta_prestado() {
+         PrestamoService s = new PrestamoService(new RepositorioFalso());
+-        s.prestar("20231234", "proyector-01", hoy);
+-        assertThrows(IllegalStateException.class, () -> s.prestar("20235678", "proyector-01", hoy));
++        s.prestar("20231234", "proyector-01", "clase de redes", hoy);
++        assertThrows(IllegalStateException.class, () -> s.prestar("20235678", "proyector-01", "clase de redes", hoy));
+     }
+ 
+     @Test
+     void el_urgente_tambien_exige_quien_autoriza() {
+         PrestamoService s = new PrestamoService(new RepositorioFalso());
+-        assertThrows(IllegalArgumentException.class, () -> s.prestarUrgente("20231234", "laptop-03", "", hoy));
++        assertThrows(IllegalArgumentException.class, () -> s.prestarUrgente("20231234", "laptop-03", "", "clase de redes", hoy));
+     }
+ 
+     @Test
+     void al_devolver_el_equipo_queda_libre() {
+         PrestamoService s = new PrestamoService(new RepositorioFalso());
+-        String id = s.prestar("20231234", "laptop-03", hoy);
++        String id = s.prestar("20231234", "laptop-03", "clase de redes", hoy);
+         s.devolver(id);
+-        assertDoesNotThrow(() -> s.prestar("20235678", "laptop-03", hoy));
++        assertDoesNotThrow(() -> s.prestar("20235678", "laptop-03", "clase de redes", hoy));
++    }
++
++    @Test
++    void rechaza_tercer_equipo_normal_y_urgente() {
++        PrestamoService s = new PrestamoService(new RepositorioFalso());
++        s.prestar("20231234", "equipo-1", "clase", hoy);
++        s.prestarUrgente("20231234", "equipo-2", "jefe", "proyecto", hoy);
++        IllegalStateException normal = assertThrows(IllegalStateException.class,
++                () -> s.prestar("20231234", "equipo-3", "clase", hoy));
++        assertTrue(normal.getMessage().contains("dos equipos"));
++        IllegalStateException urgente = assertThrows(IllegalStateException.class,
++                () -> s.prestarUrgente("20231234", "equipo-3", "jefe", "clase", hoy));
++        assertTrue(urgente.getMessage().contains("dos equipos"));
++        assertEquals(2, s.prestamosDe("20231234").size());
++    }
++
++    @Test
++    void rechaza_motivo_nulo_vacio_y_solo_espacios() {
++        PrestamoService s = new PrestamoService(new RepositorioFalso());
++        for (String motivo : new String[]{null, "", "   "}) {
++            assertThrows(IllegalArgumentException.class,
++                    () -> s.prestar("20231234", "equipo-1", motivo, hoy));
++            assertThrows(IllegalArgumentException.class,
++                    () -> s.prestarUrgente("20231234", "equipo-1", "jefe", motivo, hoy));
++        }
++        assertEquals(0, s.prestamosDe("20231234").size());
++    }
++
++    @Test
++    void devolver_libera_un_cupo_y_conserva_el_motivo() {
++        PrestamoService s = new PrestamoService(new RepositorioFalso());
++        String id = s.prestar("20231234", "equipo-1", "clase de redes", hoy);
++        s.prestar("20231234", "equipo-2", "proyecto", hoy);
++        s.devolver(id);
++        assertEquals("clase de redes", s.prestamosDe("20231234").stream().filter(p -> p.id().equals(id)).findFirst().orElseThrow().motivo());
++        assertDoesNotThrow(() -> s.prestar("20231234", "equipo-3", "sustentación", hoy));
++        assertEquals(3, s.prestamosDe("20231234").size());
++    }
++
++    @Test
++    void el_tope_es_independiente_para_cada_alumno() {
++        PrestamoService s = new PrestamoService(new RepositorioFalso());
++        s.prestar("20231234", "equipo-1", "clase", hoy);
++        s.prestar("20231234", "equipo-2", "proyecto", hoy);
++        assertDoesNotThrow(() -> s.prestar("20235678", "equipo-3", "clase", hoy));
++    }
++
++    @Test
++    void guarda_motivo_y_conserva_plazos_normal_y_urgente() {
++        PrestamoService s = new PrestamoService(new RepositorioFalso());
++        s.prestar("20231234", "equipo-1", "clase", hoy);
++        s.prestarUrgente("20231234", "equipo-2", "jefe", "proyecto", hoy);
++        assertEquals("clase", s.prestamosDe("20231234").get(0).motivo());
++        assertEquals("proyecto", s.prestamosDe("20231234").get(1).motivo());
++        assertEquals(hoy.plusDays(7), s.prestamosDe("20231234").get(0).devolucion());
++        assertEquals(hoy.plusDays(1), s.prestamosDe("20231234").get(1).devolucion());
+     }
+ }
+diff --git a/version-b/src/test/java/pe/uni/fiis/prestamos/infraestructura/RepositorioEnMemoriaTest.java b/version-b/src/test/java/pe/uni/fiis/prestamos/infraestructura/RepositorioEnMemoriaTest.java
+index 845c8f2..77fd12e 100644
+--- a/version-b/src/test/java/pe/uni/fiis/prestamos/infraestructura/RepositorioEnMemoriaTest.java
++++ b/version-b/src/test/java/pe/uni/fiis/prestamos/infraestructura/RepositorioEnMemoriaTest.java
+@@ -12,10 +12,11 @@ class RepositorioEnMemoriaTest {
+     @Test
+     void guarda_y_recupera_por_id() {
+         RepositorioEnMemoria repo = new RepositorioEnMemoria();
+-        Prestamo p = new Prestamo("1", "20231234", "laptop-03",
++        Prestamo p = new Prestamo("1", "20231234", "laptop-03", "clase de redes",
+                 LocalDate.of(2026, 10, 5), LocalDate.of(2026, 10, 12), false);
+         repo.guardar(p);
+         assertEquals("laptop-03", repo.porId("1").equipo());
++        assertEquals("clase de redes", repo.porId("1").motivo());
+         assertEquals(1, repo.deAlumno("20231234").size());
+     }
+ }

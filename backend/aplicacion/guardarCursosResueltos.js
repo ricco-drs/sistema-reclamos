@@ -1,6 +1,6 @@
 import { cursosValidos, prepararCursosResueltos, ErrorDeCursos } from '../dominio/cursosResueltos.js';
 
-// Puerto requerido: obtener(id) y guardar(id, valor). El caso de uso no importa Supabase.
+/** @param {import('../dominio/repositorioCursosResueltos.js').RepositorioCursosResueltos} repositorio */
 export function crearGuardarCursosResueltos(repositorio, reloj = () => new Date().toISOString()) {
   return async ({ id, admin, matricular, desmatricular }) => {
     const altas = cursosValidos(matricular, 'matricular');

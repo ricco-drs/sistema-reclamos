@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { cursosValidos, prepararCursosResueltos } from '../dominio/cursosResueltos.js';
 import { crearGuardarCursosResueltos } from '../aplicacion/guardarCursosResueltos.js';
 import { crearRepositorioCursosSupabase } from '../infraestructura/repositorioCursosSupabase.js';
+import { crearRepositorioCursosMemoria } from '../infraestructura/repositorioCursosMemoria.js';
 import { crearGuardarCursosHandler } from '../presentacion/guardarCursosHandler.js';
 
 test('dominio: normaliza código y sección y limita nombre', () => {
@@ -72,6 +73,22 @@ test('adaptador: informa esquema ausente y reconoce PATCH sin filas', async () =
   assert.equal(await repoVacio.obtener('1'), null);
   assert.equal(await repoVacio.guardar('1', {}), false);
 });
+
+// Misma prueba de dominio, corrida contra los dos adaptadores: demuestra que
+// el puerto está bien puesto, el caso de uso no sabe cuál usa.
+const adaptadores = {
+  Supabase: () => crearRepositorioCursosSupabase(async () => ({ ok: true, json: async () => [{ cursos_resueltos: {} }] })),
+  Memoria: () => crearRepositorioCursosMemoria({ 'caso-1': {} }),
+};
+
+for (const [nombre, crearRepo] of Object.entries(adaptadores)) {
+  test(`adaptador ${nombre}: el caso de uso guarda y normaliza igual`, async () => {
+    const guardar = crearGuardarCursosResueltos(crearRepo(), () => 'fecha-fija');
+    const valor = await guardar({ id: 'caso-1', admin: 'admin', matricular: [{ codigo: 'sw708', seccion: 'u' }] });
+    assert.equal(valor.actualizadoPor, 'admin');
+    assert.equal(valor.matricular[0].codigo, 'SW708');
+  });
+}
 
 function respuesta() {
   return { codigo: 200, status(n) { this.codigo = n; return this; }, json(body) { this.body = body; return this; } };

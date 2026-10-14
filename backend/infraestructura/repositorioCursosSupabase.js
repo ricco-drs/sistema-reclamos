@@ -1,3 +1,4 @@
+/** @returns {import('../dominio/repositorioCursosResueltos.js').RepositorioCursosResueltos} */
 export function crearRepositorioCursosSupabase(sbRest) {
   return {
     async obtener(id) {

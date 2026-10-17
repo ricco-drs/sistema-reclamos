@@ -6,16 +6,16 @@ Sección 3 del informe de la Entrega 1 (SW708, equipo 2). Los tres niveles salen
 
 Vale para las tres figuras. Structurizr escribe los tipos en inglés dentro de cada caja (`[Person]`, `[Container]`); esta tabla dice qué significan. Cada figura tiene además su leyenda generada (`img/*-key.png`).
 
-| Forma y color | Tipo | Qué representa |
-|---|---|---|
-| Silueta azul oscuro | Persona (`Person`) | Quien usa el sistema: el estudiante o el miembro del Tercio. |
-| Rectángulo azul | Sistema (`Software System`) | TEFIIS visto como una sola caja. |
-| Rectángulo gris | Sistema externo | Un servicio de terceros que el equipo no controla. |
-| Rectángulo azul medio | Contenedor (`Container`) | Algo que se despliega o se ejecuta por separado: una aplicación web o la API. Entre corchetes, su tecnología. |
-| Cilindro azul medio | Almacén de datos | Un contenedor que guarda datos: la base PostgreSQL o el Storage de los PDF. |
-| Rectángulo celeste | Componente (`Component`) | Un archivo o una función de la API con una responsabilidad. Entre corchetes, la carpeta donde vive. |
-| Marco con borde azul | Límite | Lo que está dentro pertenece al sistema o al contenedor que nombra el marco. |
-| Flecha | Relación | Va de quien inicia a quien recibe. Dice qué pasa y, entre corchetes, el protocolo. |
+| Forma y color         | Tipo                        | Qué representa                                                                                                |
+| --------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Silueta azul oscuro   | Persona (`Person`)          | Quien usa el sistema: el estudiante o el miembro del Tercio.                                                  |
+| Rectángulo azul       | Sistema (`Software System`) | TEFIIS visto como una sola caja.                                                                              |
+| Rectángulo gris       | Sistema externo             | Un servicio de terceros que el equipo no controla.                                                            |
+| Rectángulo azul medio | Contenedor (`Container`)    | Algo que se despliega o se ejecuta por separado: una aplicación web o la API. Entre corchetes, su tecnología. |
+| Cilindro azul medio   | Almacén de datos            | Un contenedor que guarda datos: la base PostgreSQL o el Storage de los PDF.                                   |
+| Rectángulo celeste    | Componente (`Component`)    | Un archivo o una función de la API con una responsabilidad. Entre corchetes, la carpeta donde vive.           |
+| Marco con borde azul  | Límite                      | Lo que está dentro pertenece al sistema o al contenedor que nombra el marco.                                  |
+| Flecha                | Relación                    | Va de quien inicia a quien recibe. Dice qué pasa y, entre corchetes, el protocolo.                            |
 
 ## Figura 1. Contexto
 
@@ -37,7 +37,7 @@ Leyenda generada: [structurizr-Contexto-key.png](img/structurizr-Contexto-key.pn
 
 Leyenda generada: [structurizr-Contenedores-key.png](img/structurizr-Contenedores-key.png)
 
-## Figura 3. Componentes de la rodaja
+## Figura 3. Componentes
 
 ![Componentes de la API TEFIIS: registrar cursos resueltos](img/structurizr-Componentes.png)
 

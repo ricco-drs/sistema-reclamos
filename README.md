@@ -1,115 +1,124 @@
-# Sistema de Gestión de Reclamos Estudiantiles
+# TEFIIS: sistema de gestión de reclamos estudiantiles
 
-**TEFIIS** es una plataforma web integral diseñada para la **Facultad de Ingeniería Industrial y de Sistemas (FIIS)** de la **Universidad Nacional de Ingeniería (UNI)** en Perú. Su objetivo principal es optimizar, automatizar y hacer más transparente el proceso de registro, evaluación y resolución de reclamos y trámites presentados por los estudiantes.
+**TEFIIS** es la plataforma web con la que la Facultad de Ingeniería Industrial y de Sistemas (FIIS) de la UNI recibe y resuelve los reclamos de matrícula de sus estudiantes. El estudiante entra con su correo `@uni.pe`, sube sus documentos del SIGA, registra su reclamo y lo sigue con un número `REC-AAAA-NNNN`. El Tercio lo revisa desde un panel propio y le responde por correo. **Tefi**, un asistente con IA, responde dudas sobre reglamentos y trámites buscando en los documentos oficiales de la facultad.
 
-El sistema se apoya en **Tefi**, un asistente conversacional inteligente potenciado por Inteligencia Artificial (RAG) que guía a los estudiantes y asiste en el análisis regulatorio de cada caso.
-a
----
+Proyecto del curso SW708 Arquitectura de Soluciones de Software (2026-2), equipo 2. La documentación de arquitectura está en [docs/](#documentación).
 
-## 🚀 Características Principales
+## Construir y probar
 
-### 1. Asistente Inteligente (Tefi)
-* **Chat Institucional con RAG**: Tefi resuelve dudas sobre matrícula, reglamentos, planes de estudio y trámites académicos basándose en documentos oficiales indexados de la FIIS-UNI.
-* **Integración con Gemini**: Utiliza el SDK oficial de Google GenAI (`@google/genai`) y la tecnología de *File Search Stores* para realizar búsquedas contextuales precisas dentro de PDFs de entrenamiento.
-* **Formateo Avanzado**: Renderiza respuestas con Markdown, tablas y fórmulas matemáticas en LaTeX (mediante KaTeX).
+Requisitos: Git, Node.js 22 y npm. No hacen falta credenciales.
 
-### 2. Gestión de Reclamos Académicos
-* **Autoservicio del Estudiante**: Registro de reclamos clasificados por categorías y seguimiento del estado del trámite mediante un ID de caso único.
-* **Extracción de Datos de PDFs**: Parseo automático de documentos oficiales descargados del SIGA (Ficha Académica, Boleta de Matrícula y Avance Curricular) mediante `pdfjs-dist`, cruzando datos del estudiante con la malla curricular.
-* **Buzón del Evaluador**: Interfaz para el personal administrativo y académico (Miembros TEFIIS) con asignación automática, visualización completa del expediente y registro del dictamen (Aprobado/Rechazado).
-* **Alertas de Larga Espera**: Identificación visual en el panel administrativo de casos acumulados que superen el tiempo de atención previsto.
+```bash
+git clone https://github.com/ricco-drs/sistema-reclamos.git
+cd sistema-reclamos
+npm ci
+npm test
+npm run arch:check
+npm run build
+```
 
-### 3. Autenticación y Notificaciones
-* **Acceso sin Contraseña (Passwordless)**: Verificación de identidad estudiantil mediante el envío de un código temporal de 4 dígitos exclusivo para correos institucionales de la UNI (`@uni.pe`).
-* **Notificaciones por Correo**: Envío automático de confirmaciones de recepción y de resoluciones finales de reclamos por correo electrónico mediante la API de Brevo (Sendinblue).
+| Comando              | Qué hace                                                                                                                          |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `npm ci`             | Instala las dependencias exactas de `package-lock.json`.                                                                          |
+| `npm test`           | Corre las 12 pruebas de `backend/tests/` con `node:test`. No usan red, base de datos ni credenciales.                             |
+| `npm run arch:check` | Comprueba con dependency-cruiser la regla `dominio-limpio`: `backend/dominio/` no puede importar infraestructura ni presentación. |
+| `npm run build`      | Compila la aplicación de estudiantes en `dist/`.                                                                                  |
 
----
+En un clon limpio, los seis comandos tardaron 3 min 10 s en total (Windows 11, Node 22.16), y 1 min 44 s sin `npm run build`. La integración continua ([.github/workflows/ci.yml](.github/workflows/ci.yml)) corre `npm ci`, `npm test` y `npm run arch:check` en cada push y en cada pull request.
 
-## 🛠️ Stack Tecnológico
+**En Windows**, si `git clone` falla con `Filename too long`, activa las rutas largas y vuelve a clonar:
 
-* **Frontend**: React 19, TypeScript, Vite, TailwindCSS 4.
-* **Backend**: Node.js, Express.js.
-* **Base de Datos / Auth**: Supabase (PostgreSQL, Cliente SDK con Service Key).
-* **Servicio de IA**: Gemini (Google AI Studio) & File Search Stores.
-* **Correos electrónicos**: Brevo HTTP API.
-* **Lector de PDFs**: PDF.js (`pdfjs-dist`).
+```bash
+git config --global core.longpaths true
+```
 
----
+## Levantar el sistema completo
 
-## 📁 Estructura del Proyecto
+La API depende de cinco servicios en la nube, así que para levantarla hacen falta cuentas propias en cada uno.
+
+**1. Variables de entorno.** Crea un archivo `.env` en la raíz:
+
+| Variable                                                                    | Para qué                                                                | Obligatoria  |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------ |
+| `JWT_SECRET`                                                                | Firmar las sesiones de los estudiantes.                                 | Sí           |
+| `SUPABASE_URL` y `SUPABASE_SERVICE_KEY`                                     | Base de datos (PostgREST) y Storage.                                    | Sí           |
+| `FIREBASE_SERVICE_ACCOUNT`                                                  | JSON de la cuenta de servicio, para verificar los tokens del panel.     | Sí           |
+| `ADMIN_EMAILS`                                                              | Correos que pueden entrar al panel, separados por comas.                | Sí           |
+| `VITE_API_KEY`                                                              | Clave de Gemini, para Tefi.                                             | Sí           |
+| `FROM_EMAIL`                                                                | Remitente de los correos.                                               | Sí           |
+| `BREVO_API_KEY`, `RESEND_API_KEY`, `MAILJET_API_KEY` y `MAILJET_SECRET_KEY` | Proveedores de correo, en ese orden de respaldo.                        | Al menos uno |
+| `ADMIN_EMAILS_SOLO_LECTURA`                                                 | Cuentas del panel que solo pueden consultar.                            | No           |
+| `ALLOWED_ORIGINS`                                                           | Orígenes permitidos por CORS. Sin ella se acepta cualquiera.            | No           |
+| `PORT`                                                                      | Puerto de la API. Por defecto, 3005.                                    | No           |
+| `VITE_API_URL`                                                              | URL de la API para la aplicación. Por defecto, `http://localhost:3005`. | No           |
+
+**2. Base de datos.** En el editor SQL de Supabase, ejecuta los scripts de [sql/](sql/). Crean la secuencia que numera los reclamos y las tablas `conversaciones` y `respuestas_reclamo`, y agregan la columna `cursos_resueltos`. Las tablas base (`reclamos`, `documentos_estudiante`, `activity_log` y `app_settings`) todavía no tienen script.
+
+**3. Base de conocimiento de Tefi.** Sube a Gemini los PDF de `documentos_entrenamiento/`:
+
+```bash
+npm run seed-rag
+```
+
+**4. Arrancar.** La API y la aplicación, cada una en su terminal:
+
+```bash
+npm run server   # API en http://localhost:3005
+npm run dev      # aplicación en http://localhost:5173
+```
+
+## Qué hace
+
+- **Tefi.** Responde con búsqueda en los reglamentos oficiales (Gemini con File Search) y muestra texto, tablas y fórmulas.
+- **Reclamos.** El estudiante sube su ficha académica, su avance curricular y, si la tiene, su boleta de matrícula; elige los cursos y secciones del catálogo, adjunta una evidencia y recibe un número de caso único. Sigue el estado desde la aplicación.
+- **Acceso.** Código de 4 dígitos por correo, solo para cuentas `@uni.pe`. El correo sale por Brevo y, si falla, por Resend o Mailjet.
+- **Modos de operación.** El Tercio abre o cierra la ventana de reclamos y activa los modos de almuerzo, mantenimiento y despedida sin desplegar.
+- **Panel del Tercio.** Vive en otro repositorio (`sistema-admin`) y usa esta misma API: bandeja de reclamos, cambio de estado, cursos resueltos y respuestas por correo.
+
+## Estructura
 
 ```text
-├── backend/                       # Servidor Express, API REST y parsing de documentos
-│   ├── server.js                  # Lógica del servidor, autenticación y llamadas a Gemini/Supabase
-│   └── pdfParser.js               # Algoritmo de parseo de Ficha Académica, Boleta y Avance
-├── docs/                          # Documentación del proyecto (Modelos C4, Requisitos, etc.)
-│   ├── arquitectura_c4_M3.md
-│   ├── atributos_calidad_M3.md
-│   ├── requisitos_funcionales_M3.md
-│   └── tefi.md                    # Análisis actual del módulo inteligente
-├── documentos_entrenamiento/      # PDFs oficiales de la FIIS-UNI usados para alimentar el RAG de Tefi
-├── src/                           # Frontend React + TypeScript
-│   ├── assets/                    # Recursos visuales (logotipos, iconos)
-│   ├── components/                # Componentes globales reutilizables
-│   ├── features/                  # Módulos del negocio (chat, admin/reclamos, profile)
-│   ├── hooks/                     # Custom hooks (autenticación, estado)
-│   └── supabaseClient.ts          # Inicialización del cliente Supabase
-├── scripts/                       # Scripts utilitarios (indexación RAG, formateo de carga horaria, etc.)
-│   └── seed_rag.js                # Sube e indexa los PDFs de documentos_entrenamiento en Gemini
-└── package.json                   # Dependencias y scripts de ejecución
+backend/
+  server.js              API Express: rutas, autenticación, correo, Tefi y composición de la rodaja
+  promptTefi.js          Instrucciones de sistema de Tefi
+  presentacion/          Rodaja «registrar cursos resueltos»: adaptador HTTP
+  aplicacion/            Caso de uso
+  dominio/               Reglas y puerto de persistencia
+  infraestructura/       Adaptadores de Supabase y en memoria
+  tests/                 Pruebas con node:test
+src/                     Aplicación de estudiantes (React 19, TypeScript, Vite)
+  features/chat/         Conversación con Tefi
+  features/admin/        Registro y seguimiento de reclamos del estudiante (el nombre de la carpeta es heredado)
+  features/profile/      Perfil y documentos
+  data/                  Catálogo de cursos-sección y planes de estudio
+docs/                    Documentación de arquitectura
+documentos_entrenamiento/  Reglamentos oficiales que consulta Tefi
+sql/                     Scripts de base de datos
+scripts/                 Indexación de Tefi y utilidades de datos
+laboratorio/             Laboratorio 4-5: costo del cambio (Java)
+.dependency-cruiser.cjs  Regla de arquitectura dominio-limpio
+.github/workflows/ci.yml Integración continua
 ```
 
----
+## Documentación
 
-## ⚙️ Configuración del Entorno
+| Documento                                              | Contenido                                              |
+| ------------------------------------------------------ | ------------------------------------------------------ |
+| [docs/arquitectura.md](docs/arquitectura.md)           | Informe de la Entrega 1                                |
+| [docs/ficha-del-sistema.md](docs/ficha-del-sistema.md) | Ficha del sistema                                      |
+| [docs/escenarios.md](docs/escenarios.md)               | Escenarios de calidad y su priorización                |
+| [docs/c4/](docs/c4/)                                   | Modelo C4 en Structurizr DSL y sus tres diagramas      |
+| [docs/adr/](docs/adr/)                                 | Registros de decisiones de arquitectura                |
+| [docs/interfaz/](docs/interfaz/)                       | Flujos principales y frontera entre interfaz y dominio |
+| [docs/bitacora-ia.md](docs/bitacora-ia.md)             | Bitácora de uso de IA                                  |
+| [docs/costo-del-cambio.md](docs/costo-del-cambio.md)   | Cuadro del Laboratorio 4-5                             |
 
-Para ejecutar el proyecto, debes crear un archivo `.env` en la raíz con las siguientes variables:
+## Equipo
 
-```env
-# Puerto del Backend
-PORT=3005
-
-# Credenciales de Gemini (Google AI Studio)
-VITE_API_KEY=tu_api_key_de_gemini
-
-# Credenciales de Supabase
-SUPABASE_URL=https://tu-proyecto.supabase.co
-SUPABASE_SERVICE_KEY=tu_service_role_key_para_el_backend
-VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-VITE_SUPABASE_ANON_KEY=tu_anon_key_para_el_frontend
-
-# Credenciales de Brevo (Envío de Correos)
-BREVO_API_KEY=tu_api_key_de_brevo
-FROM_EMAIL=no-responder@tu-dominio.com
-```
-
----
-
-## 🚀 Instalación y Uso en Local
-
-### 1. Clonar el repositorio e instalar dependencias
-```bash
-git clone <url-del-repositorio>
-cd sistema-tefiis
-npm install
-```
-
-### 2. Indexar la base de conocimiento (RAG)
-Ejecuta el script de RAG para subir los reglamentos oficiales de la carpeta `documentos_entrenamiento` a la tienda de búsqueda de archivos de Gemini:
-```bash
-node scripts/seed_rag.js
-```
-*Este proceso creará el archivo `backend/.rag_store_id` con el ID del store generado.*
-
-### 3. Iniciar el servidor backend
-```bash
-npm run server
-```
-El servidor backend se levantará por defecto en el puerto `3005`.
-
-### 4. Iniciar el servidor frontend de desarrollo
-En otra terminal, ejecuta:
-```bash
-npm run dev
-```
-La aplicación web estará disponible en [http://localhost:5173](http://localhost:5173).
+| Integrante                                 | Código    |
+| ------------------------------------------ | --------- |
+| Castro Aguirre, Lenin Giomar (coordinador) | 20240243J |
+| Albino Soto, Christopher Henrry            | 20231158C |
+| Nuñez Villazana, Franz Pool                | 20244028F |
+| Puris Ricaldi, Roy Farid                   | 20244011F |
+| Rashuaman Sapallanay, Ricco Didier         | 20231242D |

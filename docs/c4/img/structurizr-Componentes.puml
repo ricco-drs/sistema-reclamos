@@ -1,0 +1,110 @@
+@startuml
+title <size:24>Componentes de la API TEFIIS: registrar cursos resueltos</size>
+
+set separator none
+top to bottom direction
+skinparam ranksep 60
+skinparam nodesep 30
+hide stereotype
+
+<style>
+  root {
+    BackgroundColor: #ffffff;
+    FontColor: #444444;
+  }
+  // Element,Component
+  .Element-RWxlbWVudCxDb21wb25lbnQ= {
+    BackgroundColor: #85bbf0;
+    LineColor: #5d82a8;
+    LineStyle: 0;
+    LineThickness: 2;
+    FontColor: #000000;
+    FontSize: 24;
+    HorizontalAlignment: center;
+    Shadowing: 0;
+    MaximumWidth: 450;
+  }
+  // Element,Container
+  .Element-RWxlbWVudCxDb250YWluZXI= {
+    BackgroundColor: #438dd5;
+    LineColor: #2e6295;
+    LineStyle: 0;
+    LineThickness: 2;
+    FontColor: #ffffff;
+    FontSize: 24;
+    HorizontalAlignment: center;
+    Shadowing: 0;
+    MaximumWidth: 450;
+  }
+  // Element,Container,Almacén de datos
+  .Element-RWxlbWVudCxDb250YWluZXIsQWxtYWPDqW4gZGUgZGF0b3M= {
+    BackgroundColor: #438dd5;
+    LineColor: #2e6295;
+    LineStyle: 0;
+    LineThickness: 2;
+    FontColor: #ffffff;
+    FontSize: 24;
+    HorizontalAlignment: center;
+    Shadowing: 0;
+    MaximumWidth: 450;
+  }
+  // Relationship
+  .Relationship-UmVsYXRpb25zaGlw {
+    LineThickness: 2;
+    LineStyle: 0;
+    LineColor: #444444;
+    FontColor: #444444;
+    FontSize: 24;
+  }
+  // API TEFIIS
+  .Boundary-QVBJIFRFRklJUw== {
+    BackgroundColor: #ffffff;
+    LineColor: #2e6295;
+    LineStyle: 0;
+    LineThickness: 2;
+    FontColor: #0b4884;
+    FontSize: 24;
+    HorizontalAlignment: center;
+    Shadowing: 0;
+  }
+  // TEFIIS
+  .Boundary-VEVGSUlT {
+    BackgroundColor: #ffffff;
+    LineColor: #0b4884;
+    LineStyle: 0;
+    LineThickness: 2;
+    FontColor: #0b4884;
+    FontSize: 24;
+    HorizontalAlignment: center;
+    Shadowing: 0;
+  }
+</style>
+
+rectangle "TEFIIS\n<size:16>[Software System]</size>" <<Boundary-VEVGSUlT>> {
+  rectangle "API TEFIIS\n<size:16>[Container: Node.js 22, Express 5]</size>" <<Boundary-QVBJIFRFRklJUw==>> {
+    rectangle "==requireAdminAuth\n<size:16>[Component: Middleware Express]</size>\n\nVerifica el token de Firebase y la lista de administradores." <<Element-RWxlbWVudCxDb21wb25lbnQ=>> as TEFIIS.APITEFIIS.requireAdminAuth
+    rectangle "==guardarCursosHandler\n<size:16>[Component: backend/presentacion]</size>\n\nPasa de HTTP al caso de uso y traduce los errores." <<Element-RWxlbWVudCxDb21wb25lbnQ=>> as TEFIIS.APITEFIIS.guardarCursosHandler
+    rectangle "==logActividad\n<size:16>[Component: server.js]</size>\n\nEscribe la auditoría en activity_log." <<Element-RWxlbWVudCxDb21wb25lbnQ=>> as TEFIIS.APITEFIIS.logActividad
+    rectangle "==crearGuardarCursosResueltos\n<size:16>[Component: backend/aplicacion]</size>\n\nValida, lee, prepara y guarda." <<Element-RWxlbWVudCxDb21wb25lbnQ=>> as TEFIIS.APITEFIIS.crearGuardarCursosResueltos
+    rectangle "==cursosResueltos\n<size:16>[Component: backend/dominio]</size>\n\nListas de hasta 40 cursos; historial de 50 con autor y fecha." <<Element-RWxlbWVudCxDb21wb25lbnQ=>> as TEFIIS.APITEFIIS.cursosResueltos
+    rectangle "==RepositorioCursosResueltos\n<size:16>[Component: backend/dominio]</size>\n\nobtener(id) y guardar(id, valor)." <<Element-RWxlbWVudCxDb21wb25lbnQ=>> as TEFIIS.APITEFIIS.RepositorioCursosResueltos
+    rectangle "==repositorioCursosSupabase\n<size:16>[Component: backend/infraestructura]</size>\n\nPostgREST sobre reclamos.cursos_resueltos." <<Element-RWxlbWVudCxDb21wb25lbnQ=>> as TEFIIS.APITEFIIS.repositorioCursosSupabase
+    rectangle "==repositorioCursosMemoria\n<size:16>[Component: backend/infraestructura]</size>\n\nMap en memoria para pruebas y demostración." <<Element-RWxlbWVudCxDb21wb25lbnQ=>> as TEFIIS.APITEFIIS.repositorioCursosMemoria
+  }
+
+  database "==Base de datos\n<size:16>[Container: PostgreSQL en Supabase]</size>\n\nreclamos, respuestas_reclamo, activity_log, conversaciones, app_settings, documentos_estudiante." <<Element-RWxlbWVudCxDb250YWluZXIsQWxtYWPDqW4gZGUgZGF0b3M=>> as TEFIIS.Basededatos
+  rectangle "==Panel del Tercio\n<size:16>[Container: React, repositorio sistema-admin]</size>\n\nBandeja, expediente, estados, cursos resueltos y respuestas." <<Element-RWxlbWVudCxDb250YWluZXI=>> as TEFIIS.PaneldelTercio
+}
+
+TEFIIS.PaneldelTercio --> TEFIIS.APITEFIIS.requireAdminAuth <<Relationship-UmVsYXRpb25zaGlw>> : "PUT /api/admin/reclamos/:id/cursos-resueltos\n<size:16>[JSON/HTTPS, token de Firebase]</size>"
+TEFIIS.APITEFIIS.requireAdminAuth --> TEFIIS.APITEFIIS.guardarCursosHandler <<Relationship-UmVsYXRpb25zaGlw>> : "Pasa la petición con adminEmail"
+TEFIIS.APITEFIIS.guardarCursosHandler --> TEFIIS.APITEFIIS.crearGuardarCursosResueltos <<Relationship-UmVsYXRpb25zaGlw>> : "Invoca con id, admin y listas"
+TEFIIS.APITEFIIS.guardarCursosHandler --> TEFIIS.APITEFIIS.logActividad <<Relationship-UmVsYXRpb25zaGlw>> : "Registra la decisión"
+TEFIIS.APITEFIIS.crearGuardarCursosResueltos --> TEFIIS.APITEFIIS.cursosResueltos <<Relationship-UmVsYXRpb25zaGlw>> : "Valida y arma el historial"
+TEFIIS.APITEFIIS.crearGuardarCursosResueltos --> TEFIIS.APITEFIIS.RepositorioCursosResueltos <<Relationship-UmVsYXRpb25zaGlw>> : "obtener / guardar"
+TEFIIS.APITEFIIS.repositorioCursosSupabase --> TEFIIS.APITEFIIS.RepositorioCursosResueltos <<Relationship-UmVsYXRpb25zaGlw>> : "Implementa"
+TEFIIS.APITEFIIS.repositorioCursosMemoria --> TEFIIS.APITEFIIS.RepositorioCursosResueltos <<Relationship-UmVsYXRpb25zaGlw>> : "Implementa"
+TEFIIS.APITEFIIS.repositorioCursosSupabase --> TEFIIS.Basededatos <<Relationship-UmVsYXRpb25zaGlw>> : "SELECT y PATCH\n<size:16>[PostgREST/HTTPS]</size>"
+TEFIIS.APITEFIIS.logActividad --> TEFIIS.Basededatos <<Relationship-UmVsYXRpb25zaGlw>> : "INSERT en activity_log\n<size:16>[PostgREST/HTTPS]</size>"
+
+@enduml

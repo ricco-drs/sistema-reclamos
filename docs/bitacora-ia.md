@@ -38,12 +38,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 ## Semana 2 · 12 de setiembre
 
-- **¿Se usó IA?** POR COMPLETAR
-- **Herramienta:** POR COMPLETAR
-- **Para qué se usó:** POR COMPLETAR. Qué se le preguntó sobre los escenarios.
-- **Qué se aceptó:** POR COMPLETAR
-- **Qué se descartó y por qué:** POR COMPLETAR
-- **Registra:** POR COMPLETAR
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude
+- **Para qué se usó:** Revisar, a nivel técnico, qué se podía mejorar en los cinco escenarios de calidad del módulo M3 (`ESC-M3-01` a `ESC-M3-05`, en [atributos_calidad_M3.md](atributos_calidad_M3.md)).
+- **Qué se aceptó:** Las métricas que sugirió Claude para las medidas de los escenarios. Dos de las medidas se cambiaron: en rendimiento (`ESC-M3-02`) se pedía 1 s o menos y quedó en 2 s, y en confiabilidad (`ESC-M3-04`) se pedía que el 100 % de los correos se entregara y quedó en el 95 % dentro de 15 minutos. Lo demás que sugirió se aceptó.
+- **Qué se descartó y por qué:** Añadir más escenarios de calidad que no eran tan críticos. Se dejaron solo los más importantes.
+- **Registra:** Roy Puris
 
 ## Semana 3 · 19 de setiembre
 
@@ -56,21 +56,17 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 ## Semana 4 · 9 de octubre
 
-- **¿Se usó IA?** Sí
-- **Herramienta:** POR COMPLETAR
-- **Para qué se usó:** Revisar los repositorios, proponer alternativas, redactar dos ADR y explicar la decisión, los descartes y las consecuencias. La decisión y las consecuencias deben ser revisadas por el grupo.
-- **Qué se aceptó:** POR COMPLETAR. Qué alternativas propuso la IA se tomaron.
-- **Qué se descartó y por qué:** POR COMPLETAR. Qué alternativas se refutaron.
-- **Registra:** POR COMPLETAR
+- **¿Se usó IA?** Sí.
+- **Herramienta:** Codex.
+- **Para qué se usó:** Proponer alternativas para organizar la API y separar la persistencia de cursos resueltos en los ADR 001 y 002.
+- **Qué se aceptó:** La separación por capas dentro de la API existente y la inyección de un repositorio con `obtener` y `guardar`, para probar las reglas sin conectarse a Supabase.
+- **Qué se descartó y por qué:** Mantener las reglas dentro del endpoint, porque mezcla validación, HTTP y almacenamiento; crear un microservicio adicional, porque añade operación sin una necesidad demostrada; y migrar esta operación a un ORM, porque excede el alcance de la rodaja.
+- **Registra:** Lenin.
 
 ## Semana 5
 
-- **¿Se usó IA?** POR COMPLETAR. Declarar «No se usó asistente» en el cuadro del costo del cambio y en la rodaja vertical, si es cierto.
-- **Herramienta:** POR COMPLETAR
-- **Para qué se usó:** POR COMPLETAR
-- **Qué se aceptó:** POR COMPLETAR
-- **Qué se descartó y por qué:** POR COMPLETAR
-- **Registra:** POR COMPLETAR
+- **¿Se usó IA?** No.
+- **Registra:** Lenin.
 
 ## Semana 6 · 14 de octubre
 

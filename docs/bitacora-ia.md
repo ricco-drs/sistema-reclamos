@@ -56,21 +56,17 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 ## Semana 4 · 9 de octubre
 
-- **¿Se usó IA?** Sí
-- **Herramienta:** POR COMPLETAR
-- **Para qué se usó:** Revisar los repositorios, proponer alternativas, redactar dos ADR y explicar la decisión, los descartes y las consecuencias. La decisión y las consecuencias deben ser revisadas por el grupo.
-- **Qué se aceptó:** POR COMPLETAR. Qué alternativas propuso la IA se tomaron.
-- **Qué se descartó y por qué:** POR COMPLETAR. Qué alternativas se refutaron.
-- **Registra:** POR COMPLETAR
+- **¿Se usó IA?** Sí.
+- **Herramienta:** Codex.
+- **Para qué se usó:** Proponer alternativas para organizar la API y separar la persistencia de cursos resueltos en los ADR 001 y 002.
+- **Qué se aceptó:** La separación por capas dentro de la API existente y la inyección de un repositorio con `obtener` y `guardar`, para probar las reglas sin conectarse a Supabase.
+- **Qué se descartó y por qué:** Mantener las reglas dentro del endpoint, porque mezcla validación, HTTP y almacenamiento; crear un microservicio adicional, porque añade operación sin una necesidad demostrada; y migrar esta operación a un ORM, porque excede el alcance de la rodaja.
+- **Registra:** Lenin.
 
 ## Semana 5
 
-- **¿Se usó IA?** POR COMPLETAR. Declarar «No se usó asistente» en el cuadro del costo del cambio y en la rodaja vertical, si es cierto.
-- **Herramienta:** POR COMPLETAR
-- **Para qué se usó:** POR COMPLETAR
-- **Qué se aceptó:** POR COMPLETAR
-- **Qué se descartó y por qué:** POR COMPLETAR
-- **Registra:** POR COMPLETAR
+- **¿Se usó IA?** No.
+- **Registra:** Lenin.
 
 ## Semana 6 · 14 de octubre
 

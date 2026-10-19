@@ -4,7 +4,7 @@ Sección 3 del informe de la Entrega 1 (SW708, equipo 2). Los tres niveles salen
 
 ## Leyenda
 
-Vale para las tres figuras. Structurizr escribe los tipos en inglés dentro de cada caja (`[Person]`, `[Container]`); esta tabla dice qué significan. Cada figura tiene además su leyenda generada (`img/*-key.png`).
+Vale para las tres figuras. Structurizr escribe los tipos en inglés dentro de cada caja (`[Person]`, `[Container]`); esta tabla dice qué significan. Para el detalle de responsabilidad de cada caja en una sola línea, consultar [leyenda.md](leyenda.md). Cada figura tiene además su leyenda generada (`img/*-key.png`).
 
 | Forma y color         | Tipo                        | Qué representa                                                                                                |
 | --------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -39,16 +39,17 @@ Leyenda generada: [structurizr-Contenedores-key.png](img/structurizr-Contenedore
 
 ## Figura 3. Componentes
 
-![Componentes de la API TEFIIS: registrar cursos resueltos](img/structurizr-Componentes.png)
+![Componentes de la API TEFIIS](img/Componentes-dark.svg)
 
-**Qué muestra.** Los componentes de la API que intervienen en «registrar cursos resueltos». Cada caja es un archivo de `backend/` o una función de `server.js`; los dos adaptadores implementan el mismo puerto.
+**Qué muestra.** Los componentes de la API TEFIIS, el contenedor central que concentra las reglas de negocio. Muestra cómo se dividen las responsabilidades internas del backend en 6 componentes funcionales que agrupan clases, rutas y servicios.
 
-**Observación del equipo.** El caso de uso solo conoce el puerto; `server.js` decide qué adaptador inyectar y en producción usa el de Supabase. El adaptador en memoria no se usa en producción: existe para que la misma prueba corra sin base de datos y para demostrar que el puerto está bien puesto. `requireAdminAuth` y `logActividad` todavía viven dentro de `server.js`: son parte del sistema anterior y no tienen archivo propio.
+**Observación del equipo.** El diagrama evidencia una arquitectura lógica de 6 componentes de negocio (Autenticación/Autorización, Gestión de Reclamos y Cursos, Asistente Tefi RAG, Notificaciones, Auditoría y Gestión de Documentos). Como hallazgo arquitectónico, varias de estas responsabilidades conviven hoy dentro del archivo `server.js` y módulos de `backend/`, por lo que el modelo C4 permite identificar con claridad los límites modulares a consolidar en futuras refactorizaciones.
 
-Leyenda generada: [structurizr-Componentes-key.png](img/structurizr-Componentes-key.png)
+Leyenda detallada: [leyenda.md](leyenda.md)
 
 ## Decisiones al modelar
 
-- Las relaciones de contexto y de contenedores se declaran antes que las de componentes. Si no, Structurizr deduce la flecha de un nivel a partir de una del nivel de abajo, y el diagrama de contenedores decía que la API solo hace «SELECT y PATCH» en la base y que el panel solo llama a una ruta.
-- La flecha del correo al estudiante se muestra en el contexto y se excluye en contenedores, donde empujaba al estudiante al fondo del diagrama sin agregar información.
-- El panel del Tercio está dentro del límite de TEFIIS aunque vive en otro repositorio: sin él no se puede resolver ningún reclamo, y usa la misma API que la aplicación de estudiantes.
+- Las relaciones de contexto y de contenedores se declaran antes que las de componentes para preservar la claridad semántica de cada nivel en Structurizr.
+- Se abre únicamente la API TEFIIS por ser el contenedor que concentra las reglas de negocio, manteniendo cerrados los demás contenedores.
+- Cada componente agrupa una responsabilidad clara de negocio descrita en una sola línea, cumpliendo con la regla de mantener entre 4 y 8 componentes por contenedor.
+- El panel del Tercio y Administración está dentro del límite de TEFIIS aunque vive en un repositorio independiente (`sistema-admin`), ya que opera directamente sobre la misma API central.

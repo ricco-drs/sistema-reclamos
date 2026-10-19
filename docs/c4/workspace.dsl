@@ -13,14 +13,12 @@ workspace "TEFIIS" "Gestión de reclamos estudiantiles de la FIIS-UNI" {
             spa = container "Aplicación de estudiantes" "Reclamos, chat con Tefi, perfil y seguimiento." "React 19, TypeScript, Vite"
             panel = container "Panel del Tercio y Administración" "Bandeja, expediente, estados, cursos resueltos y respuestas." "React, repositorio sistema-admin"
             api = container "API TEFIIS" "Reglas de reclamos, sesiones, Tefi, correos y auditoría." "Node.js 22, Express 5" {
-                auth = component "requireAdminAuth" "Verifica el token de Firebase y la lista de administradores." "Middleware Express"
-                handler = component "guardarCursosHandler" "Pasa de HTTP al caso de uso y traduce los errores." "backend/presentacion"
-                log = component "logActividad" "Escribe la auditoría en activity_log." "server.js"
-                casoDeUso = component "crearGuardarCursosResueltos" "Valida, lee, prepara y guarda." "backend/aplicacion"
-                reglas = component "cursosResueltos" "Listas de hasta 40 cursos; historial de 50 con autor y fecha." "backend/dominio"
-                puerto = component "RepositorioCursosResueltos" "obtener(id) y guardar(id, valor)." "backend/dominio"
-                supabase = component "repositorioCursosSupabase" "PostgREST sobre reclamos.cursos_resueltos." "backend/infraestructura"
-                memoria = component "repositorioCursosMemoria" "Map en memoria para pruebas y demostración." "backend/infraestructura"
+                auth = component "Componente de Autenticación y Autorización" "Valida tokens de Firebase, verifica listas de administradores y protege rutas privadas." "server.js (Middleware)"
+                reclamos = component "Componente de Gestión de Reclamos y Cursos" "Gestiona la recepción, validación, cambios de estado, evaluación y resolución de cursos." "server.js y backend/"
+                tefi = component "Componente de Asistente Virtual Tefi" "Atiende consultas en lenguaje natural usando RAG sobre los reglamentos con Gemini." "promptTefi.js y server.js"
+                notificaciones = component "Componente de Notificaciones" "Compone y envía correos de confirmación, códigos de acceso y resoluciones vía Brevo." "server.js"
+                auditoria = component "Componente de Auditoría y Trazabilidad" "Registra de forma inmutable las acciones administrativas y eventos del sistema en activity_log." "server.js"
+                documentos = component "Componente de Gestión de Documentos" "Valida archivos PDF del SIGA y evidencias, gestionando URLs firmadas en Storage." "server.js"
             }
             bd = container "Base de datos" "reclamos, respuestas_reclamo, activity_log, conversaciones, app_settings, documentos_estudiante." "PostgreSQL en Supabase" "Almacén de datos"
             archivos = container "Archivos" "PDF del SIGA y evidencias." "Supabase Storage" "Almacén de datos"
@@ -47,17 +45,21 @@ workspace "TEFIIS" "Gestión de reclamos estudiantiles de la FIIS-UNI" {
         api -> bd "Lee y escribe reclamos, respuestas, auditoría y configuración" "PostgREST/HTTPS"
         api -> archivos "Guarda PDF y firma URL" "HTTPS"
 
-        # Componentes de la rodaja «registrar cursos resueltos».
-        panel -> auth "PUT /api/admin/reclamos/:id/cursos-resueltos" "JSON/HTTPS, token de Firebase"
-        auth -> handler "Pasa la petición con adminEmail"
-        handler -> casoDeUso "Invoca con id, admin y listas"
-        handler -> log "Registra la decisión"
-        casoDeUso -> reglas "Valida y arma el historial"
-        casoDeUso -> puerto "obtener / guardar"
-        supabase -> puerto "Implementa"
-        memoria -> puerto "Implementa"
-        supabase -> bd "SELECT y PATCH" "PostgREST/HTTPS"
-        log -> bd "INSERT en activity_log" "PostgREST/HTTPS"
+        # Componentes de la API TEFIIS (Nivel 3).
+        spa -> reclamos "Registra reclamos y consulta estado de expedientes" "JSON/HTTPS"
+        spa -> tefi "Envía preguntas sobre reglamentos de matrícula" "JSON/HTTPS"
+        spa -> documentos "Sube evidencias y PDFs del SIGA" "Multipart/HTTPS"
+        panel -> auth "Envía peticiones administrativas con token de Firebase" "JSON/HTTPS, Bearer Token"
+        panel -> reclamos "Lista reclamos, cambia estados, resuelve cursos y envía respuestas" "JSON/HTTPS"
+        auth -> reclamos "Autoriza el acceso a rutas protegidas"
+        reclamos -> notificaciones "Solicita envío de correos ante cambios de estado y resoluciones"
+        reclamos -> auditoria "Registra cada decisión y cambio de estado administrativo"
+        auth -> firebase "Verifica validez del token y obtiene identidad" "Admin SDK"
+        tefi -> gemini "Envía consultas con búsqueda semántica en reglamentos" "JSON/HTTPS"
+        notificaciones -> brevo "Envía correos electrónicos transaccionales" "HTTP"
+        reclamos -> bd "Lee y escribe reclamos, cursos resueltos y respuestas" "PostgREST/HTTPS"
+        auditoria -> bd "Inserta eventos en activity_log" "PostgREST/HTTPS"
+        documentos -> archivos "Guarda archivos PDF y genera URLs firmadas" "HTTPS"
     }
 
     views {
@@ -72,7 +74,7 @@ workspace "TEFIIS" "Gestión de reclamos estudiantiles de la FIIS-UNI" {
             autolayout tb
         }
         component api "Componentes" {
-            title "Componentes de la API TEFIIS: registrar cursos resueltos"
+            title "Componentes de la API TEFIIS"
             include *
             autolayout tb
         }

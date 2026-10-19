@@ -79,3 +79,5 @@ Para levantar el sistema completo hacen falta cuentas en cinco servicios:
 - **Los códigos de verificación viven en la memoria del proceso.** Un reinicio de la API los borra, y con dos instancias el código pedido en una no sirve en la otra.
 - **Fallas silenciosas.** La bandeja del panel no pagina y PostgREST corta en 1 000 filas; `logActividad` no espera ni reintenta; `sendEmail` no tiene timeout, así que un proveedor lento deja la petición colgada en lugar de pasar al siguiente.
 - **Reglas que solo valida la interfaz.** El formato del código UNI no se comprueba en el servidor, y dos reenvíos simultáneos del mismo reclamo pueden crear dos reclamos.
+
+12/09/2026: resultado aprobado con observaciones

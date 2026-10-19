@@ -1,8 +1,16 @@
 # Costo del cambio
 
-Fecha: 9 de octubre de 2026. Equipo: TEFIIS. Integrantes: completar por el grupo.
+Fecha: 9 de octubre de 2026. Equipo: TEFIIS.
 
-Estos datos corresponden a la ejecución del caso. El requisito se leyó antes de cronometrar, se revisaron ambas estructuras y se compartió la preparación de las pruebas. Los tiempos no permiten concluir que un estilo sea más rápido para una persona.
+| Nombre completo | Código |
+| --- | --- |
+| Albino Soto Christopher Henrry | 20231158C |
+| Castro Aguirre Lenin Giomar | 20240243J |
+| Nuñez Villazana Franz Pool | 20244028F |
+| Puris Ricaldi Roy Farid | 20244011F |
+| Rashuaman Sapallanay Ricco Didier | 20231242D |
+
+El requisito se leyó antes de cronometrar y ambas versiones compartieron la revisión inicial y la preparación de pruebas. Por ello, los tiempos no permiten concluir que un estilo sea más rápido para una persona.
 
 | Medición                                                      | A: un paquete | B: capas |
 | ------------------------------------------------------------- | ------------: | -------: |
@@ -14,21 +22,21 @@ Estos datos corresponden a la ejecución del caso. El requisito se leyó antes d
 | Pruebas nuevas que fallaron antes de corregirse               |           0   |      1   |
 | Archivos inspeccionados durante la revisión inicial           |           4   |      7   |
 
-La última fila es un inventario observado, no un conteo de búsquedas independientes durante la implementación. Se inspeccionaron todos los archivos Java: modelo, servicio, almacenamiento y pruebas en A; modelo, servicio, reglas, puerto, adaptador y dos archivos de pruebas en B.
+La última fila cuenta archivos inspeccionados, no búsquedas independientes. Se revisaron todos los archivos Java: modelo, servicio, almacenamiento y pruebas en A; modelo, servicio, reglas, puerto, adaptador y dos archivos de pruebas en B.
 
-Los errores iniciales se debieron al nuevo argumento obligatorio `motivo`. En A hubo seis llamadas incompatibles distribuidas en cuatro pruebas. En B hubo seis llamadas incompatibles en cuatro pruebas y un constructor incompatible en la prueba de infraestructura: cinco pruebas antiguas afectadas. No se eliminaron sus comprobaciones.
+El argumento obligatorio `motivo` rompió seis llamadas en cuatro pruebas de A. En B afectó seis llamadas en cuatro pruebas y un constructor en la prueba de infraestructura: cinco pruebas antiguas en total. Se adaptaron sin eliminar comprobaciones.
 
-La prueba nueva de devolución en B falló porque asumía que el primer elemento de la lista seguía siendo el préstamo devuelto. El repositorio falso reemplaza el registro y lo añade al final. Se corrigió la prueba para buscar por ID, manteniendo la comprobación del motivo. No se alteró el repositorio para satisfacer el orden de la prueba.
+La prueba nueva de devolución en B falló al asumir que el préstamo devuelto seguía primero en la lista; el repositorio falso lo añade al final al reemplazarlo. Se corrigió la prueba para buscar por ID y comprobar el motivo, sin modificar el repositorio.
 
 ## Conclusión
 
-1. B concentró las dos reglas nuevas en `ReglasDePrestamo`. A necesitó repetirlas en préstamo normal y urgente. Esa es una reducción concreta de duplicación.
-2. B no redujo los archivos afectados: necesitó cinco frente a tres. La nueva firma del modelo también afectó a su prueba de infraestructura. Menos duplicación no significa menos archivos.
-3. Para TEFIIS se aplica separación por capas dentro de la API existente, con dominio sin dependencias de infraestructura. El escenario de calidad es modificar las reglas de los cursos resueltos y probarlas sin conectar Supabase ni cambiar el panel administrativo.
+1. B centralizó las dos reglas nuevas en `ReglasDePrestamo`; A las repitió en los préstamos normales y urgentes. B redujo la duplicación.
+2. B modificó cinco archivos frente a tres en A, porque el cambio del modelo también afectó a su prueba de infraestructura. Menos duplicación no implica menos archivos.
+3. En TEFIIS se separó por capas la operación de cursos resueltos dentro de la API existente. El objetivo es cambiar y probar sus reglas sin Supabase ni cambios en el panel administrativo.
 
 ## Evidencia reproducible
 
-El caso completo está copiado en `laboratorio/costo-del-cambio/`. Los conteos corresponden al diff frente al commit original, conservado en `docs/evidencias/cambio-caso.patch`, no al número de archivos nuevos incorporados al repositorio TEFIIS.
+El caso está en `laboratorio/costo-del-cambio/`. Los conteos se obtuvieron del diff frente al commit original, conservado en `docs/evidencias/cambio-caso.patch`; no cuentan los archivos nuevos incorporados a TEFIIS.
 
 ```powershell
 git diff --stat -- version-a

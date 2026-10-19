@@ -68,7 +68,7 @@ Para levantar el sistema completo hacen falta cuentas en cinco servicios:
 
 1. Crear un `.env` dentro de `sistema-reclamos/` con `JWT_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `FIREBASE_SERVICE_ACCOUNT` (el JSON de la cuenta de servicio), `ADMIN_EMAILS`, `VITE_API_KEY` (Gemini), `FROM_EMAIL` y la clave de al menos un proveedor de correo (`BREVO_API_KEY`, `RESEND_API_KEY` o `MAILJET_API_KEY` con `MAILJET_SECRET_KEY`). Opcionales: `PORT`, `ALLOWED_ORIGINS`, `ADMIN_EMAILS_SOLO_LECTURA` y `VITE_API_URL`.
 2. En el editor SQL de Supabase, ejecutar los scripts de `sql/`. Ojo: no crean las tablas base (`reclamos`, `documentos_estudiante`, `activity_log`, `app_settings`), que se crearon a mano en producción.
-3. `npm run seed-rag` para subir a Gemini los PDF de `documentos_entrenamiento/`.
+3. Configurar en `app_settings`, clave `rag_store_name`, el identificador del store de Gemini File Search que contiene los documentos. El corpus se mantiene fuera del repositorio y no se vuelve a cargar en cada arranque.
 4. `npm run server` para la API (puerto 3005) y, en otra terminal, `npm run dev` para la aplicación (puerto 5173).
 
 ## 9. Qué le falta o le duele

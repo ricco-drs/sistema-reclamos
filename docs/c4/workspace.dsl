@@ -60,7 +60,7 @@ workspace "TEFIIS" "Gestión de reclamos estudiantiles de la FIIS-UNI" {
         reclamos -> bd "Lee y escribe reclamos, cursos resueltos y respuestas" "PostgREST/HTTPS"
         auditoria -> bd "Inserta eventos en activity_log" "PostgREST/HTTPS"
         documentos -> archivos "Guarda archivos PDF y genera URLs firmadas" "HTTPS"
-    }
+    }   
 
     views {
         systemContext tefiis "Contexto" {

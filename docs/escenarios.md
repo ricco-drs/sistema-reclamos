@@ -23,7 +23,7 @@ La regla que nos dimos: **si no sabemos con qué herramienta se va a medir, el e
 |---|---|
 | Fuente | 200 estudiantes de la FIIS en la última hora del plazo de reclamos de matrícula, muchos desde la red de la UNI y con una sola IP pública. |
 | Estímulo | Envían su reclamo casi al mismo tiempo; algunos lo repiten por un doble clic o porque la red falló. |
-| Artefacto | Ruta `POST /api/reclamos` de la API, función `siguiente_id_reclamo()` ([sql/secuencia_reclamos.sql](../sql/secuencia_reclamos.sql)) y tabla `reclamos` en PostgreSQL. |
+| Artefacto | Ruta `POST /api/reclamos` de la API, función `siguiente_id_reclamo()` ([sql/secuencia_reclamos.sql](../sistema-reclamos/sql/secuencia_reclamos.sql)) y tabla `reclamos` en PostgreSQL. |
 | Entorno | Hora punta, con una sola instancia de la API. |
 | Respuesta | Cada reclamo recibe un número único `REC-2026-NNNN` y queda guardado. Un reenvío idéntico del mismo estudiante dentro de 10 minutos devuelve el número ya asignado en lugar de crear otro reclamo. Si no se logra asignar un número tras 10 intentos, la API responde 503 con un mensaje que invita a reintentar. |
 | Medida | 0 reclamos perdidos, 0 números repetidos, 0 reclamos duplicados por reenvío y menos del 1 % de respuestas 5xx. Se comprueba con k6 (200 usuarios virtuales durante 5 minutos, con un 10 % de reenvíos) y con una consulta SQL que cruza las respuestas exitosas de k6 con las filas creadas. Semana 12. |
@@ -45,7 +45,7 @@ La regla que nos dimos: **si no sabemos con qué herramienta se va a medir, el e
 |---|---|
 | Fuente | Un estudiante con sesión válida, o una cuenta del panel configurada como de solo lectura. |
 | Estímulo | El estudiante pide el detalle de un reclamo que no es suyo o adjunta la evidencia de otro estudiante; la cuenta de solo lectura intenta cambiar el estado de un reclamo. |
-| Artefacto | Middlewares `requireStudentAuth` y `requireAdminAuth`, y las consultas filtradas por el correo de la sesión, en [backend/server.js](../backend/server.js). |
+| Artefacto | Middlewares `requireStudentAuth` y `requireAdminAuth`, y las consultas filtradas por el correo de la sesión, en [backend/server.js](../sistema-reclamos/backend/server.js). |
 | Entorno | Operación normal, con tokens válidos. |
 | Respuesta | Se rechaza la operación sin revelar datos: 404 para el reclamo ajeno, sin distinguir entre «no existe» y «no es tuyo»; 403 para la evidencia ajena y para cualquier escritura desde una cuenta de solo lectura. El correo que decide de quién son los datos sale siempre del token, nunca del cuerpo de la petición. |
 | Medida | 100 % de los intentos rechazados con el código esperado y 0 campos del reclamo ajeno en la respuesta. Se comprueba con una suite de autorización en `node:test`, de al menos 8 casos, que correrá en CI. Hoy esa suite no existe. Semana 10. |
@@ -56,7 +56,7 @@ La regla que nos dimos: **si no sabemos con qué herramienta se va a medir, el e
 |---|---|
 | Fuente | El Tercio. |
 | Estímulo | Pide cambiar una regla de los cursos resueltos; por ejemplo, conservar 100 entradas de historial en lugar de 50, o aceptar más de 40 cursos por lista. |
-| Artefacto | Dominio de la rodaja: [backend/dominio/cursosResueltos.js](../backend/dominio/cursosResueltos.js) y sus pruebas. |
+| Artefacto | Dominio de la rodaja: [backend/dominio/cursosResueltos.js](../sistema-reclamos/backend/dominio/cursosResueltos.js) y sus pruebas. |
 | Entorno | Tiempo de desarrollo, con el sistema en producción. |
 | Respuesta | El cambio se hace en el dominio y se prueba sin Supabase, sin Firebase y sin credenciales. No cambian el adaptador, el handler, el contrato HTTP ni el panel. |
 | Medida | 0 archivos modificados fuera de `backend/dominio/` y `backend/tests/`, y `npm test` en verde en menos de 5 s sin red (hoy: 12 pruebas en 0,07 s). Se comprueba con `git diff --stat` entre el commit anterior y el del cambio, y con la regla `dominio-limpio` en CI. |

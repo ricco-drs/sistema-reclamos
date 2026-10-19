@@ -1,0 +1,86 @@
+{
+  "id": "sistemas",
+  "especialidad": "Ingeniería de Sistemas",
+  "plan": "2026",
+  "creditosObligatorios": 184,
+  "creditosElectivos": 21,
+  "creditosTotales": 205,
+  "notaFila": "fila = pista temática usada solo para dibujar el diagrama",
+  "cursos": [
+    { "codigo": "FB101", "nombre": "Geometría analítica", "ciclo": 1, "fila": 8, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": [] },
+    { "codigo": "BMA01", "nombre": "Cálculo diferencial", "ciclo": 1, "fila": 7, "creditos": 5, "horasTeoria": 4, "horasPracticaLab": 2, "totalHoras": 6, "sistemaEvaluacion": "G", "preRequisitos": [] },
+    { "codigo": "BQU01", "nombre": "Química I", "ciclo": 1, "fila": 6, "creditos": 5, "horasTeoria": 4, "horasPracticaLab": 2, "totalHoras": 6, "sistemaEvaluacion": "F", "preRequisitos": [] },
+    { "codigo": "BIC01", "nombre": "Introducción a la computación", "ciclo": 1, "fila": 5, "creditos": 2, "horasTeoria": 1, "horasPracticaLab": 2, "totalHoras": 3, "sistemaEvaluacion": "F", "preRequisitos": [] },
+    { "codigo": "BRC01", "nombre": "Redacción y comunicación", "ciclo": 1, "fila": 2, "creditos": 2, "horasTeoria": 1, "horasPracticaLab": 2, "totalHoras": 3, "sistemaEvaluacion": "D", "preRequisitos": [] },
+    { "codigo": "SI121", "nombre": "Introducción a la Ingeniería de Sistemas", "ciclo": 1, "fila": 3, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": [] },
+    { "codigo": "BEF01", "nombre": "Ética y filosofía política", "ciclo": 1, "fila": 1, "creditos": 2, "horasTeoria": 1, "horasPracticaLab": 2, "totalHoras": 3, "sistemaEvaluacion": "D", "preRequisitos": [] },
+
+    { "codigo": "BMA03", "nombre": "Álgebra lineal", "ciclo": 2, "fila": 8, "creditos": 4, "horasTeoria": 3, "horasPracticaLab": 2, "totalHoras": 5, "sistemaEvaluacion": "G", "preRequisitos": ["FB101"] },
+    { "codigo": "BMA02", "nombre": "Cálculo integral", "ciclo": 2, "fila": 7, "creditos": 5, "horasTeoria": 4, "horasPracticaLab": 2, "totalHoras": 6, "sistemaEvaluacion": "G", "preRequisitos": ["BMA01"] },
+    { "codigo": "BRN01", "nombre": "Realidad nacional, constitución y derechos humanos", "ciclo": 2, "fila": 2, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": [] },
+    { "codigo": "BFI01", "nombre": "Física I", "ciclo": 2, "fila": 6, "creditos": 5, "horasTeoria": 4, "horasPracticaLab": 2, "totalHoras": 6, "sistemaEvaluacion": "F", "preRequisitos": ["BMA01"] },
+    { "codigo": "SI205", "nombre": "Algoritmia y estructuras de datos", "ciclo": 2, "fila": 5, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["BIC01"] },
+    { "codigo": "TE205", "nombre": "Dibujo y geometría descriptiva", "ciclo": 2, "fila": 9, "creditos": 2, "horasTeoria": 0, "horasPracticaLab": 4, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": ["FB101"] },
+
+    { "codigo": "FB301", "nombre": "Matemática discreta", "ciclo": 3, "fila": 9, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["BMA03"] },
+    { "codigo": "FB303", "nombre": "Cálculo multivariable", "ciclo": 3, "fila": 7, "creditos": 5, "horasTeoria": 4, "horasPracticaLab": 2, "totalHoras": 6, "sistemaEvaluacion": "G", "preRequisitos": ["BMA02"] },
+    { "codigo": "FB401", "nombre": "Física II", "ciclo": 3, "fila": 6, "creditos": 5, "horasTeoria": 4, "horasPracticaLab": 2, "totalHoras": 6, "sistemaEvaluacion": "F", "preRequisitos": ["BFI01"] },
+    { "codigo": "HU102", "nombre": "Desarrollo personal", "ciclo": 3, "fila": 1, "creditos": 2, "horasTeoria": 0, "horasPracticaLab": 4, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": ["BEF01"] },
+    { "codigo": "FB305", "nombre": "Estadística y probabilidades", "ciclo": 3, "fila": 8, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["BMA02"] },
+    { "codigo": "SI322", "nombre": "Ingeniería de requisitos", "ciclo": 3, "fila": 4, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI205"] },
+    { "codigo": "SI302", "nombre": "Programación orientada a objetos", "ciclo": 3, "fila": 5, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI205"] },
+
+    { "codigo": "FB403", "nombre": "Ecuaciones diferenciales", "ciclo": 4, "fila": 7, "creditos": 5, "horasTeoria": 4, "horasPracticaLab": 2, "totalHoras": 6, "sistemaEvaluacion": "G", "preRequisitos": ["FB303"] },
+    { "codigo": "BEG01", "nombre": "Economía general", "ciclo": 4, "fila": 2, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["BRN01"] },
+    { "codigo": "SI421", "nombre": "Arquitectura de computador y sistemas operativos", "ciclo": 4, "fila": 6, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["BIC01"] },
+    { "codigo": "FB405", "nombre": "Estadística aplicada", "ciclo": 4, "fila": 8, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["FB305"] },
+    { "codigo": "SI422", "nombre": "Ciencia integrativa de sistemas", "ciclo": 4, "fila": 3, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI121"] },
+    { "codigo": "SI405", "nombre": "Modelado conceptual de datos", "ciclo": 4, "fila": 5, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI322", "SI302"] },
+    { "codigo": "SI425", "nombre": "Transformación organizacional", "ciclo": 4, "fila": 4, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI322"] },
+
+    { "codigo": "GE702", "nombre": "Ingeniería económica", "ciclo": 5, "fila": 2, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["BEG01"] },
+    { "codigo": "SI505", "nombre": "Diseño de base de datos", "ciclo": 5, "fila": 5, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI405"] },
+    { "codigo": "SI524", "nombre": "Ingeniería de sistemas complejos", "ciclo": 5, "fila": 7, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["FB403", "SI422"] },
+    { "codigo": "SI523", "nombre": "Métodos estadísticos para aprendizaje automático", "ciclo": 5, "fila": 8, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["FB301", "FB405"] },
+    { "codigo": "SW507", "nombre": "Redes y comunicaciones", "ciclo": 5, "fila": 6, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI421", "FB401"] },
+    { "codigo": "SI526", "nombre": "Diseño empresarial I", "ciclo": 5, "fila": 4, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI425"] },
+    { "codigo": "FB402", "nombre": "Cálculo numérico", "ciclo": 5, "fila": 9, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["FB301"] },
+
+    { "codigo": "SI621", "nombre": "Gestión empresarial", "ciclo": 6, "fila": 2, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["GE702"] },
+    { "codigo": "SI501", "nombre": "Investigación de operaciones I", "ciclo": 6, "fila": 8, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["FB405"] },
+    { "codigo": "SI622", "nombre": "Ingeniería de Sistemas basada en modelos", "ciclo": 6, "fila": 7, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI524"] },
+    { "codigo": "SI077", "nombre": "Inteligencia artificial", "ciclo": 6, "fila": 9, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI523"] },
+    { "codigo": "SI624", "nombre": "Ingeniería de datos", "ciclo": 6, "fila": 5, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI505"] },
+    { "codigo": "SI625", "nombre": "Diseño empresarial II", "ciclo": 6, "fila": 4, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI526"] },
+    { "codigo": "HU501", "nombre": "Taller de efectividad personal", "ciclo": 6, "fila": 1, "creditos": 2, "horasTeoria": 0, "horasPracticaLab": 4, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": ["HU102"] },
+
+    { "codigo": "SI150", "nombre": "Analítica de datos", "ciclo": 7, "fila": 9, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI077", "SI624"] },
+    { "codigo": "SI601", "nombre": "Investigación de operaciones II", "ciclo": 7, "fila": 8, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI501"] },
+    { "codigo": "SI707", "nombre": "Ingeniería de software", "ciclo": 7, "fila": 6, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI505"] },
+    { "codigo": "HU301", "nombre": "Metodología de la investigación", "ciclo": 7, "fila": 1, "creditos": 2, "horasTeoria": 0, "horasPracticaLab": 4, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": ["SI523"] },
+    { "codigo": "SI724", "nombre": "Sistemas de información", "ciclo": 7, "fila": 5, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI624"] },
+    { "codigo": "SI723", "nombre": "Ingeniería de procesos digitales", "ciclo": 7, "fila": 3, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["HU501"] },
+
+    { "codigo": "SI821", "nombre": "Diseño organizacional y gestión del cambio", "ciclo": 8, "fila": 2, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["HU501", "SI621"] },
+    { "codigo": "SI822", "nombre": "Machine Learning", "ciclo": 8, "fila": 8, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI150", "SI601"] },
+    { "codigo": "SI701", "nombre": "Modelado sistémico y simulación", "ciclo": 8, "fila": 7, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI622", "SI601"] },
+    { "codigo": "SI155", "nombre": "Ciberseguridad", "ciclo": 8, "fila": 6, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI707"] },
+    { "codigo": "SI823", "nombre": "Arquitectura en la nube y servicios", "ciclo": 8, "fila": 5, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SW507", "SI724"] },
+    { "codigo": "SI824", "nombre": "Automatización de procesos", "ciclo": 8, "fila": 3, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI723"] },
+
+    { "codigo": "SI922", "nombre": "Formulación y evaluación de proyectos", "ciclo": 9, "fila": 3, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI824"] },
+    { "codigo": "SI924", "nombre": "Data lake y lakehouse", "ciclo": 9, "fila": 5, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "G", "preRequisitos": ["SI823"] },
+    { "codigo": "SI905", "nombre": "Taller de proyecto de investigación", "ciclo": 9, "fila": 1, "creditos": 2, "horasTeoria": 0, "horasPracticaLab": 4, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": ["HU301"] },
+    { "codigo": "SI921", "nombre": "Taller integrador de analítica", "ciclo": 9, "fila": 8, "creditos": 2, "horasTeoria": 0, "horasPracticaLab": 4, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": ["SI822", "SI701"] },
+
+    { "codigo": "SI021", "nombre": "Taller integrador de transformación organizacional", "ciclo": 10, "fila": 2, "creditos": 2, "horasTeoria": 0, "horasPracticaLab": 4, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": ["SI821"] },
+    { "codigo": "SI025", "nombre": "Dirección de proyectos", "ciclo": 10, "fila": 3, "creditos": 3, "horasTeoria": 2, "horasPracticaLab": 2, "totalHoras": 4, "sistemaEvaluacion": "F", "preRequisitos": ["SI922"] },
+    { "codigo": "SI036", "nombre": "Taller de investigación", "ciclo": 10, "fila": 1, "creditos": 2, "horasTeoria": 0, "horasPracticaLab": 4, "totalHoras": 4, "sistemaEvaluacion": "D", "preRequisitos": ["SI905"] }
+  ],
+  "electivos": [
+    { "ciclo": 7, "creditos": 6 },
+    { "ciclo": 8, "creditos": 3 },
+    { "ciclo": 9, "creditos": 6 },
+    { "ciclo": 10, "creditos": 6 }
+  ]
+}

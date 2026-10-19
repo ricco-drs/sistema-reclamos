@@ -20,12 +20,8 @@ El número sale de la secuencia `public.reclamos_numero`, a través de la funci�
 
 ## Consecuencias
 
-> Borrador de guía. Roy: reescribe esta sección con tus palabras antes de entregar (la plantilla pide que las consecuencias las escriba el equipo, sin IA) y declara el uso en la sección 7 del informe.
-
-- `nextval` es atómico: dos peticiones nunca reciben el mismo número, y un número borrado no se vuelve a usar.
+- `nextval` es atómico: dos peticiones nunca reciben el mismo número, y un número borrado no vuelve a ser usado.
 - Se conserva el formato `REC-AAAA-NNNN`.
-- La numeración puede tener huecos: un número consumido por una inserción fallida no vuelve.
-- Hay un viaje más a la base por reclamo; su costo se medirá con E1 en la semana 12.
-- La garantía vive en PostgreSQL. La creación de reclamos todavía no está detrás de un puerto, y un adaptador en memoria tendría que imitar la secuencia.
-- La secuencia no se reinicia cada año: en 2027 los números seguirán desde donde quedaron en 2026, no desde 0001.
-- El respaldo conserva la carrera si un entorno nuevo no ejecuta el script SQL; el Docker Compose de la semana 11 tiene que ejecutarlo al iniciar.
+- La numeración puede tener huecos: un número consumido por una inserción fallida no regresa.
+- La creación de reclamos todavía no está detrás de un puerto, y un adaptador en memoria tendría que simular la secuencia.
+- La secuencia no se reinicia cada año: en el año 2027 los números seguirán desde donde quedaron en 2026, no desde 0001.

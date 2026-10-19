@@ -21,9 +21,9 @@ Vale para las tres figuras. Structurizr escribe los tipos en inglés dentro de c
 
 ![Contexto del sistema TEFIIS](img/structurizr-Contexto.png)
 
-**Qué muestra.** TEFIIS como una sola caja, las dos personas que lo usan y los cuatro servicios externos de los que depende.
+**Qué muestra.** TEFIIS como una sola caja, las tres personas que interactúan con el sistema (Estudiante UNI-FIIS, Miembro del tercio estudiantil y Administrador del sistema) y los tres servicios externos de los que depende (Brevo, Servicio LLM con Gemini y Firebase Authentication).
 
-**Observación del equipo.** El estudiante y el Tercio entran por puertas distintas al mismo sistema y nunca comparten pantalla. Todo lo que sale de TEFIIS es un servicio de terceros: cada flecha hacia abajo es una dependencia que puede fallar sin que el equipo pueda arreglarla, y de una de ellas nace el escenario E5. El correo le llega al estudiante a través de los proveedores; TEFIIS no tiene servidor de correo propio. El servicio M2 es el único externo que no se configura en la API: lo llama directamente la aplicación de estudiantes (figura 2).
+**Observación del equipo.** El estudiante, el Tercio y el Administrador acceden a través de sus respectivos portales hacia el mismo sistema. Todo lo que sale de TEFIIS hacia la derecha es un servicio de terceros (envío de correos mediante Brevo, consulta semántica al modelo LLM con Gemini y validación de usuarios con Firebase Authentication).
 
 Leyenda generada: [structurizr-Contexto-key.png](img/structurizr-Contexto-key.png)
 
@@ -33,7 +33,7 @@ Leyenda generada: [structurizr-Contexto-key.png](img/structurizr-Contexto-key.pn
 
 **Qué muestra.** Las dos aplicaciones web, la API y los dos almacenes de datos que forman TEFIIS, con la tecnología de cada uno y el protocolo de cada flecha. Las dos aplicaciones viven en repositorios distintos y hablan con una sola API.
 
-**Observación del equipo.** Una sola API concentra las reglas: las dos aplicaciones web pueden validar la forma de los datos, pero lo que importa se vuelve a comprobar en el servidor, porque cualquiera con un token puede llamar a la API sin pasar por la interfaz. La base de datos y los archivos están en Supabase, pero la API los usa como dos contenedores distintos: PostgREST para las tablas y Storage para los PDF, que solo se entregan con URL firmadas. La aplicación de estudiantes llama directamente al servicio M2 sin pasar por la API; es la única integración que la API no controla y la revisaremos con el flujo por eventos.
+**Observación del equipo.** Una sola API concentra las reglas: las dos aplicaciones web pueden validar la forma de los datos, pero lo que importa se vuelve a comprobar en el servidor, porque cualquiera con un token puede llamar a la API sin pasar por la interfaz. La base de datos y los archivos están en Supabase, pero la API los usa como dos contenedores distintos: PostgREST para las tablas y Storage para los PDF, que solo se entregan con URL firmadas.
 
 Leyenda generada: [structurizr-Contenedores-key.png](img/structurizr-Contenedores-key.png)
 

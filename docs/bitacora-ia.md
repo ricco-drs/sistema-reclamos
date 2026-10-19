@@ -40,8 +40,8 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude
-- **Para qué se usó:** Revisar, a nivel técnico, qué se podía mejorar en los primeros cinco escenarios de calidad (ESC-01 a ESC-05).
-- **Qué se aceptó:** Las nuevas métricas que sugirió Claude, que se dejaron en las medidas de los escenarios.
+- **Para qué se usó:** Revisar, a nivel técnico, qué se podía mejorar en los cinco escenarios de calidad del módulo M3 (`ESC-M3-01` a `ESC-M3-05`, en [atributos_calidad_M3.md](atributos_calidad_M3.md)).
+- **Qué se aceptó:** Las métricas que sugirió Claude para las medidas de los escenarios. Dos de las medidas se cambiaron: en rendimiento (`ESC-M3-02`) se pedía 1 s o menos y quedó en 2 s, y en confiabilidad (`ESC-M3-04`) se pedía que el 100 % de los correos se entregara y quedó en el 95 % dentro de 15 minutos. Lo demás que sugirió se aceptó.
 - **Qué se descartó y por qué:** Añadir más escenarios de calidad que no eran tan críticos. Se dejaron solo los más importantes.
 - **Registra:** Roy Puris
 

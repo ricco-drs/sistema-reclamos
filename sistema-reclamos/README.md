@@ -42,11 +42,6 @@ a
 ├── backend/                       # Servidor Express, API REST y parsing de documentos
 │   ├── server.js                  # Lógica del servidor, autenticación y llamadas a Gemini/Supabase
 │   └── pdfParser.js               # Algoritmo de parseo de Ficha Académica, Boleta y Avance
-├── docs/                          # Documentación del proyecto (Modelos C4, Requisitos, etc.)
-│   ├── arquitectura_c4_M3.md
-│   ├── atributos_calidad_M3.md
-│   ├── requisitos_funcionales_M3.md
-│   └── tefi.md                    # Análisis actual del módulo inteligente
 ├── documentos_entrenamiento/      # PDFs oficiales de la FIIS-UNI usados para alimentar el RAG de Tefi
 ├── src/                           # Frontend React + TypeScript
 │   ├── assets/                    # Recursos visuales (logotipos, iconos)

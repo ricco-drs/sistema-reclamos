@@ -1,0 +1,871 @@
+{
+  "id": "industrial",
+  "especialidad": "Ingeniería Industrial",
+  "plan": "2026",
+  "creditosObligatorios": 192,
+  "creditosElectivos": 15,
+  "creditosComplementarios": 5,
+  "creditosTotales": 212,
+  "notaFila": "fila = pista temática usada solo para dibujar el diagrama; reproduce la disposición del mapa oficial",
+  "cursos": [
+    {
+      "codigo": "BFI01",
+      "nombre": "Física I",
+      "ciclo": 1,
+      "fila": 3,
+      "creditos": 5,
+      "horasTeoria": 4,
+      "horasPracticaLab": 2,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": []
+    },
+    {
+      "codigo": "BIC01",
+      "nombre": "Introducción a la computación",
+      "ciclo": 1,
+      "fila": 8,
+      "creditos": 2,
+      "horasTeoria": 1,
+      "horasPracticaLab": 2,
+      "totalHoras": 3,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": []
+    },
+    {
+      "codigo": "BMA01",
+      "nombre": "Cálculo diferencial",
+      "ciclo": 1,
+      "fila": 5,
+      "creditos": 5,
+      "horasTeoria": 4,
+      "horasPracticaLab": 2,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "G",
+      "preRequisitos": []
+    },
+    {
+      "codigo": "BQU01",
+      "nombre": "Química I",
+      "ciclo": 1,
+      "fila": 4,
+      "creditos": 5,
+      "horasTeoria": 4,
+      "horasPracticaLab": 2,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": []
+    },
+    {
+      "codigo": "FB101",
+      "nombre": "Geometría analítica",
+      "ciclo": 1,
+      "fila": 7,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "G",
+      "preRequisitos": []
+    },
+    {
+      "codigo": "GE101",
+      "nombre": "Introducción a la Ingeniería Industrial",
+      "ciclo": 1,
+      "fila": 2,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": []
+    },
+    {
+      "codigo": "BMA02",
+      "nombre": "Cálculo integral",
+      "ciclo": 2,
+      "fila": 5,
+      "creditos": 5,
+      "horasTeoria": 4,
+      "horasPracticaLab": 2,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "G",
+      "preRequisitos": [
+        "BMA01"
+      ]
+    },
+    {
+      "codigo": "BMA03",
+      "nombre": "Álgebra lineal",
+      "ciclo": 2,
+      "fila": 7,
+      "creditos": 4,
+      "horasTeoria": 3,
+      "horasPracticaLab": 2,
+      "totalHoras": 5,
+      "sistemaEvaluacion": "G",
+      "preRequisitos": [
+        "FB101"
+      ]
+    },
+    {
+      "codigo": "BRC01",
+      "nombre": "Redacción y comunicación",
+      "ciclo": 2,
+      "fila": 1,
+      "creditos": 2,
+      "horasTeoria": 1,
+      "horasPracticaLab": 2,
+      "totalHoras": 3,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": []
+    },
+    {
+      "codigo": "FB202",
+      "nombre": "Química II",
+      "ciclo": 2,
+      "fila": 4,
+      "creditos": 4,
+      "horasTeoria": 3,
+      "horasPracticaLab": 2,
+      "totalHoras": 5,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "BQU01"
+      ]
+    },
+    {
+      "codigo": "FB401",
+      "nombre": "Física II",
+      "ciclo": 2,
+      "fila": 3,
+      "creditos": 5,
+      "horasTeoria": 4,
+      "horasPracticaLab": 2,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "BFI01"
+      ]
+    },
+    {
+      "codigo": "TE205",
+      "nombre": "Dibujo y geometría descriptiva",
+      "ciclo": 2,
+      "fila": 2,
+      "creditos": 2,
+      "horasTeoria": 0,
+      "horasPracticaLab": 4,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": []
+    },
+    {
+      "codigo": "FB301",
+      "nombre": "Matemática discreta",
+      "ciclo": 3,
+      "fila": 7,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "BMA03"
+      ]
+    },
+    {
+      "codigo": "FB303",
+      "nombre": "Cálculo multivariable",
+      "ciclo": 3,
+      "fila": 6,
+      "creditos": 5,
+      "horasTeoria": 4,
+      "horasPracticaLab": 2,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "BMA02"
+      ]
+    },
+    {
+      "codigo": "FB305",
+      "nombre": "Estadística y probabilidades",
+      "ciclo": 3,
+      "fila": 5,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "BMA02"
+      ]
+    },
+    {
+      "codigo": "HU102",
+      "nombre": "Desarrollo personal",
+      "ciclo": 3,
+      "fila": 1,
+      "creditos": 2,
+      "horasTeoria": 0,
+      "horasPracticaLab": 4,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": [
+        "BRC01"
+      ]
+    },
+    {
+      "codigo": "SI205",
+      "nombre": "Algoritmia y estructura de datos",
+      "ciclo": 3,
+      "fila": 8,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "BIC01"
+      ]
+    },
+    {
+      "codigo": "TE302",
+      "nombre": "Diseño asistido por computador",
+      "ciclo": 3,
+      "fila": 2,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": [
+        "TE205"
+      ]
+    },
+    {
+      "codigo": "TE401",
+      "nombre": "Termodinámica",
+      "ciclo": 3,
+      "fila": 4,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "FB202"
+      ]
+    },
+    {
+      "codigo": "BEF01",
+      "nombre": "Ética y filosofía política",
+      "ciclo": 4,
+      "fila": 1,
+      "creditos": 2,
+      "horasTeoria": 1,
+      "horasPracticaLab": 2,
+      "totalHoras": 3,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": [
+        "HU102"
+      ]
+    },
+    {
+      "codigo": "BEG01",
+      "nombre": "Economía general",
+      "ciclo": 4,
+      "fila": 8,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "FB305"
+      ]
+    },
+    {
+      "codigo": "FB403",
+      "nombre": "Ecuaciones diferenciales",
+      "ciclo": 4,
+      "fila": 6,
+      "creditos": 5,
+      "horasTeoria": 4,
+      "horasPracticaLab": 2,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "FB303"
+      ]
+    },
+    {
+      "codigo": "FB405",
+      "nombre": "Estadística aplicada",
+      "ciclo": 4,
+      "fila": 5,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "FB305"
+      ]
+    },
+    {
+      "codigo": "SI150",
+      "nombre": "Analítica de datos",
+      "ciclo": 4,
+      "fila": 7,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "FB301",
+        "SI205"
+      ]
+    },
+    {
+      "codigo": "TE301",
+      "nombre": "Fisicoquímica y operaciones unitarias",
+      "ciclo": 4,
+      "fila": 4,
+      "creditos": 4,
+      "horasTeoria": 3,
+      "horasPracticaLab": 2,
+      "totalHoras": 5,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE401",
+        "FB401"
+      ]
+    },
+    {
+      "codigo": "TE501",
+      "nombre": "Electricidad y Electrónica Industrial",
+      "ciclo": 4,
+      "fila": 3,
+      "creditos": 4,
+      "horasTeoria": 3,
+      "horasPracticaLab": 2,
+      "totalHoras": 5,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "FB401"
+      ]
+    },
+    {
+      "codigo": "BRN01",
+      "nombre": "Realidad Nacional, Constitución y Derechos Humanos",
+      "ciclo": 5,
+      "fila": 1,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": [
+        "BEF01"
+      ]
+    },
+    {
+      "codigo": "GE502",
+      "nombre": "Ingeniería del trabajo I",
+      "ciclo": 5,
+      "fila": 2,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "G",
+      "preRequisitos": [
+        "GE101"
+      ]
+    },
+    {
+      "codigo": "GE602",
+      "nombre": "Contabilidad financiera",
+      "ciclo": 5,
+      "fila": 8,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "BEG01"
+      ]
+    },
+    {
+      "codigo": "GE604",
+      "nombre": "Administración y Organización",
+      "ciclo": 5,
+      "fila": 7,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "BEG01"
+      ]
+    },
+    {
+      "codigo": "SI501",
+      "nombre": "Investigación de Operaciones I",
+      "ciclo": 5,
+      "fila": 6,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "SI150",
+        "FB405"
+      ]
+    },
+    {
+      "codigo": "TE503",
+      "nombre": "Procesos industriales I",
+      "ciclo": 5,
+      "fila": 4,
+      "creditos": 4,
+      "horasTeoria": 2,
+      "horasPracticaLab": 4,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE301"
+      ]
+    },
+    {
+      "codigo": "TE601",
+      "nombre": "Ingeniería de materiales",
+      "ciclo": 5,
+      "fila": 3,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE501"
+      ]
+    },
+    {
+      "codigo": "GE603",
+      "nombre": "Ingeniería del trabajo II",
+      "ciclo": 6,
+      "fila": 2,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE502"
+      ]
+    },
+    {
+      "codigo": "GE606",
+      "nombre": "Costos y presupuestos",
+      "ciclo": 6,
+      "fila": 8,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE602"
+      ]
+    },
+    {
+      "codigo": "SI601",
+      "nombre": "Investigación de Operaciones II",
+      "ciclo": 6,
+      "fila": 6,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "SI501"
+      ]
+    },
+    {
+      "codigo": "TE602",
+      "nombre": "Procesos industriales II",
+      "ciclo": 6,
+      "fila": 4,
+      "creditos": 4,
+      "horasTeoria": 2,
+      "horasPracticaLab": 4,
+      "totalHoras": 6,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE503"
+      ]
+    },
+    {
+      "codigo": "TE603",
+      "nombre": "Control estadístico de procesos",
+      "ciclo": 6,
+      "fila": 5,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "FB405"
+      ]
+    },
+    {
+      "codigo": "TE604",
+      "nombre": "Maquinaria e instrumentación industrial",
+      "ciclo": 6,
+      "fila": 3,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE302",
+        "TE601"
+      ]
+    },
+    {
+      "codigo": "GE701",
+      "nombre": "Logística empresarial",
+      "ciclo": 7,
+      "fila": 7,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE604",
+        "GE606"
+      ]
+    },
+    {
+      "codigo": "GE702",
+      "nombre": "Ingeniería económica",
+      "ciclo": 7,
+      "fila": 8,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE606"
+      ]
+    },
+    {
+      "codigo": "HU301",
+      "nombre": "Metodología de la Investigación",
+      "ciclo": 7,
+      "fila": 1,
+      "creditos": 2,
+      "horasTeoria": 0,
+      "horasPracticaLab": 4,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": [
+        "BRN01"
+      ]
+    },
+    {
+      "codigo": "SI701",
+      "nombre": "Modelado sistémico y simulación",
+      "ciclo": 7,
+      "fila": 6,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "SI150",
+        "SI601"
+      ]
+    },
+    {
+      "codigo": "TE702",
+      "nombre": "Manufactura Inteligente",
+      "ciclo": 7,
+      "fila": 4,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "G",
+      "preRequisitos": [
+        "TE602",
+        "TE604"
+      ]
+    },
+    {
+      "codigo": "TE703",
+      "nombre": "Ingeniería de procesos",
+      "ciclo": 7,
+      "fila": 2,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "G",
+      "preRequisitos": [
+        "TE604",
+        "GE603"
+      ]
+    },
+    {
+      "codigo": "GE805",
+      "nombre": "Mercadotecnia",
+      "ciclo": 8,
+      "fila": 7,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE701"
+      ]
+    },
+    {
+      "codigo": "GE905",
+      "nombre": "Planeamiento y control de operaciones",
+      "ciclo": 8,
+      "fila": 6,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "SI701",
+        "GE701"
+      ]
+    },
+    {
+      "codigo": "GE906",
+      "nombre": "Gestión financiera",
+      "ciclo": 8,
+      "fila": 8,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE702"
+      ]
+    },
+    {
+      "codigo": "TE802",
+      "nombre": "Ingeniería del producto",
+      "ciclo": 8,
+      "fila": 2,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE703"
+      ]
+    },
+    {
+      "codigo": "TE803",
+      "nombre": "Sistemas integrados de calidad",
+      "ciclo": 8,
+      "fila": 5,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE603"
+      ]
+    },
+    {
+      "codigo": "GE802",
+      "nombre": "Gestión de la cadena de suministro",
+      "ciclo": 9,
+      "fila": 6,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE805",
+        "GE905"
+      ]
+    },
+    {
+      "codigo": "GE904",
+      "nombre": "Taller de proyecto de investigación",
+      "ciclo": 9,
+      "fila": 1,
+      "creditos": 2,
+      "horasTeoria": 0,
+      "horasPracticaLab": 4,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": [
+        "HU301"
+      ]
+    },
+    {
+      "codigo": "SI077",
+      "nombre": "Inteligencia Artificial",
+      "ciclo": 9,
+      "fila": 4,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE702"
+      ]
+    },
+    {
+      "codigo": "TE901",
+      "nombre": "Seguridad y salud ocupacional",
+      "ciclo": 9,
+      "fila": 5,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE803"
+      ]
+    },
+    {
+      "codigo": "TE903",
+      "nombre": "Automatización",
+      "ciclo": 9,
+      "fila": 3,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE702"
+      ]
+    },
+    {
+      "codigo": "GE004",
+      "nombre": "Taller de Investigación",
+      "ciclo": 10,
+      "fila": 1,
+      "creditos": 2,
+      "horasTeoria": 0,
+      "horasPracticaLab": 4,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "D",
+      "preRequisitos": [
+        "GE904"
+      ]
+    },
+    {
+      "codigo": "GE801",
+      "nombre": "Planeamiento y gestión estratégica",
+      "ciclo": 10,
+      "fila": 8,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE802",
+        "GE906"
+      ]
+    },
+    {
+      "codigo": "GE902",
+      "nombre": "Diseño y evaluación de proyectos",
+      "ciclo": 10,
+      "fila": 7,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "GE805",
+        "GE906"
+      ]
+    },
+    {
+      "codigo": "GE903",
+      "nombre": "Gestión del talento humano",
+      "ciclo": 10,
+      "fila": 6,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "F",
+      "preRequisitos": [
+        "TE901"
+      ]
+    },
+    {
+      "codigo": "TE001",
+      "nombre": "Sostenibilidad industrial",
+      "ciclo": 10,
+      "fila": 5,
+      "creditos": 3,
+      "horasTeoria": 2,
+      "horasPracticaLab": 2,
+      "totalHoras": 4,
+      "sistemaEvaluacion": "G",
+      "preRequisitos": [
+        "TE802",
+        "TE901"
+      ]
+    }
+  ],
+  "electivos": [
+    {
+      "ciclo": 6,
+      "creditos": 3
+    },
+    {
+      "ciclo": 7,
+      "creditos": 3
+    },
+    {
+      "ciclo": 8,
+      "creditos": 3
+    },
+    {
+      "ciclo": 9,
+      "creditos": 3
+    },
+    {
+      "ciclo": 10,
+      "creditos": 3
+    }
+  ]
+}

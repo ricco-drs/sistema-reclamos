@@ -1,0 +1,917 @@
+[
+  {
+    "codigo": "FB101",
+    "nombre": "Geometría Analítica",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 1
+  },
+  {
+    "codigo": "BMA01",
+    "nombre": "Cálculo Diferencial",
+    "creditos": 5,
+    "horasTeoria": 4,
+    "horasPracticaLab": 2,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 1
+  },
+  {
+    "codigo": "BQU01",
+    "nombre": "Química I",
+    "creditos": 5,
+    "horasTeoria": 4,
+    "horasPracticaLab": 2,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 1
+  },
+  {
+    "codigo": "BRC01",
+    "nombre": "Redacción y Comunicación",
+    "creditos": 2,
+    "horasTeoria": 1,
+    "horasPracticaLab": 2, 
+    "totalHoras": 3,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 1
+  },
+  {
+    "codigo": "SW101",
+    "nombre": "Introducción a la Ingeniería de Software",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 1
+  },
+  {
+    "codigo": "BIC01",
+    "nombre": "Introducción a la computación",
+    "creditos": 2,
+    "horasTeoria": 1,
+    "horasPracticaLab": 2,
+    "totalHoras": 3,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 1
+  },
+  {
+    "codigo": "HU102",
+    "nombre": "Desarrollo Personal",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 1
+  },
+  {
+    "codigo": "BMA03",
+    "nombre": "Álgebra lineal",
+    "creditos": 4,
+    "horasTeoria": 3,
+    "horasPracticaLab": 2,
+    "totalHoras": 5,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "FB101"
+    ],
+    "preRequisitosRaw": "FB101",
+    "tipo": "obligatorio",
+    "ciclo": 2
+  },
+  {
+    "codigo": "BMA02",
+    "nombre": "Cálculo Integral",
+    "creditos": 5,
+    "horasTeoria": 4,
+    "horasPracticaLab": 2,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "BMA01"
+    ],
+    "preRequisitosRaw": "BMA01",
+    "tipo": "obligatorio",
+    "ciclo": 2
+  },
+  {
+    "codigo": "FB301",
+    "nombre": "Matemática discreta",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 2
+  },
+  {
+    "codigo": "BFI01",
+    "nombre": "Física I",
+    "creditos": 5,
+    "horasTeoria": 4,
+    "horasPracticaLab": 2,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 2
+  },
+  {
+    "codigo": "TE205",
+    "nombre": "Dibujo y Geometría Descriptiva",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "FB101"
+    ],
+    "preRequisitosRaw": "FB101",
+    "tipo": "obligatorio",
+    "ciclo": 2
+  },
+  {
+    "codigo": "SI205",
+    "nombre": "Algoritmia y Estructura de Datos",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "BIC01",
+      "SW101"
+    ],
+    "preRequisitosRaw": "BIC01 AND SW101",
+    "tipo": "obligatorio",
+    "ciclo": 2
+  },
+  {
+    "codigo": "FB303",
+    "nombre": "Cálculo Multivariable",
+    "creditos": 5,
+    "horasTeoria": 4,
+    "horasPracticaLab": 2,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "BMA03",
+      "BMA02"
+    ],
+    "preRequisitosRaw": "BMA03 AND BMA02",
+    "tipo": "obligatorio",
+    "ciclo": 3
+  },
+  {
+    "codigo": "FB305",
+    "nombre": "Estadística y Probabilidades",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "BMA02"
+    ],
+    "preRequisitosRaw": "BMA02",
+    "tipo": "obligatorio",
+    "ciclo": 3
+  },
+  {
+    "codigo": "FB401",
+    "nombre": "Física II",
+    "creditos": 5,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "BFI01"
+    ],
+    "preRequisitosRaw": "BFI01",
+    "tipo": "obligatorio",
+    "ciclo": 3
+  },
+  {
+    "codigo": "SW305",
+    "nombre": "Algoritmia y Estructura de Datos Avanzada",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SI205"
+    ],
+    "preRequisitosRaw": "SI205",
+    "tipo": "obligatorio",
+    "ciclo": 3
+  },
+  {
+    "codigo": "SW301",
+    "nombre": "Arquitectura de Computadoras I",
+    "creditos": 2,
+    "horasTeoria": 1,
+    "horasPracticaLab": 2,
+    "totalHoras": 3,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "FB301"
+    ],
+    "preRequisitosRaw": "FB301",
+    "tipo": "obligatorio",
+    "ciclo": 3
+  },
+  {
+    "codigo": "SW303",
+    "nombre": "Lenguajes de Programación I",
+    "creditos": 4,
+    "horasTeoria": 2,
+    "horasPracticaLab": 4,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SI205"
+    ],
+    "preRequisitosRaw": "SI205",
+    "tipo": "obligatorio",
+    "ciclo": 3
+  },
+  {
+    "codigo": "FB403",
+    "nombre": "Ecuaciones Diferenciales",
+    "creditos": 5,
+    "horasTeoria": 4,
+    "horasPracticaLab": 2,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "FB303"
+    ],
+    "preRequisitosRaw": "FB303",
+    "tipo": "obligatorio",
+    "ciclo": 4
+  },
+  {
+    "codigo": "BEF01",
+    "nombre": "Ética y Filosofía Política",
+    "creditos": 2,
+    "horasTeoria": 1,
+    "horasPracticaLab": 2,
+    "totalHoras": 3,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 4
+  },
+  {
+    "codigo": "SI405",
+    "nombre": "Modelado Conceptual de Datos",
+    "creditos": 4,
+    "horasTeoria": 3,
+    "horasPracticaLab": 2,
+    "totalHoras": 5,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW305"
+    ],
+    "preRequisitosRaw": "SW305",
+    "tipo": "obligatorio",
+    "ciclo": 4
+  },
+  {
+    "codigo": "SW405",
+    "nombre": "Ingeniería de Requerimientos I",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW303"
+    ],
+    "preRequisitosRaw": "SW303",
+    "tipo": "obligatorio",
+    "ciclo": 4
+  },
+  {
+    "codigo": "SW407",
+    "nombre": "Sistemas Operativos",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW301"
+    ],
+    "preRequisitosRaw": "SW301",
+    "tipo": "obligatorio",
+    "ciclo": 4
+  },
+  {
+    "codigo": "SW403",
+    "nombre": "Programación II (POO)",
+    "creditos": 4,
+    "horasTeoria": 2,
+    "horasPracticaLab": 4,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW303"
+    ],
+    "preRequisitosRaw": "SW303",
+    "tipo": "obligatorio",
+    "ciclo": 4
+  },
+  {
+    "codigo": "BEG01",
+    "nombre": "Economía General",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 5
+  },
+  {
+    "codigo": "BRN01",
+    "nombre": "Realidad Nacional y Derechos Humanos",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [],
+    "preRequisitosRaw": "",
+    "tipo": "obligatorio",
+    "ciclo": 5
+  },
+  {
+    "codigo": "SW501",
+    "nombre": "Arquitectura de Computadoras II",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW301"
+    ],
+    "preRequisitosRaw": "SW301",
+    "tipo": "obligatorio",
+    "ciclo": 5
+  },
+  {
+    "codigo": "SW503",
+    "nombre": "Análisis y Modelamiento de Comportamiento",
+    "creditos": 4,
+    "horasTeoria": 2,
+    "horasPracticaLab": 4,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW403"
+    ],
+    "preRequisitosRaw": "SW403",
+    "tipo": "obligatorio",
+    "ciclo": 5
+  },
+  {
+    "codigo": "SW505",
+    "nombre": "Construcción de Software I",
+    "creditos": 4,
+    "horasTeoria": 2,
+    "horasPracticaLab": 4,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "SI405",
+      "SW405"
+    ],
+    "preRequisitosRaw": "SI405 AND SW405",
+    "tipo": "obligatorio",
+    "ciclo": 5
+  },
+  {
+    "codigo": "SW507",
+    "nombre": "Redes y Comunicaciones",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW407",
+      "SW403"
+    ],
+    "preRequisitosRaw": "SW407 OR SW403",
+    "tipo": "obligatorio",
+    "ciclo": 5
+  },
+  {
+    "codigo": "HU501",
+    "nombre": "Taller de Efectividad Personal",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "HU102"
+    ],
+    "preRequisitosRaw": "HU102",
+    "tipo": "obligatorio",
+    "ciclo": 5
+  },
+  {
+    "codigo": "SI505",
+    "nombre": "Diseño de Base de Datos",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SI405"
+    ],
+    "preRequisitosRaw": "SI405",
+    "tipo": "obligatorio",
+    "ciclo": 5
+  },
+  {
+    "codigo": "SW608",
+    "nombre": "Lenguajes de Dominio Específico",
+    "creditos": 4,
+    "horasTeoria": 2,
+    "horasPracticaLab": 4,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW503",
+      "SW501"
+    ],
+    "preRequisitosRaw": "SW503 AND SW501",
+    "tipo": "obligatorio",
+    "ciclo": 6
+  },
+  {
+    "codigo": "SW609",
+    "nombre": "Sistemas de Gestión de BD",
+    "creditos": 4,
+    "horasTeoria": 2,
+    "horasPracticaLab": 4,
+    "totalHoras": 6,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SI505"
+    ],
+    "preRequisitosRaw": "SI505",
+    "tipo": "obligatorio",
+    "ciclo": 6
+  },
+  {
+    "codigo": "FB405",
+    "nombre": "Estadística Aplicada",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "FB305"
+    ],
+    "preRequisitosRaw": "FB305",
+    "tipo": "obligatorio",
+    "ciclo": 6
+  },
+  {
+    "codigo": "SI501",
+    "nombre": "Investigación de Operaciones I",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "FB305"
+    ],
+    "preRequisitosRaw": "FB305",
+    "tipo": "obligatorio",
+    "ciclo": 6
+  },
+  {
+    "codigo": "SW603",
+    "nombre": "Diseño de Software",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "SW503"
+    ],
+    "preRequisitosRaw": "SW503",
+    "tipo": "obligatorio",
+    "ciclo": 6
+  },
+  {
+    "codigo": "SW605",
+    "nombre": "Requerimientos II",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW405"
+    ],
+    "preRequisitosRaw": "SW405",
+    "tipo": "obligatorio",
+    "ciclo": 6
+  },
+  {
+    "codigo": "SW701",
+    "nombre": "Gestión de Configuración",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW603",
+      "SW609"
+    ],
+    "preRequisitosRaw": "SW603 AND SW609",
+    "tipo": "obligatorio",
+    "ciclo": 7
+  },
+  {
+    "codigo": "SW705",
+    "nombre": "Taller de Software I",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "SW605"
+    ],
+    "preRequisitosRaw": "SW605",
+    "tipo": "obligatorio",
+    "ciclo": 7
+  },
+  {
+    "codigo": "SW707",
+    "nombre": "Construcción de Software II",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW505"
+    ],
+    "preRequisitosRaw": "SW505",
+    "tipo": "obligatorio",
+    "ciclo": 7
+  },
+  {
+    "codigo": "SW708",
+    "nombre": "Arquitectura de Software",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW505"
+    ],
+    "preRequisitosRaw": "SW505",
+    "tipo": "obligatorio",
+    "ciclo": 7
+  },
+  {
+    "codigo": "SW709",
+    "nombre": "Verificación y Validación",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW603"
+    ],
+    "preRequisitosRaw": "SW603",
+    "tipo": "obligatorio",
+    "ciclo": 7
+  },
+  {
+    "codigo": "SW703",
+    "nombre": "Sistemas Embebidos",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW501",
+      "SW507"
+    ],
+    "preRequisitosRaw": "SW501 OR SW507",
+    "tipo": "obligatorio",
+    "ciclo": 7
+  },
+  {
+    "codigo": "SW803",
+    "nombre": "Machine Learning I",
+    "creditos": 4,
+    "horasTeoria": 3,
+    "horasPracticaLab": 2,
+    "totalHoras": 5,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "FB405",
+      "SW505"
+    ],
+    "preRequisitosRaw": "FB405 AND SW505",
+    "tipo": "obligatorio",
+    "ciclo": 8
+  },
+  {
+    "codigo": "SW805",
+    "nombre": "Ingeniería Económica",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "BEG01"
+    ],
+    "preRequisitosRaw": "BEG01",
+    "tipo": "obligatorio",
+    "ciclo": 8
+  },
+  {
+    "codigo": "SW809",
+    "nombre": "Calidad de Software",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW709"
+    ],
+    "preRequisitosRaw": "SW709",
+    "tipo": "obligatorio",
+    "ciclo": 8
+  },
+  {
+    "codigo": "SW807",
+    "nombre": "Procesos de Software",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW707"
+    ],
+    "preRequisitosRaw": "SW707",
+    "tipo": "obligatorio",
+    "ciclo": 8
+  },
+  {
+    "codigo": "GS804",
+    "nombre": "Gestión de Empresas Software",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "BEG01"
+    ],
+    "preRequisitosRaw": "BEG01",
+    "tipo": "obligatorio",
+    "ciclo": 8
+  },
+  {
+    "codigo": "HU801",
+    "nombre": "Taller Profesional",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "HU501"
+    ],
+    "preRequisitosRaw": "HU501",
+    "tipo": "obligatorio",
+    "ciclo": 8
+  },
+  {
+    "codigo": "SW901",
+    "nombre": "Machine Learning II",
+    "creditos": 4,
+    "horasTeoria": 3,
+    "horasPracticaLab": 2,
+    "totalHoras": 5,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW803"
+    ],
+    "preRequisitosRaw": "SW803",
+    "tipo": "obligatorio",
+    "ciclo": 9
+  },
+  {
+    "codigo": "SW902",
+    "nombre": "Tesis I",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "SW807"
+    ],
+    "preRequisitosRaw": "SW807",
+    "tipo": "obligatorio",
+    "ciclo": 9
+  },
+  {
+    "codigo": "SW903",
+    "nombre": "Innovación Tecnológica",
+    "creditos": 3,
+    "horasTeoria": 1,
+    "horasPracticaLab": 4,
+    "totalHoras": 5,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW805",
+      "SW803"
+    ],
+    "preRequisitosRaw": "SW805 AND SW803",
+    "tipo": "obligatorio",
+    "ciclo": 9
+  },
+  {
+    "codigo": "SW904",
+    "nombre": "Seguridad de Software",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW807"
+    ],
+    "preRequisitosRaw": "SW807",
+    "tipo": "obligatorio",
+    "ciclo": 9
+  },
+  {
+    "codigo": "SW907",
+    "nombre": "Metodologías Ágiles",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "SW809"
+    ],
+    "preRequisitosRaw": "SW809",
+    "tipo": "obligatorio",
+    "ciclo": 9
+  },
+  {
+    "codigo": "SW905",
+    "nombre": "Taller Software II",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "SW705"
+    ],
+    "preRequisitosRaw": "SW705",
+    "tipo": "obligatorio",
+    "ciclo": 9
+  },
+  {
+    "codigo": "SW001",
+    "nombre": "Tesis II",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "SW902"
+    ],
+    "preRequisitosRaw": "SW902",
+    "tipo": "obligatorio",
+    "ciclo": 10
+  },
+  {
+    "codigo": "SW002",
+    "nombre": "Tópicos Especiales",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW809"
+    ],
+    "preRequisitosRaw": "SW809",
+    "tipo": "obligatorio",
+    "ciclo": 10
+  },
+  {
+    "codigo": "SW003",
+    "nombre": "Gestión de Servicios Software",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "F",
+    "preRequisitos": [
+      "SW907"
+    ],
+    "preRequisitosRaw": "SW907",
+    "tipo": "obligatorio",
+    "ciclo": 10
+  },
+  {
+    "codigo": "SW004",
+    "nombre": "Gestión de Proyectos",
+    "creditos": 3,
+    "horasTeoria": 2,
+    "horasPracticaLab": 2,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "G",
+    "preRequisitos": [
+      "SW905"
+    ],
+    "preRequisitosRaw": "SW905",
+    "tipo": "obligatorio",
+    "ciclo": 10
+  },
+  {
+    "codigo": "SW005",
+    "nombre": "Emprendimiento Software",
+    "creditos": 2,
+    "horasTeoria": 0,
+    "horasPracticaLab": 4,
+    "totalHoras": 4,
+    "sistemaEvaluacion": "D",
+    "preRequisitos": [
+      "SW903"
+    ],
+    "preRequisitosRaw": "SW903",
+    "tipo": "obligatorio",
+    "ciclo": 10
+  }
+]

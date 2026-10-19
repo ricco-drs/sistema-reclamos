@@ -54,11 +54,9 @@ La API depende de cinco servicios en la nube, así que para levantarla hacen fal
 
 **2. Base de datos.** En el editor SQL de Supabase, ejecuta los scripts de [sql/](sql/). Crean la secuencia que numera los reclamos y las tablas `conversaciones` y `respuestas_reclamo`, y agregan la columna `cursos_resueltos`. Las tablas base (`reclamos`, `documentos_estudiante`, `activity_log` y `app_settings`) todavía no tienen script.
 
-**3. Base de conocimiento de Tefi.** Sube a Gemini los PDF de `documentos_entrenamiento/`:
+**3. Base de conocimiento de Tefi.** Los documentos se mantienen en Gemini File Search y no se incluyen en el repositorio. La API obtiene el identificador del store desde `app_settings`, clave `rag_store_name`. Para un entorno nuevo, configura el identificador de su store. No es necesario volver a cargar los documentos al iniciar la API con un store existente.
 
-```bash
-npm run seed-rag
-```
+El comando `npm run seed-rag` queda como herramienta de reconstrucción: requiere aportar los PDF en una carpeta local `documentos_entrenamiento/` y sustituye el store configurado al terminar. No forma parte del arranque habitual.
 
 **4. Arrancar.** La API y la aplicación, cada una en su terminal:
 
@@ -91,7 +89,6 @@ src/                     Aplicación de estudiantes (React 19, TypeScript, Vite)
   features/admin/        Registro y seguimiento de reclamos del estudiante (el nombre de la carpeta es heredado)
   features/profile/      Perfil y documentos
   data/                  Catálogo de cursos-sección y planes de estudio
-documentos_entrenamiento/  Reglamentos oficiales que consulta Tefi
 sql/                     Scripts de base de datos
 scripts/                 Indexación de Tefi y utilidades de datos
 laboratorio/             Laboratorio 4-5: costo del cambio (Java)

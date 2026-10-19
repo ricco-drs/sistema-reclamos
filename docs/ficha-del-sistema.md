@@ -2,7 +2,7 @@
 
 SW708 Arquitectura de Soluciones de Software, equipo 2. Opción A: el sistema del equipo.
 
-## 1. Nombre
+## 1. Nombre del sistema
 
 **TEFIIS**: sistema de gestión de reclamos estudiantiles de la FIIS, con el asistente Tefi.
 
@@ -12,14 +12,14 @@ Se desarrolló para el curso de Diseño de Software. El repositorio original emp
 
 No es un prototipo: lo usan los estudiantes de la FIIS para sus reclamos de matrícula desde el ciclo 2026-II. Cuando se creó la secuencia que numera los reclamos, la numeración de 2026 ya iba en `REC-2026-0366`.
 
-## 3. Quiénes lo hicieron
+## 3. Integrantes que participaron
 
 Del equipo actual:
 
-| Integrante | Qué hizo antes de este curso |
-|---|---|
-| Rashuaman Sapallanay, Ricco Didier | Desarrollo principal de la API y de la aplicación de estudiantes, y despliegue. |
-| Albino Soto, Christopher Henrry | Creó el repositorio original y la primera versión del chat con Tefi; documentación del módulo M3 (requisitos, atributos de calidad y bosquejo C4). |
+| Integrante                         | Qué hizo antes de este curso                                                                                                                       |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rashuaman Sapallanay, Ricco Didier | Desarrollo principal de la API y de la aplicación de estudiantes, y despliegue.                                                                    |
+| Albino Soto, Christopher Henrry    | Creó el repositorio original y la primera versión del chat con Tefi; documentación del módulo M3 (requisitos, atributos de calidad y bosquejo C4). |
 
 Castro Aguirre, Lenin Giomar; Nuñez Villazana, Franz Pool, y Puris Ricaldi, Roy Farid, se suman en este curso.
 
@@ -31,21 +31,21 @@ Tefi, un asistente con IA, responde dudas sobre reglamentos y trámites buscando
 
 ## 5. Lenguaje y stack
 
-| Parte | Tecnología |
-|---|---|
-| API | JavaScript, Node.js 22 y Express 5. Desplegada en Railway. |
-| Aplicación de estudiantes | TypeScript, React 19, Vite y Tailwind. Servida desde Cloudflare Workers. |
-| Panel del Tercio | React, en la carpeta `sistema-admin/`. |
-| Base de datos y archivos | PostgreSQL y Storage en Supabase. La API usa PostgREST. |
-| Autenticación | JWT propio para estudiantes (código de 4 dígitos por correo) y Firebase Authentication para el panel. |
-| Servicios externos | Gemini con File Search para Tefi; Brevo, Resend y Mailjet para el correo. |
-| Construcción y pruebas | npm (`npm ci`), `node:test`, dependency-cruiser y GitHub Actions. |
+| Parte                     | Tecnología                                                                                            |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| API                       | JavaScript, Node.js 22 y Express 5. Desplegada en Railway.                                            |
+| Aplicación de estudiantes | TypeScript, React 19, Vite y Tailwind. Servida desde Cloudflare Workers.                              |
+| Panel del Tercio          | React, en la carpeta `sistema-admin/`.                                                                |
+| Base de datos y archivos  | PostgreSQL y Storage en Supabase. La API usa PostgREST.                                               |
+| Autenticación             | JWT propio para estudiantes (código de 4 dígitos por correo) y Firebase Authentication para el panel. |
+| Servicios externos        | Gemini con File Search para Tefi; Brevo, Resend y Mailjet para el correo.                             |
+| Construcción y pruebas    | npm (`npm ci`), `node:test`, dependency-cruiser y GitHub Actions.                                     |
 
 ## 6. Repositorio
 
 https://github.com/ricco-drs/sistema-reclamos
 
-El repositorio tiene dos carpetas: `sistema-reclamos/`, con la API y la aplicación de estudiantes, y `sistema-admin/`, con el panel del Tercio. La documentación está en `docs/`, en la raíz. [Confirmar que el profesor ya es colaborador.]
+El repositorio tiene dos carpetas: `sistema-reclamos/`, con la API y la aplicación de estudiantes, y `sistema-admin/`, con el panel del Tercio. La documentación está en `docs/`, en la raíz.
 
 ## 7. Tres reglas de negocio
 

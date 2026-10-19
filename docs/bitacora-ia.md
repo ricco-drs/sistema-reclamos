@@ -38,12 +38,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 ## Semana 2 · 12 de setiembre
 
-- **¿Se usó IA?** POR COMPLETAR
-- **Herramienta:** POR COMPLETAR
-- **Para qué se usó:** POR COMPLETAR. Qué se le preguntó sobre los escenarios.
-- **Qué se aceptó:** POR COMPLETAR
-- **Qué se descartó y por qué:** POR COMPLETAR
-- **Registra:** POR COMPLETAR
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude
+- **Para qué se usó:** Revisar, a nivel técnico, qué se podía mejorar en los primeros cinco escenarios de calidad (ESC-01 a ESC-05).
+- **Qué se aceptó:** Las nuevas métricas que sugirió Claude, que se dejaron en las medidas de los escenarios.
+- **Qué se descartó y por qué:** Añadir más escenarios de calidad que no eran tan críticos. Se dejaron solo los más importantes.
+- **Registra:** Roy Puris
 
 ## Semana 3 · 19 de setiembre
 

@@ -17,15 +17,15 @@ Cada integrante completa la semana que le tocó, con estos campos y sin cambiar 
 
 Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis de `container` en Structurizr y me dio una versión vieja que corregí»). Donde dice `POR COMPLETAR` falta ese dato; se reemplaza y se borra la marca.
 
-| Semana | Papel de la IA según el curso |
-|---|---|
-| 1 | Guía de código ajeno: se verifica cada afirmación contra el código y se anota al menos un error suyo. |
-| 2 | Abogada del diablo: los escenarios se escriben a mano y la IA pregunta con qué instrumento se mide cada uno. |
-| 3 | Traductora a DSL: de la descripción en prosa al modelo C4. |
-| 4 | Generadora de alternativas: las consecuencias las escribe una persona. |
-| 5 | No se usa. |
-| 6 | No se usa. |
-| 7 | Detectora de sobreingeniería: el equipo rechaza por escrito lo que no corresponde. |
+| Semana | Papel de la IA según el curso                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------ |
+| 1      | Guía de código ajeno: se verifica cada afirmación contra el código y se anota al menos un error suyo.        |
+| 2      | Abogada del diablo: los escenarios se escriben a mano y la IA pregunta con qué instrumento se mide cada uno. |
+| 3      | Traductora a DSL: de la descripción en prosa al modelo C4.                                                   |
+| 4      | Generadora de alternativas: las consecuencias las escribe una persona.                                       |
+| 5      | No se usa.                                                                                                   |
+| 6      | No se usa.                                                                                                   |
+| 7      | Detectora de sobreingeniería: el equipo rechaza por escrito lo que no corresponde.                           |
 
 ## Semana 1 · 5 de setiembre
 
@@ -47,12 +47,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 ## Semana 3 · 19 de setiembre
 
-- **¿Se usó IA?** POR COMPLETAR
-- **Herramienta:** POR COMPLETAR
-- **Para qué se usó:** POR COMPLETAR. Qué se le pidió para pasar el modelo C4 a Structurizr DSL.
-- **Qué se aceptó:** POR COMPLETAR
-- **Qué se descartó y por qué:** POR COMPLETAR. Qué hubo que corregir.
-- **Registra:** POR COMPLETAR
+- **¿Se usó IA?** Sí
+- **Herramienta:** Antigravity
+- **Para qué se usó:** Se le pidió analizar la consistencia del borrador realizado en clase con el diagrama de contexto de structurizer, además de señalar debilidades en las 3 capas del diagrama.
+- **Qué se aceptó:** Se aceptó el cambio de sintaxis para actualizar el gráfico y se subsanó las inconsistencias señaladas.
+- **Qué se descartó y por qué:** Se descartó una observación que señalaba que no se contaba con un plan B respecto a Brevo (servicio de envío de email) debido a que sí se cuenta con un plan B configurado en el código.
+- **Registra:** Franz Nuñez
 
 ## Semana 4 · 9 de octubre
 

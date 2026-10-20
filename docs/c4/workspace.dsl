@@ -1,79 +1,80 @@
 workspace "TEFIIS" "Gestión de reclamos estudiantiles de la FIIS-UNI" {
 
     model {
-        estudiante = person "Estudiante" "Presenta reclamos de matrícula y consulta a Tefi."
-        tercio = person "Miembro del Tercio" "Revisa los reclamos, decide los cursos y responde."
+        estudiante = person "Estudiante UNI-FIIS" "Presenta reclamos de matrícula y realiza consultas a Tefi."
+        tercio = person "Miembro del tercio estudiantil" "Revisa los reclamos, decide los cursos y responde."
+        admin = person "Administrador del sistema" "Gestiona cuentas, permisos y configuración del sistema."
 
-        gemini = softwareSystem "Google Gemini" "Modelo de lenguaje con File Search." "Sistema externo"
-        correo = softwareSystem "Proveedores de correo" "Brevo, Resend y Mailjet." "Sistema externo"
-        firebase = softwareSystem "Firebase Authentication" "Cuentas del panel del Tercio." "Sistema externo"
-        m2 = softwareSystem "Servicio M2" "Recibe el expediente de cada reclamo." "Sistema externo"
+        gemini = softwareSystem "Servicio LLM Externo - File Search Gemini API" "RAG del BOT." "Sistema externo"
+        correo = softwareSystem "Proveedores de correo" "Brevo (primario), Resend y Mailjet (con respaldo automático)." "Sistema externo"
+        firebase = softwareSystem "Firebase Authentication" "Autenticación del administrador." "Sistema externo"
 
-        tefiis = softwareSystem "TEFIIS" "Registra y resuelve los reclamos de matrícula." {
+        tefiis = softwareSystem "Sistema TEFIIS" "Sistema de gestión de reclamos estudiantiles." {
             spa = container "Aplicación de estudiantes" "Reclamos, chat con Tefi, perfil y seguimiento." "React 19, TypeScript, Vite"
-            panel = container "Panel del Tercio" "Bandeja, expediente, estados, cursos resueltos y respuestas." "React, repositorio sistema-admin"
+            panel = container "Panel del Tercio y Administración" "Bandeja, expediente, estados, cursos resueltos y respuestas." "React, Vite"
             api = container "API TEFIIS" "Reglas de reclamos, sesiones, Tefi, correos y auditoría." "Node.js 22, Express 5" {
-                auth = component "requireAdminAuth" "Verifica el token de Firebase y la lista de administradores." "Middleware Express"
-                handler = component "guardarCursosHandler" "Pasa de HTTP al caso de uso y traduce los errores." "backend/presentacion"
-                log = component "logActividad" "Escribe la auditoría en activity_log." "server.js"
-                casoDeUso = component "crearGuardarCursosResueltos" "Valida, lee, prepara y guarda." "backend/aplicacion"
-                reglas = component "cursosResueltos" "Listas de hasta 40 cursos; historial de 50 con autor y fecha." "backend/dominio"
-                puerto = component "RepositorioCursosResueltos" "obtener(id) y guardar(id, valor)." "backend/dominio"
-                supabase = component "repositorioCursosSupabase" "PostgREST sobre reclamos.cursos_resueltos." "backend/infraestructura"
-                memoria = component "repositorioCursosMemoria" "Map en memoria para pruebas y demostración." "backend/infraestructura"
+                auth = component "Componente de Autenticación y Autorización" "Valida tokens de Firebase, verifica listas de administradores y protege rutas privadas." "server.js (Middleware)"
+                reclamos = component "Componente de Gestión de Reclamos y Cursos" "Gestiona la recepción, validación, cambios de estado, evaluación y resolución de cursos." "server.js y backend/"
+                tefi = component "Componente de Asistente Virtual Tefi" "Atiende consultas en lenguaje natural usando RAG sobre los reglamentos con Gemini." "promptTefi.js y server.js"
+                notificaciones = component "Componente de Notificaciones" "Compone y envía correos de confirmación, códigos de acceso y resoluciones vía Brevo/Resend/Mailjet." "server.js"
+                auditoria = component "Componente de Auditoría y Trazabilidad" "Registra de forma inmutable las acciones administrativas y eventos del sistema en activity_log." "server.js"
+                documentos = component "Componente de Gestión de Documentos" "Valida archivos PDF del SIGA y evidencias, gestionando URLs firmadas en Storage." "server.js"
             }
             bd = container "Base de datos" "reclamos, respuestas_reclamo, activity_log, conversaciones, app_settings, documentos_estudiante." "PostgreSQL en Supabase" "Almacén de datos"
             archivos = container "Archivos" "PDF del SIGA y evidencias." "Supabase Storage" "Almacén de datos"
         }
 
-        # Contexto. Se declara antes que las relaciones de contenedores para que
-        # Structurizr no deduzca la etiqueta a partir de una de ellas.
-        tefiis -> firebase "Autentica a los miembros del Tercio" "Firebase SDK y Admin SDK"
-        entregaCorreo = correo -> estudiante "Entrega códigos, confirmaciones y respuestas" "Correo electrónico"
+        # Contexto. Relaciones explícitas de nivel 1
+        estudiante -> tefiis "Usa portal de reclamos" "HTTPS"
+        tercio -> tefiis "Usa portal de miembro TEFIIS" "HTTPS"
+        admin -> tefiis "Usa portal de administrador" "HTTPS"
+        tefiis -> correo "Envía códigos, confirmaciones y respuestas" "JSON/HTTPS"
+        tefiis -> gemini "Consume el modelo" "HTTPS"
+        tefiis -> firebase "Valida usuario" "HTTPS"
 
-        # Contenedores. Van antes que las de componentes por la misma razón:
-        # sin ellas, el diagrama de contenedores mostraría «SELECT y PATCH» como
-        # todo lo que la API hace con la base, y solo una ruta del panel.
-        estudiante -> spa "Presenta reclamos, consulta a Tefi y sigue sus casos" "HTTPS"
-        tercio -> panel "Revisa reclamos, decide cursos y responde" "HTTPS"
-        spa -> api "Reclamos, documentos y preguntas a Tefi" "JSON/HTTPS, JWT"
-        spa -> m2 "Registra el expediente" "JSON/HTTPS"
+        # Contenedores.
+        estudiante -> spa "Usa portal de reclamos" "HTTPS"
+        tercio -> panel "Usa portal de miembro TEFIIS" "HTTPS"
+        admin -> panel "Usa portal de administrador" "HTTPS"
+        spa -> api "Envía reclamos, documentos y consultas a Tefi" "JSON/HTTPS, JWT"
         panel -> firebase "Inicia sesión" "Firebase SDK"
         panel -> api "Lista reclamos, cambia estados, registra cursos resueltos y responde" "JSON/HTTPS, token de Firebase"
         api -> firebase "Verifica el token" "Admin SDK"
         api -> gemini "Envía preguntas con búsqueda en los reglamentos" "JSON/HTTPS"
-        api -> correo "Envía códigos, confirmaciones y respuestas" "JSON/HTTPS"
+        api -> correo "Envía códigos, confirmaciones y respuestas con fallback" "JSON/HTTPS"
         api -> bd "Lee y escribe reclamos, respuestas, auditoría y configuración" "PostgREST/HTTPS"
         api -> archivos "Guarda PDF y firma URL" "HTTPS"
 
-        # Componentes de la rodaja «registrar cursos resueltos».
-        panel -> auth "PUT /api/admin/reclamos/:id/cursos-resueltos" "JSON/HTTPS, token de Firebase"
-        auth -> handler "Pasa la petición con adminEmail"
-        handler -> casoDeUso "Invoca con id, admin y listas"
-        handler -> log "Registra la decisión"
-        casoDeUso -> reglas "Valida y arma el historial"
-        casoDeUso -> puerto "obtener / guardar"
-        supabase -> puerto "Implementa"
-        memoria -> puerto "Implementa"
-        supabase -> bd "SELECT y PATCH" "PostgREST/HTTPS"
-        log -> bd "INSERT en activity_log" "PostgREST/HTTPS"
-    }
+        # Componentes de la API TEFIIS (Nivel 3).
+        spa -> reclamos "Registra reclamos y consulta estado de expedientes" "JSON/HTTPS"
+        spa -> tefi "Envía preguntas sobre reglamentos de matrícula" "JSON/HTTPS"
+        spa -> documentos "Sube evidencias y PDFs del SIGA" "Multipart/HTTPS"
+        panel -> auth "Envía peticiones administrativas con token de Firebase" "JSON/HTTPS, Bearer Token"
+        panel -> reclamos "Lista reclamos, cambia estados, resuelve cursos y envía respuestas" "JSON/HTTPS"
+        auth -> reclamos "Autoriza el acceso a rutas protegidas" "In-process"
+        reclamos -> notificaciones "Solicita envío de correos ante cambios de estado y resoluciones" "Llamada a función"
+        reclamos -> auditoria "Registra cada decisión y cambio de estado administrativo" "Llamada a función"
+        auth -> firebase "Verifica validez del token y obtiene identidad" "Admin SDK"
+        tefi -> gemini "Envía consultas con búsqueda semántica en reglamentos" "JSON/HTTPS"
+        notificaciones -> correo "Envía correos con fallback Brevo -> Resend -> Mailjet" "JSON/HTTPS"
+        reclamos -> bd "Lee y escribe reclamos, cursos resueltos y respuestas" "PostgREST/HTTPS"
+        auditoria -> bd "Inserta eventos en activity_log" "PostgREST/HTTPS"
+        documentos -> archivos "Guarda archivos PDF y genera URLs firmadas" "HTTPS"
+    }   
 
     views {
         systemContext tefiis "Contexto" {
             title "Contexto del sistema TEFIIS"
             include *
-            autolayout tb
+            autolayout lr
         }
         container tefiis "Contenedores" {
             title "Contenedores de TEFIIS"
             include *
-            # Ya se ve en el contexto; aquí empujaría al estudiante al fondo.
-            exclude entregaCorreo
             autolayout tb
         }
         component api "Componentes" {
-            title "Componentes de la API TEFIIS: registrar cursos resueltos"
+            title "Componentes de la API TEFIIS"
             include *
             autolayout tb
         }

@@ -29,6 +29,7 @@ Inventario de la carpeta `documentos_entrenamiento/`, retirada del repositorio. 
 | ley_universitaria_04_02_2022.pdf | 1147278 |
 | pago-matricula-rezagados.pdf | 2402 |
 | reglamento-de-matricula-29-03-2022.pdf | 2501185 |
+
 Total: 21 archivos (20 PDF y una imagen), 47,63 MiB.
 
 Los documentos se mantienen fuera del repositorio. Su consulta desde Tefi depende del acceso al store de Gemini File Search; no es necesario descargarlos al instalar o iniciar la API.

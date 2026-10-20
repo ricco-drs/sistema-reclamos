@@ -2,7 +2,7 @@
 
 ## Estado
 
-Aceptado. Fecha de registro: 18/10/2026.
+Aceptado. Registrado a posteriori: la decisión se tomó el 16/09/2026.
 
 ## Contexto
 

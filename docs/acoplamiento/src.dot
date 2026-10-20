@@ -1,0 +1,30 @@
+strict digraph "dependency-cruiser output"{
+    rankdir="LR" splines="true" overlap="false" nodesep="0.16" ranksep="0.18" fontname="Helvetica-bold" fontsize="9" style="rounded,bold,filled" fillcolor="#ffffff" compound="true"
+    node [shape="box" style="rounded, filled" height="0.2" color="black" fillcolor="#ffffcc" fontcolor="black" fontname="Helvetica" fontsize="9"]
+    edge [arrowhead="normal" arrowsize="0.6" penwidth="2.0" color="#00000033" fontname="Helvetica" fontsize="9"]
+
+    "src" [label=<src> tooltip="src" URL="src" fillcolor="#ccffcc" shape="box3d"]
+    "src" -> "src/assets"
+    "src" -> "src/features/admin/components"
+    "src" -> "src/features/chat/components"
+    "src" -> "src/features/profile/components"
+    "src" -> "src/hooks"
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] "src/assets" [label=<assets> tooltip="assets" URL="src/assets" shape="box3d"] }
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] "src/components" [label=<components> tooltip="components" URL="src/components" shape="box3d"] }
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] "src/data" [label=<data> tooltip="data" URL="src/data" shape="box3d"] }
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features" {label="features" "src/features" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features/admin" {label="admin" "src/features/admin" [width="0.05" shape="point" style="invis"] "src/features/admin/components" [label=<components> tooltip="components" URL="src/features/admin/components" shape="box3d"] } } }
+    "src/features/admin/components" -> "src/assets"
+    "src/features/admin/components" -> "src/features/admin/hooks"
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features" {label="features" "src/features" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features/admin" {label="admin" "src/features/admin" [width="0.05" shape="point" style="invis"] "src/features/admin/hooks" [label=<hooks> tooltip="hooks" URL="src/features/admin/hooks" shape="box3d"] } } }
+    "src/features/admin/hooks" -> "src/data"
+    "src/features/admin/hooks" -> "src/utils"
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features" {label="features" "src/features" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features/chat" {label="chat" "src/features/chat" [width="0.05" shape="point" style="invis"] "src/features/chat/components" [label=<components> tooltip="components" URL="src/features/chat/components" shape="box3d"] } } }
+    "src/features/chat/components" -> "src/assets"
+    "src/features/chat/components" -> "src/features/chat/hooks"
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features" {label="features" "src/features" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features/chat" {label="chat" "src/features/chat" [width="0.05" shape="point" style="invis"] "src/features/chat/hooks" [label=<hooks> tooltip="hooks" URL="src/features/chat/hooks" shape="box3d"] } } }
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features" {label="features" "src/features" [width="0.05" shape="point" style="invis"] subgraph "cluster_src/features/profile" {label="profile" "src/features/profile" [width="0.05" shape="point" style="invis"] "src/features/profile/components" [label=<components> tooltip="components" URL="src/features/profile/components" shape="box3d"] } } }
+    "src/features/profile/components" -> "src/components"
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] "src/hooks" [label=<hooks> tooltip="hooks" URL="src/hooks" shape="box3d"] }
+    "src/hooks" -> "src/utils"
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] "src/utils" [label=<utils> tooltip="utils" URL="src/utils" shape="box3d"] }
+}

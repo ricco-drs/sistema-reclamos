@@ -1,0 +1,43 @@
+strict digraph "dependency-cruiser output"{
+    rankdir="LR" splines="true" overlap="false" nodesep="0.16" ranksep="0.18" fontname="Helvetica-bold" fontsize="9" style="rounded,bold,filled" fillcolor="#ffffff" compound="true"
+    node [shape="box" style="rounded, filled" height="0.2" color="black" fillcolor="#ffffcc" fontcolor="black" fontname="Helvetica" fontsize="9"]
+    edge [arrowhead="normal" arrowsize="0.6" penwidth="2.0" color="#00000033" fontname="Helvetica" fontsize="9"]
+
+    "." [label=<.> tooltip="." URL="https://nodejs.org/api/..html" color="grey" fontcolor="grey" shape="box3d"]
+    "assert" [label=<assert> tooltip="assert" URL="https://nodejs.org/api/assert.html" color="grey" fontcolor="grey" shape="box3d"]
+    "backend" [label=<backend> tooltip="backend" URL="backend" shape="box3d"]
+    "backend" -> "src/data"
+    "backend" -> "backend/aplicacion"
+    "backend" -> "backend/infraestructura"
+    "backend" -> "backend/presentacion"
+    "backend" -> "node_modules/@google/genai/dist/node" [penwidth="1.0"]
+    "backend" -> "node_modules/cors/lib" [penwidth="1.0"]
+    "backend" -> "." [style="dashed" penwidth="1.0"]
+    "backend" -> "node_modules/dotenv/lib" [penwidth="1.0"]
+    "backend" -> "node_modules/express" [penwidth="1.0"]
+    "backend" -> "node_modules/express-rate-limit/dist" [penwidth="1.0"]
+    "backend" -> "firebase-admin"
+    "backend" -> "node_modules/jsonwebtoken" [penwidth="1.0"]
+    "backend" -> "node_modules/multer" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" "backend" [width="0.05" shape="point" style="invis"] "backend/aplicacion" [label=<aplicacion> tooltip="aplicacion" URL="backend/aplicacion" shape="box3d"] }
+    "backend/aplicacion" -> "backend/dominio"
+    subgraph "cluster_backend" {label="backend" "backend" [width="0.05" shape="point" style="invis"] "backend/dominio" [label=<dominio> tooltip="dominio" URL="backend/dominio" fillcolor="#ccffcc" shape="box3d"] }
+    subgraph "cluster_backend" {label="backend" "backend" [width="0.05" shape="point" style="invis"] "backend/infraestructura" [label=<infraestructura> tooltip="infraestructura" URL="backend/infraestructura" shape="box3d"] }
+    subgraph "cluster_backend" {label="backend" "backend" [width="0.05" shape="point" style="invis"] "backend/presentacion" [label=<presentacion> tooltip="presentacion" URL="backend/presentacion" shape="box3d"] }
+    subgraph "cluster_backend" {label="backend" "backend" [width="0.05" shape="point" style="invis"] "backend/tests" [label=<tests> tooltip="tests" URL="backend/tests" shape="box3d"] }
+    "backend/tests" -> "backend/aplicacion"
+    "backend/tests" -> "backend/dominio"
+    "backend/tests" -> "backend/infraestructura"
+    "backend/tests" -> "backend/presentacion"
+    "backend/tests" -> "assert" [style="dashed" penwidth="1.0"]
+    "backend/tests" -> "." [style="dashed" penwidth="1.0"]
+    "firebase-admin" [label=<firebase-admin> tooltip="firebase-admin" shape="box3d"]
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules" [width="0.05" shape="point" style="invis"] subgraph "cluster_node_modules/@google" {label="@google" "node_modules/@google" [width="0.05" shape="point" style="invis"] subgraph "cluster_node_modules/@google/genai" {label="genai" "node_modules/@google/genai" [width="0.05" shape="point" style="invis"] subgraph "cluster_node_modules/@google/genai/dist" {label="dist" "node_modules/@google/genai/dist" [width="0.05" shape="point" style="invis"] "node_modules/@google/genai/dist/node" [label=<node> tooltip="node" URL="https://www.npmjs.com/package/@google/genai" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] } } } }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules" [width="0.05" shape="point" style="invis"] subgraph "cluster_node_modules/cors" {label="cors" "node_modules/cors" [width="0.05" shape="point" style="invis"] "node_modules/cors/lib" [label=<lib> tooltip="lib" URL="https://www.npmjs.com/package/cors" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] } }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules" [width="0.05" shape="point" style="invis"] subgraph "cluster_node_modules/dotenv" {label="dotenv" "node_modules/dotenv" [width="0.05" shape="point" style="invis"] "node_modules/dotenv/lib" [label=<lib> tooltip="lib" URL="https://www.npmjs.com/package/dotenv" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] } }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules" [width="0.05" shape="point" style="invis"] "node_modules/express" [label=<express> tooltip="express" URL="https://www.npmjs.com/package/express" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules" [width="0.05" shape="point" style="invis"] subgraph "cluster_node_modules/express-rate-limit" {label="express-rate-limit" "node_modules/express-rate-limit" [width="0.05" shape="point" style="invis"] "node_modules/express-rate-limit/dist" [label=<dist> tooltip="dist" URL="https://www.npmjs.com/package/express-rate-limit" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] } }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules" [width="0.05" shape="point" style="invis"] "node_modules/jsonwebtoken" [label=<jsonwebtoken> tooltip="jsonwebtoken" URL="https://www.npmjs.com/package/jsonwebtoken" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules" [width="0.05" shape="point" style="invis"] "node_modules/multer" [label=<multer> tooltip="multer" URL="https://www.npmjs.com/package/multer" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_src" {label="src" "src" [width="0.05" shape="point" style="invis"] "src/data" [label=<data> tooltip="data" URL="src/data" shape="box3d"] }
+}

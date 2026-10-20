@@ -6,8 +6,8 @@ Este documento detalla la responsabilidad de cada componente y elemento modelado
 
 ## 1. Nivel 1: Diagrama de Contexto (Sistema TEFIIS)
 
-![Diagrama de Contexto](img/Contexto.svg)
-*Leyenda generada:* [Contexto-key.svg](img/Contexto-key.svg)
+![Diagrama de Contexto](img/Contexto-dark.svg)
+*Leyenda generada:* [Contexto-dark-key.svg](img/Contexto-dark-key.svg)
 
 ### Qué muestra
 TEFIIS como una sola caja negra de software central, los tres actores que interactúan con él a través de sus respectivos portales web (Estudiante UNI-FIIS, Miembro del tercio estudiantil y Administrador del sistema), y los tres servicios externos críticos de los que depende: **Proveedores de correo** (con respaldo automático entre Brevo, Resend y Mailjet), **Gemini API** para el asistente inteligente Tefi (RAG) y **Firebase Authentication** para la autenticación del panel administrativo.
@@ -41,8 +41,8 @@ TEFIIS como una sola caja negra de software central, los tres actores que intera
 
 ## 2. Nivel 2: Diagrama de Contenedores (Sistema TEFIIS)
 
-![Diagrama de Contenedores](img/Contenedores.svg)
-*Leyenda generada:* [Contenedores-key.svg](img/Contenedores-key.svg)
+![Diagrama de Contenedores](img/Contenedores-dark.svg)
+*Leyenda generada:* [Contenedores-dark-key.svg](img/Contenedores-dark-key.svg)
 
 ### Qué muestra
 La arquitectura de ejecución del sistema dividida en sus 5 contenedores desplegables o almacenes de datos: dos aplicaciones cliente en React (`Aplicación de estudiantes` y `Panel del Tercio y Administración`), una API backend central en `Node.js 22 / Express 5` que concentra las reglas de negocio, y dos contenedores de almacenamiento en Supabase (`Base de datos PostgreSQL` y `Storage de Archivos`), detallando los protocolos reales de comunicación entre ellos (`HTTPS`, `JSON/HTTPS con JWT/Bearer` y `PostgREST/HTTPS`).
@@ -68,8 +68,8 @@ La arquitectura de ejecución del sistema dividida en sus 5 contenedores despleg
 
 ## 3. Nivel 3: Diagrama de Componentes (API TEFIIS)
 
-![Diagrama de Componentes](img/Componentes.svg)
-*Leyenda generada:* [Componentes-key.svg](img/Componentes-key.svg)
+![Diagrama de Componentes](img/Componentes-dark.svg)
+*Leyenda generada:* [Componentes-dark-key.svg](img/Componentes-dark-key.svg)
 
 ### Qué muestra
 El contenedor central (`API TEFIIS`) abierto en sus 6 componentes lógicos de negocio: `Autenticación y Autorización`, `Gestión de Reclamos y Cursos`, `Asistente Virtual Tefi (RAG)`, `Notificaciones`, `Auditoría y Trazabilidad` y `Gestión de Documentos`, detallando sus dependencias internas y conexiones hacia los almacenes de datos y servicios externos.

@@ -8,6 +8,7 @@ workspace "TEFIIS" "Gestión de reclamos estudiantiles de la FIIS-UNI" {
         gemini = softwareSystem "Servicio LLM Externo - File Search Gemini API" "RAG del BOT." "Sistema externo"
         correo = softwareSystem "Proveedores de correo" "Brevo (primario), Resend y Mailjet (con respaldo automático)." "Sistema externo"
         firebase = softwareSystem "Firebase Authentication" "Autenticación del administrador." "Sistema externo"
+        m2 = softwareSystem "Servicio M2" "Recibe el expediente de cada reclamo." "Sistema externo"
 
         tefiis = softwareSystem "Sistema TEFIIS" "Sistema de gestión de reclamos estudiantiles." {
             spa = container "Aplicación de estudiantes" "Reclamos, chat con Tefi, perfil y seguimiento." "React 19, TypeScript, Vite"
@@ -31,12 +32,14 @@ workspace "TEFIIS" "Gestión de reclamos estudiantiles de la FIIS-UNI" {
         tefiis -> correo "Envía códigos, confirmaciones y respuestas" "JSON/HTTPS"
         tefiis -> gemini "Consume el modelo" "HTTPS"
         tefiis -> firebase "Valida usuario" "HTTPS"
+        tefiis -> m2 "Registra el expediente de cada reclamo" "JSON/HTTPS"
 
         # Contenedores.
         estudiante -> spa "Usa portal de reclamos" "HTTPS"
         tercio -> panel "Usa portal de miembro TEFIIS" "HTTPS"
         admin -> panel "Usa portal de administrador" "HTTPS"
         spa -> api "Envía reclamos, documentos y consultas a Tefi" "JSON/HTTPS, JWT"
+        spa -> m2 "Registra el expediente" "JSON/HTTPS"
         panel -> firebase "Inicia sesión" "Firebase SDK"
         panel -> api "Lista reclamos, cambia estados, registra cursos resueltos y responde" "JSON/HTTPS, token de Firebase"
         api -> firebase "Verifica el token" "Admin SDK"

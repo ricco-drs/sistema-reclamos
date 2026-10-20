@@ -6,15 +6,14 @@ Este documento detalla la responsabilidad de cada componente y elemento modelado
 
 ## 1. Nivel 1: Diagrama de Contexto (Sistema TEFIIS)
 
-![Diagrama de Contexto](img/Contexto-dark.svg)
-*Leyenda generada:* [Contexto-dark-key.svg](img/Contexto-dark-key.svg)
+![Diagrama de Contexto](img/Contexto.svg)
+*Leyenda generada:* [Contexto-key.svg](img/Contexto-key.svg)
 
 ### Qué muestra
-TEFIIS como una sola caja negra de software central, los tres actores que interactúan con él a través de sus respectivos portales web (Estudiante UNI-FIIS, Miembro del tercio estudiantil y Administrador del sistema), y los tres servicios externos críticos de los que depende: **Proveedores de correo** (con respaldo automático entre Brevo, Resend y Mailjet), **Gemini API** para el asistente inteligente Tefi (RAG) y **Firebase Authentication** para la autenticación del panel administrativo.
+TEFIIS como una sola caja negra de software central, los tres actores que interactúan con él a través de sus respectivos portales web (Estudiante UNI-FIIS, Miembro del tercio estudiantil y Administrador del sistema), y los cuatro servicios externos de los que depende: **Proveedores de correo** (con respaldo automático entre Brevo, Resend y Mailjet), **Gemini API** para el asistente inteligente Tefi (RAG), **Firebase Authentication** para la autenticación del panel administrativo y el **Servicio M2**, al que la aplicación de estudiantes envía el expediente de cada reclamo.
 
 ### Qué se decidió dejar afuera a propósito
 * **La entrega física del correo al estudiante:** Se omitió la flecha de retorno desde los proveedores de correo hacia el estudiante (y la infraestructura de buzones como Gmail o correo institucional). El sistema cumple su responsabilidad entregando la petición a la API del proveedor de correo; modelar el rebote al estudiante generaba un ciclo visual innecesario en la vista de contexto.
-* **Módulos no implementados:** Se excluyó deliberadamente cualquier integración con módulos teóricos de entregas previas (como un supuesto "Servicio M2"), ya que en el código fuente no existe ninguna llamada real a ellos.
 * **Infraestructura de red y hosting:** No se detallan servidores de despliegue, DNS ni proxies reversos (Vercel, Render), manteniendo el diagrama en un nivel puramente funcional y de negocio.
 
 ### Observación del equipo
@@ -36,13 +35,14 @@ TEFIIS como una sola caja negra de software central, los tres actores que intera
 | **Proveedores de correo** | Sistema externo | Despacha correos electrónicos transaccionales con códigos de verificación y resoluciones con fallback automático (Brevo $\rightarrow$ Resend $\rightarrow$ Mailjet). |
 | **Servicio LLM Externo (Gemini API)** | Sistema externo | Ejecuta la búsqueda semántica sobre los reglamentos universitarios indexados (RAG) para generar las respuestas del asistente Tefi. |
 | **Firebase Authentication** | Sistema externo | Gestiona la autenticación, emisión y validación de tokens de identidad para el acceso seguro al panel administrativo. |
+| **Servicio M2** | Sistema externo | Recibe el expediente de cada reclamo (ID, código, correo, nombre, motivo y descripción) que la aplicación de estudiantes le envía al registrarlo. |
 
 ---
 
 ## 2. Nivel 2: Diagrama de Contenedores (Sistema TEFIIS)
 
-![Diagrama de Contenedores](img/Contenedores-dark.svg)
-*Leyenda generada:* [Contenedores-dark-key.svg](img/Contenedores-dark-key.svg)
+![Diagrama de Contenedores](img/Contenedores.svg)
+*Leyenda generada:* [Contenedores-key.svg](img/Contenedores-key.svg)
 
 ### Qué muestra
 La arquitectura de ejecución del sistema dividida en sus 5 contenedores desplegables o almacenes de datos: dos aplicaciones cliente en React (`Aplicación de estudiantes` y `Panel del Tercio y Administración`), una API backend central en `Node.js 22 / Express 5` que concentra las reglas de negocio, y dos contenedores de almacenamiento en Supabase (`Base de datos PostgreSQL` y `Storage de Archivos`), detallando los protocolos reales de comunicación entre ellos (`HTTPS`, `JSON/HTTPS con JWT/Bearer` y `PostgREST/HTTPS`).
@@ -53,7 +53,7 @@ La arquitectura de ejecución del sistema dividida en sus 5 contenedores despleg
 * **Herramientas de construcción:** Se omitieron herramientas de compilación y empaquetado (Vite, TypeScript compiler, ESLint).
 
 ### Observación del equipo
-> **Doble rol de Supabase y acoplamiento frontend-backend:** El equipo notó dos aspectos arquitectónicos esenciales: primero, que Supabase no podía modelarse como una sola caja genérica, ya que opera en dos contenedores arquitectónicamente distintos: una base relacional transaccional (PostgreSQL vía PostgREST) y un almacén de objetos no estructurados para evidencias y PDFs oficiales (Storage mediante URLs firmadas temporales). Segundo, que el panel del Tercio (`sistema-admin/`) y el portal estudiantil (`sistema-reclamos/`) se mantienen en carpetas del mismo repositorio y dependen de forma síncrona de una única API. Si la API se cae o entra en mantenimiento, se paralizan simultáneamente el canal estudiantil y la gestión del Tercio.
+> **Doble rol de Supabase y acoplamiento frontend-backend:** El equipo notó dos aspectos arquitectónicos esenciales: primero, que Supabase no podía modelarse como una sola caja genérica, ya que opera en dos contenedores arquitectónicamente distintos: una base relacional transaccional (PostgreSQL vía PostgREST) y un almacén de objetos no estructurados para evidencias y PDFs oficiales (Storage mediante URLs firmadas temporales). Segundo, que el panel del Tercio (`sistema-admin/`) y el portal estudiantil (`sistema-reclamos/`) se mantienen en carpetas del mismo repositorio y dependen de forma síncrona de una única API. Si la API se cae o entra en mantenimiento, se paralizan simultáneamente el canal estudiantil y la gestión del Tercio. Además, la aplicación de estudiantes llama directamente al Servicio M2 sin pasar por la API: es la única integración que la API no controla. Esa llamada no bloquea el reclamo, pero tampoco se reintenta ni deja registro en la base: si falla, solo se avisa en la consola del navegador.
 
 ### Tabla de Responsabilidades – Nivel 2
 | Contenedor | Tecnología | Responsabilidad (una línea) |
@@ -68,8 +68,8 @@ La arquitectura de ejecución del sistema dividida en sus 5 contenedores despleg
 
 ## 3. Nivel 3: Diagrama de Componentes (API TEFIIS)
 
-![Diagrama de Componentes](img/Componentes-dark.svg)
-*Leyenda generada:* [Componentes-dark-key.svg](img/Componentes-dark-key.svg)
+![Diagrama de Componentes](img/Componentes.svg)
+*Leyenda generada:* [Componentes-key.svg](img/Componentes-key.svg)
 
 ### Qué muestra
 El contenedor central (`API TEFIIS`) abierto en sus 6 componentes lógicos de negocio: `Autenticación y Autorización`, `Gestión de Reclamos y Cursos`, `Asistente Virtual Tefi (RAG)`, `Notificaciones`, `Auditoría y Trazabilidad` y `Gestión de Documentos`, detallando sus dependencias internas y conexiones hacia los almacenes de datos y servicios externos.
@@ -109,5 +109,5 @@ Tras cotejar el archivo [workspace.dsl](workspace.dsl) contra el código fuente 
    * El contenedor `panel` tenía declarado `"React, repositorio sistema-admin"`, utilizando la ubicación del repositorio en vez de su tecnología de ejecución pura (`"React, Vite"`).
 
 4. **Discrepancias entre el repositorio y el diagrama:**
-   * **Pieza inexistente en el código:** En el modelo figuraba un `Servicio M2` externo, pero en el código del repositorio no existe ninguna llamada ni configuración hacia dicho servicio.
+   * **Servicio M2 (observación corregida por el equipo):** El Grupo 3 anotó que el `Servicio M2` del modelo no tenía ninguna llamada en el código, y el equipo lo retiró. Al comprobarlo de nuevo, la aplicación de estudiantes sí lo llama: `useReclamos.ts` hace un `POST` a `https://tefiis-m2.onrender.com/api/v1/m2/expedientes` al enviar cada reclamo. Por eso se restituyó al modelo, en el contexto y en los contenedores.
    * **Proveedores de correo y protocolo:** El código cuenta con una cadena de fallback (`Brevo -> Resend -> Mailjet`) por llamadas HTTPS seguras; el DSL original reducía esto a un solo proveedor con protocolo `HTTP` inexacto. Se debe modelar como `Proveedores de correo` con protocolo `JSON/HTTPS`.

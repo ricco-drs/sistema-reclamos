@@ -38,7 +38,7 @@ Tefi, un asistente con IA, responde dudas sobre reglamentos y trámites buscando
 | Panel del Tercio          | React, en la carpeta `sistema-admin/`.                                                                |
 | Base de datos y archivos  | PostgreSQL y Storage en Supabase. La API usa PostgREST.                                               |
 | Autenticación             | JWT propio para estudiantes (código de 4 dígitos por correo) y Firebase Authentication para el panel. |
-| Servicios externos        | Gemini con File Search para Tefi; Brevo, Resend y Mailjet para el correo.                             |
+| Servicios externos        | Gemini con File Search para Tefi; Brevo, Resend y Mailjet para el correo; Servicio M2 para los expedientes. |
 | Construcción y pruebas    | npm (`npm ci`), `node:test`, dependency-cruiser y GitHub Actions.                                     |
 
 ## 6. Repositorio

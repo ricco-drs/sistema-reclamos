@@ -35,16 +35,16 @@ Lo inicia el estudiante.
 2. Declara su carrera, su código UNI y su nombre, y sube su ficha académica y su avance curricular del SIGA (la boleta es opcional).
 3. Elige la categoría, los cursos y secciones a retirar o matricular desde el catálogo, escribe la descripción y adjunta un PDF de evidencia.
 4. Envía. La API valida y devuelve el número `REC-2026-NNNN`.
-5. Recibe la confirmación por correo y sigue el estado de su reclamo en la aplicación.
+5. Recibe la confirmación por correo y sigue el estado de su reclamo en la aplicación. Al enviar, la aplicación también registra el expediente en el Servicio M2; si esa llamada falla, el reclamo igual queda registrado y solo se avisa en la consola del navegador.
 
 ### Consultar a Tefi
 
-Lo inicia el estudiante, con sesión o sin ella.
+Lo inicia el estudiante con sesión iniciada: la pantalla del chat pide primero «Iniciar sesión» con el correo `@uni.pe`, y solo después deja escribir.
 
 1. Escribe su pregunta en el chat.
 2. La API la envía a Gemini con búsqueda en los reglamentos indexados.
 3. Tefi responde con texto, tablas y fórmulas.
-4. Si hay sesión, el turno se guarda para auditoría. Si el Tercio activó el modo almuerzo, la API responde 503 y la aplicación le ofrece registrar su reclamo.
+4. El turno se guarda para auditoría. Si el Tercio activó el modo almuerzo, la API responde 503 y la aplicación le ofrece registrar su reclamo.
 
 ### Resolver un reclamo
 

@@ -25,6 +25,44 @@ TEFIIS tiene dos interfaces:
 
 ![Registro de documentos](capturas/03-registro-documentos.png)
 
+## Bocetos de los flujos (Lab07)
+
+Dos de los flujos principales se bocetaron a mano, pantalla por pantalla, para que otro equipo los recorra. Los bocetos son el camino, no el diseño visual: las imágenes son marcadores.
+
+### Flujo 1: presentar un reclamo
+
+Acceso: pantalla de bienvenida de Tefi, correo `@uni.pe`, código de 4 dígitos y menú de inicio con «Hacer un reclamo» y «Consultar reclamos anteriores».
+
+![Flujo 1, acceso](bocetos/flujo1-presentar-reclamo-1-acceso.jpeg)
+
+Registro: Tefi pregunta si el estudiante llegó a matricularse y, al final, muestra la confirmación con el número `REC-2026-NNNN`.
+
+![Flujo 1, registro](bocetos/flujo1-presentar-reclamo-2-registro.jpeg)
+
+El boceto no dibuja las pantallas intermedias del registro (carrera, código UNI y nombre, documentos del SIGA, cursos y evidencia), que sí existen en la aplicación y están en el primer flujo de la sección siguiente.
+
+### Flujo 2: consultar a Tefi
+
+El estudiante escribe su duda, Tefi responde con el reglamento y, si la consulta es un reclamo, ofrece el botón «Ir a reclamos».
+
+![Flujo 2, consultar a Tefi](bocetos/flujo2-consultar-tefi.jpeg)
+
+El flujo «Resolver un reclamo», del panel del Tercio, se describe más abajo pero no se bocetó en este taller.
+
+### Recorrido cognitivo
+
+El Equipo 3 recorrió los dos flujos con las cuatro preguntas del método y levantó el [acta](acta-recorrido-equipo-3.md). Resumen de lo que no pasó:
+
+| Flujo | Paso | Pregunta | Falla |
+|---|---|---|---|
+| Presentar un reclamo | Pregunta «¿llegaste a matricularte?» | P3 | Los botones «Sí/No me matriculé» no suenan a «registrar mi reclamo». |
+| Presentar un reclamo | De Sí/No a «Reclamo registrado» | P4 | No hay pantalla intermedia: el usuario nunca describe su problema y el sistema confirma el envío. |
+| Consultar a Tefi | Inicio | P1 | La única acción es «Iniciar sesión … para registrar tu reclamo»: no se ve el camino de la consulta. |
+| Consultar a Tefi | Menú | P1, P2, P3 | No hay opción de consulta; «Conversación» es una pestaña pequeña y su etiqueta no suena a la meta. |
+| Consultar a Tefi | Respuesta de Tefi | P4 | «Hasta el 02-10» es ambiguo, sin año ni curso. |
+
+Parte de estas fallas viene del boceto y no de la aplicación, que sí pide la descripción, los cursos y la evidencia antes de registrar el reclamo. Lo que se corrige en el diseño: agregar al menú una opción de consulta a Tefi, y que Tefi responda las fechas con día, mes y año y diga a qué trámite o curso se refieren.
+
 ## Flujos principales
 
 ### Presentar un reclamo

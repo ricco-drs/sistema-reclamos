@@ -47,11 +47,11 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 ## Semana 3 · 19 de setiembre
 
-- **¿Se usó IA?** Si
+- **¿Se usó IA?** Sí
 - **Herramienta:** Antigravity
-- **Para qué se usó:** Se le pidio analizar la consistencia del borrador realizado en clase con el diagrama de contexto de structurizer, además de señalar debilidades en las 3 capas del diagrama.
-- **Qué se aceptó:** Se acepto el cambio de sintaxis para actualizar el gráfico y se subsano las inconsistencias señaladas.
-- **Qué se descartó y por qué:** Se descarto una observación que señalaba que no se contaba con un plan B respecto a brevo(servicio de envio de email) debido a que si se cuenta con un plan B configurado en el código.
+- **Para qué se usó:** Se le pidió analizar la consistencia del borrador realizado en clase con el diagrama de contexto de structurizer, además de señalar debilidades en las 3 capas del diagrama.
+- **Qué se aceptó:** Se aceptó el cambio de sintaxis para actualizar el gráfico y se subsanó las inconsistencias señaladas.
+- **Qué se descartó y por qué:** Se descartó una observación que señalaba que no se contaba con un plan B respecto a Brevo (servicio de envío de email) debido a que sí se cuenta con un plan B configurado en el código.
 - **Registra:** Franz Nuñez
 
 ## Semana 4 · 9 de octubre

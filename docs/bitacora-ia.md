@@ -29,12 +29,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 ## Semana 1 · 5 de setiembre
 
-- **¿Se usó IA?** POR COMPLETAR
-- **Herramienta:** POR COMPLETAR
-- **Para qué se usó:** POR COMPLETAR
-- **Qué se aceptó:** POR COMPLETAR
-- **Qué se descartó y por qué:** POR COMPLETAR. Debe incluir al menos un error de la IA verificado contra el código.
-- **Registra:** POR COMPLETAR
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude
+- **Para qué se usó:** Preguntarle por los conceptos principales del sistema y pedirle un resumen de cómo funciona.
+- **Qué se aceptó:** Todo el resumen y las explicaciones de los conceptos.
+- **Qué se descartó y por qué:** Nada: no se detectó ninguna afirmación errónea al leer las respuestas.
+- **Registra:** Roy Puris
 
 ## Semana 2 · 12 de setiembre
 

@@ -75,7 +75,7 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Para qué se usó:** No se realizó el uso de un asistente en la refactorización a puertos y adaptadores.
 - **Qué se aceptó:** No aplica.
 - **Qué se descartó y por qué:** No aplica.
-- **Registra:** POR COMPLETAR
+- **Registra:** Ricco Rashuaman
 
 ## Semana 7 · 15 al 19 de octubre
 
@@ -86,7 +86,7 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Para qué se usó:** Primer borrador del informe de la Entrega 1 a partir del contenido del repositorio.
 - **Qué se aceptó:** La reescritura de los escenarios de calidad sobre el comportamiento real del código (E1 a E6), la elección del ADR-0003 (la secuencia de PostgreSQL que numera los reclamos) y la estructura del informe.
 - **Qué se descartó y por qué:** Las consecuencias de los tres ADR, porque el curso exige que las escriba el equipo. El ADR-0003 ya fue reescrito por quien lo firma.
-- **Registra:** POR COMPLETAR
+- **Registra:** Ricco Rashuaman
 
 ### Entrada del 17 al 19 de octubre, escenarios, ficha, interfaz y unión de los repositorios
 

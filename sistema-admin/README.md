@@ -62,7 +62,7 @@ VITE_API_URL=http://localhost:3005
 
 La dirección debe ir sin barra final. Si no se define esta variable, el panel usa `http://localhost:3005`.
 
-Para iniciar la API local, sigue [Levantar el sistema completo](../sistema-reclamos/README.md#levantar-el-sistema-completo). Se ejecuta en otra terminal, desde `sistema-reclamos/`, con `npm run server`.
+Para iniciar la API local, sigue [Configuración de la API](../sistema-reclamos/README.md#configuración). Se ejecuta en otra terminal, desde `sistema-reclamos/`, con `npm run server`.
 
 ### 3. Iniciar el panel
 
@@ -100,9 +100,15 @@ Estas variables corresponden al backend, no al archivo de configuración del pan
 | `ADMIN_EMAILS_SOLO_LECTURA` | Cuentas con acceso de consulta, según la autorización del backend. |
 | `ALLOWED_ORIGINS` | Si se define, debe incluir el origen desde el que se ejecuta el panel. |
 
-Consulta los demás requisitos de la API en su [README](../sistema-reclamos/README.md#levantar-el-sistema-completo).
+Consulta los demás requisitos de la API en su [README](../sistema-reclamos/README.md#configuración).
 
 El panel envía el token de Firebase en las solicitudes administrativas. La API verifica la identidad y los permisos antes de acceder a Supabase. Las credenciales privadas de Firebase y Supabase permanecen en el backend y no deben agregarse al código del panel.
+
+### Seguridad
+
+El panel utiliza Firebase Authentication, Analytics opcional y Hosting. Los datos de reclamos y sus documentos están en Supabase. Hosting sirve la compilación de `dist/`.
+
+El backend verifica el token de Firebase y el correo autorizado en cada ruta administrativa. Si se habilitan Firestore, Realtime Database o Firebase Storage, sus reglas y permisos se configuran por separado en Firebase; no protegen los datos almacenados en Supabase.
 
 ## Comandos
 
@@ -151,7 +157,7 @@ El panel no tiene un script de pruebas automatizadas propio. Las pruebas de la A
 
 El proyecto incluye una configuración de Firebase Hosting que sirve `dist/` y redirige las rutas a `index.html`.
 
-1. Define `VITE_API_URL` con la dirección de la API del entorno de destino.
+1. Completa las variables de Firebase y define `VITE_API_URL` con la dirección de la API del entorno de destino.
 2. Ejecuta `npm run build`.
 3. Revisa el resultado con `npm run preview`.
 4. Publica `dist/` mediante la configuración de Hosting del proyecto correspondiente.

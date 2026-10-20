@@ -1,42 +1,78 @@
-# TEFIIS: sistema de gestión de reclamos estudiantiles
+# TEFIIS · Aplicación estudiantil y API
 
-**TEFIIS** es la plataforma web con la que la Facultad de Ingeniería Industrial y de Sistemas (FIIS) de la UNI recibe y resuelve los reclamos de matrícula de sus estudiantes. El estudiante entra con su correo `@uni.pe`, sube sus documentos del SIGA, registra su reclamo y lo sigue con un número `REC-AAAA-NNNN`. El Tercio lo revisa desde un panel propio y le responde por correo. **Tefi**, un asistente con IA, responde dudas sobre reglamentos y trámites buscando en los documentos oficiales de la facultad.
+Plataforma de la FIIS-UNI para registrar y atender reclamos de matrícula. La aplicación permite al estudiante ingresar con su correo institucional, cargar documentos del SIGA y seguir su caso. Tefi responde consultas sobre reglamentos mediante RAG con Gemini File Search.
 
-Proyecto del curso SW708 Arquitectura de Soluciones de Software (2026-2), equipo 2. La documentación de arquitectura está en [docs/](#documentación).
+Este proyecto contiene la aplicación React y la API Express de TEFIIS. El [panel administrativo](../sistema-admin/README.md) utiliza la misma API; la documentación común está en [docs/](../docs/). Proyecto del curso SW708 Arquitectura de Soluciones de Software (2026-2), equipo 2.
 
-## Construir y probar
+## Contenido
 
-Requisitos: Git, Node.js 22 y npm. No hacen falta credenciales.
+- [Funciones](#funciones)
+- [Requisitos](#requisitos)
+- [Inicio rápido](#inicio-rápido)
+- [Configuración](#configuración)
+- [Comandos](#comandos)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Verificación](#verificación)
+- [Publicación](#publicación)
+- [Solución de problemas](#solución-de-problemas)
+- [Contribución y documentación](#contribución-y-documentación)
+- [Equipo](#equipo)
+
+## Funciones
+
+- **Tefi.** Responde con búsqueda en los reglamentos oficiales (Gemini con File Search) y muestra texto, tablas y fórmulas.
+- **Reclamos.** El estudiante sube su ficha académica, su avance curricular y, si la tiene, su boleta de matrícula; elige los cursos y secciones del catálogo, adjunta una evidencia y recibe un número de caso único. Sigue el estado desde la aplicación.
+- **Acceso.** Código de 4 dígitos por correo, solo para cuentas `@uni.pe`. El correo sale por Brevo y, si falla, por Resend o Mailjet.
+- **Modos de operación.** El Tercio abre o cierra la ventana de reclamos y activa los modos de almuerzo, mantenimiento y despedida sin desplegar.
+- **Panel del Tercio.** Vive en la carpeta [sistema-admin/](../sistema-admin/) de este mismo repositorio y usa esta misma API: bandeja de reclamos, cambio de estado, cursos resueltos y respuestas por correo.
+
+## Requisitos
+
+| Requisito | Uso |
+| --- | --- |
+| Git | Obtener el repositorio. |
+| Node.js 22 y npm | Instalar dependencias y ejecutar la aplicación y la API. |
+| Supabase | Base de datos mediante PostgREST y almacenamiento de documentos. |
+| Gemini y un store de File Search | Consultas de Tefi sobre el corpus institucional. |
+| Proveedor de correo | Enviar códigos de acceso, confirmaciones y respuestas. |
+| Firebase Authentication | Verificar las sesiones del panel administrativo. |
+
+Las pruebas automatizadas y la compilación pueden ejecutarse sin credenciales. Los flujos completos requieren configurar los servicios externos.
+
+## Inicio rápido
+
+### 1. Obtener e instalar
 
 ```bash
 git clone https://github.com/ricco-drs/sistema-reclamos.git
 cd sistema-reclamos/sistema-reclamos
 npm ci
-npm test
-npm run arch:check
-npm run build
 ```
 
-| Comando              | Qué hace                                                                                                                          |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `npm ci`             | Instala las dependencias exactas de `package-lock.json`.                                                                          |
-| `npm test`           | Corre las 12 pruebas de `backend/tests/` con `node:test`. No usan red, base de datos ni credenciales.                             |
-| `npm run arch:check` | Comprueba con dependency-cruiser la regla `dominio-limpio`: `backend/dominio/` no puede importar infraestructura ni presentación. |
-| `npm run build`      | Compila la aplicación de estudiantes en `dist/`.                                                                                  |
+Si ya tienes el repositorio, entra a su carpeta `sistema-reclamos/` y ejecuta `npm ci`.
 
-En un clon limpio, los seis comandos tardaron 3 min 10 s en total (Windows 11, Node 22.16), y 1 min 44 s sin `npm run build`. La integración continua ([.github/workflows/ci.yml](../.github/workflows/ci.yml)) corre `npm ci`, `npm test` y `npm run arch:check` en cada push y en cada pull request.
+### 2. Configurar los servicios
 
-**En Windows**, si `git clone` falla con `Filename too long`, activa las rutas largas y vuelve a clonar:
+Crea `.env` en esta carpeta y completa las variables de [Configuración](#configuración). Prepara las tablas de Supabase y el identificador del store de Gemini antes de utilizar los flujos completos.
+
+### 3. Iniciar la API y la aplicación
+
+Ejecuta cada comando en una terminal distinta, dentro de esta carpeta:
 
 ```bash
-git config --global core.longpaths true
+npm run server   # API: http://localhost:3005 por defecto
+npm run dev      # Aplicación: abre la URL indicada por Vite
 ```
 
-## Levantar el sistema completo
+Para usar el panel del Tercio, sigue su [README](../sistema-admin/README.md). Se ejecuta por separado.
 
-La API depende de cinco servicios en la nube, así que para levantarla hacen falta cuentas propias en cada uno.
+## Configuración
 
-**1. Variables de entorno.** Crea un archivo `.env` en esta carpeta (`sistema-reclamos/`):
+Para ejecutar los flujos completos se necesita una API con acceso a Supabase, Gemini, Firebase Authentication y al menos un proveedor de correo.
+
+### Variables de entorno
+
+Crea un archivo `.env` en esta carpeta (`sistema-reclamos/`):
 
 | Variable                                                                    | Para qué                                                                | Obligatoria  |
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------ |
@@ -52,28 +88,33 @@ La API depende de cinco servicios en la nube, así que para levantarla hacen fal
 | `PORT`                                                                      | Puerto de la API. Por defecto, 3005.                                    | No           |
 | `VITE_API_URL`                                                              | URL de la API para la aplicación. Por defecto, `http://localhost:3005`. | No           |
 
-**2. Base de datos.** En el editor SQL de Supabase, ejecuta los scripts de [sql/](sql/). Crean la secuencia que numera los reclamos y las tablas `conversaciones` y `respuestas_reclamo`, y agregan la columna `cursos_resueltos`. Las tablas base (`reclamos`, `documentos_estudiante`, `activity_log` y `app_settings`) todavía no tienen script.
+### Base de datos
 
-**3. Base de conocimiento de Tefi.** Los documentos se mantienen en Gemini File Search y no se incluyen en el repositorio. La API obtiene el identificador del store desde `app_settings`, clave `rag_store_name`. Para un entorno nuevo, configura el identificador de su store. No es necesario volver a cargar los documentos al iniciar la API con un store existente.
+En el editor SQL de Supabase, ejecuta los scripts de [sql/](sql/). Crean la secuencia que numera los reclamos y las tablas `conversaciones` y `respuestas_reclamo`, y agregan la columna `cursos_resueltos`. Las tablas base (`reclamos`, `documentos_estudiante`, `activity_log` y `app_settings`) todavía no tienen script.
+
+### Base de conocimiento de Tefi
+
+Los documentos se mantienen en Gemini File Search y no se incluyen en el repositorio. La API obtiene el identificador del store desde `app_settings`, clave `rag_store_name`. Para un entorno nuevo, configura el identificador de su store. No es necesario volver a cargar los documentos al iniciar la API con un store existente.
 
 El comando `npm run seed-rag` queda como herramienta de reconstrucción: requiere aportar los PDF en una carpeta local `documentos_entrenamiento/` y sustituye el store configurado al terminar. No forma parte del arranque habitual.
 
-**4. Arrancar.** La API y la aplicación, cada una en su terminal:
+## Comandos
 
-```bash
-npm run server   # API en http://localhost:3005
-npm run dev      # aplicación en http://localhost:5173
-```
+Ejecuta estos comandos desde `sistema-reclamos/`:
 
-## Qué hace
+| Comando | Descripción |
+| --- | --- |
+| `npm ci` | Instala las versiones registradas en `package-lock.json`. |
+| `npm run dev` | Inicia el servidor de desarrollo de la aplicación estudiantil. |
+| `npm run server` | Inicia la API Express. |
+| `npm run build` | Genera la aplicación estática en `dist/`. |
+| `npm run preview` | Sirve localmente una compilación ya generada. |
+| `npm run lint` | Ejecuta ESLint. |
+| `npm test` | Ejecuta las pruebas del backend con `node:test`. |
+| `npm run arch:check` | Comprueba las dependencias del dominio con dependency-cruiser. |
+| `npm run seed-rag` | Reconstruye el store a partir de PDF locales; no es un paso de arranque. |
 
-- **Tefi.** Responde con búsqueda en los reglamentos oficiales (Gemini con File Search) y muestra texto, tablas y fórmulas.
-- **Reclamos.** El estudiante sube su ficha académica, su avance curricular y, si la tiene, su boleta de matrícula; elige los cursos y secciones del catálogo, adjunta una evidencia y recibe un número de caso único. Sigue el estado desde la aplicación.
-- **Acceso.** Código de 4 dígitos por correo, solo para cuentas `@uni.pe`. El correo sale por Brevo y, si falla, por Resend o Mailjet.
-- **Modos de operación.** El Tercio abre o cierra la ventana de reclamos y activa los modos de almuerzo, mantenimiento y despedida sin desplegar.
-- **Panel del Tercio.** Vive en la carpeta [sistema-admin/](../sistema-admin/) de este mismo repositorio y usa esta misma API: bandeja de reclamos, cambio de estado, cursos resueltos y respuestas por correo.
-
-## Estructura
+## Estructura del proyecto
 
 ```text
 backend/
@@ -95,7 +136,43 @@ laboratorio/             Laboratorio 4-5: costo del cambio (Java)
 .dependency-cruiser.cjs  Regla de arquitectura dominio-limpio
 ```
 
-## Documentación
+## Verificación
+
+```bash
+npm test
+npm run arch:check
+npm run build
+```
+
+Las pruebas de cursos resueltos utilizan dobles de repositorio y no requieren red ni credenciales. La regla `dominio-limpio` comprueba que `backend/dominio/` no importe infraestructura ni presentación. Estas comprobaciones no reemplazan las pruebas de integración con los servicios reales.
+
+El [CI](../.github/workflows/ci.yml) ejecuta `npm ci`, `npm test` y `npm run arch:check` en cada push y pull request. La compilación de la aplicación y ESLint se ejecutan por separado; para cambios de interfaz, verifica también `npm run lint` y el flujo afectado.
+
+## Publicación
+
+La aplicación estudiantil y la API se ejecutan por separado:
+
+1. Configura `VITE_API_URL` con la URL de la API de destino y ejecuta `npm run build` para generar `dist/`.
+2. Publica `dist/` en el alojamiento de la aplicación web.
+3. Para la API, configura las variables del entorno y utiliza `npm run server`. El archivo `railway.toml` define la instalación y el arranque del backend en Railway.
+4. Incluye los orígenes de la aplicación y del panel en `ALLOWED_ORIGINS` cuando se utilice esa restricción CORS.
+
+Vite incorpora las variables `VITE_*` durante la compilación. Mantén las claves privadas del backend fuera del código y del repositorio.
+
+## Solución de problemas
+
+| Problema | Qué revisar |
+| --- | --- |
+| Git muestra `Filename too long` en Windows | Habilita rutas largas con `git config --global core.longpaths true` y vuelve a clonar. |
+| La aplicación no conecta con la API | Que la API esté iniciada y `VITE_API_URL` apunte al entorno correcto. |
+| El navegador muestra un error de CORS | Que `ALLOWED_ORIGINS` incluya el origen exacto, con protocolo y puerto. |
+| No llega el código por correo | Las credenciales del proveedor, el remitente y los errores registrados por la API. |
+| Tefi no encuentra el store | El valor de `rag_store_name` en `app_settings` y el acceso de la cuenta de Gemini a ese store. |
+| Las rutas administrativas devuelven 401 o 403 | El proyecto de `FIREBASE_SERVICE_ACCOUNT`, el token del panel y el correo en `ADMIN_EMAILS`. |
+
+## Contribución y documentación
+
+Trabaja en una rama por tarea y presenta una pull request para revisión de otro integrante. Describe qué cambió y cómo lo verificaste; utiliza la convención `tipo(alcance): descripción` para los commits.
 
 | Documento                                              | Contenido                                              |
 | ------------------------------------------------------ | ------------------------------------------------------ |
@@ -107,6 +184,7 @@ laboratorio/             Laboratorio 4-5: costo del cambio (Java)
 | [docs/interfaz/](../docs/interfaz/)                       | Flujos principales y frontera entre interfaz y dominio |
 | [docs/bitacora-ia.md](../docs/bitacora-ia.md)             | Bitácora de uso de IA                                  |
 | [docs/costo-del-cambio.md](../docs/costo-del-cambio.md)   | Cuadro del Laboratorio 4-5                             |
+| [Inventario del corpus](../docs/corpus-tefi.md) | Documentos de consulta de Tefi |
 
 ## Equipo
 

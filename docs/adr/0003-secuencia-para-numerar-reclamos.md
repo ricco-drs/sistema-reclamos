@@ -2,7 +2,7 @@
 
 ## Estado
 
-Aceptado. Registrado a posteriori: la decisión es anterior a este ciclo y se documenta ahora porque atiende al escenario de mayor prioridad (E1). [Confirmar la fecha real de la decisión con Ricco.]
+Aceptado. Fecha de registro: 18/10/2026.
 
 ## Contexto
 

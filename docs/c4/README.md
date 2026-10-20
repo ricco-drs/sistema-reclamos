@@ -37,7 +37,7 @@ Para el detalle de responsabilidad de cada elemento en una sola línea, consulta
 *Leyenda generada:* [Contenedores-dark-key.svg](img/Contenedores-dark-key.svg)
 
 * **Qué muestra:** La arquitectura de ejecución de TEFIIS en 5 contenedores: dos aplicaciones web cliente en React (`Aplicación de estudiantes` y `Panel del Tercio y Administración`), la `API TEFIIS` en Node.js 22 / Express 5, y dos almacenes de datos desacoplados en Supabase (`Base de datos PostgreSQL` y `Storage de Archivos`), junto con sus protocolos reales de red.
-* **Observación del equipo:** Una sola API concentra todas las reglas de negocio y auditoría. Aunque el panel administrativo vive en un repositorio Git independiente (`sistema-admin`) y la aplicación de estudiantes en otro (`sistema-reclamos`), ambos dependen de forma síncrona de la misma API backend. Supabase cumple dos roles arquitectónicos distintos que se modelan por separado: persistencia relacional transaccional (PostgreSQL) y almacenamiento de evidencias PDF mediante URLs firmadas seguras (Storage).
+* **Observación del equipo:** Una sola API concentra todas las reglas de negocio y auditoría. El panel administrativo (`sistema-admin/`) y la aplicación de estudiantes (`sistema-reclamos/`) están en carpetas del mismo repositorio y dependen de forma síncrona de la misma API backend. Supabase cumple dos roles arquitectónicos distintos que se modelan por separado: persistencia relacional transaccional (PostgreSQL) y almacenamiento de evidencias PDF mediante URLs firmadas seguras (Storage).
 
 ---
 

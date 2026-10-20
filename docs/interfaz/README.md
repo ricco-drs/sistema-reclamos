@@ -47,8 +47,6 @@ El estudiante escribe su duda, Tefi responde con el reglamento y, si la consulta
 
 ![Flujo 2, consultar a Tefi](bocetos/flujo2-consultar-tefi.jpeg)
 
-El flujo «Resolver un reclamo», del panel del Tercio, se describe más abajo pero no se bocetó en este taller.
-
 ### Recorrido cognitivo
 
 El Equipo 3 recorrió los dos flujos con las cuatro preguntas del método y levantó el [acta](acta-recorrido-equipo-3.md). Resumen de lo que no pasó:

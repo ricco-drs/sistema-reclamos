@@ -114,3 +114,16 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Pasar cada observación a una corrección concreta (qué instrumento, qué script, quién lo corre), la matriz de casos de E3, el denominador de E6 y las tablas de antes y después.
 - **Qué se descartó y por qué:** La matriz de E3 ponía `POST /api/reclamos/evidencias` como la ruta que rechaza la evidencia ajena, pero esa ruta solo sube el archivo a la carpeta del propio estudiante. El rechazo está en `POST /api/reclamos`; se pidió en la revisión del PR #5 y Roy corrigió la ruta en ese mismo PR. Se encontró al revisar el borrador contra el código, con apoyo de Claude Code.
 - **Registra:** Roy Puris
+
+### Entrada del 19 de octubre, Lab07: patrones y acoplamiento
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Como detectora de sobreingeniería: se le pidió, a partir de la descripción de cada uno de los tres fragmentos del Lab07, la lista de patrones que podrían aplicarse. También midió el acoplamiento con dependency-cruiser y redactó el borrador de `docs/acoplamiento/2026-10-17.md`.
+- **Qué se aceptó:** Una tabla de funciones indexada por tipo para el fragmento A (Strategy en su forma mínima) y Adapter para el fragmento B. Para el fragmento C, no aplicar ningún patrón. De la medición, los números de Ca, Ce e I, revisados contra la salida de la herramienta.
+- **Qué se descartó y por qué:**
+  - **Fragmento A.** Strategy con una clase por tipo: tres archivos por cada tipo de comprobante para elegir una función. Factory Method: no se crea un objeto distinto por tipo, solo se elige qué función ejecutar. Chain of Responsibility: los tipos se excluyen entre sí y ninguno pasa la petición al siguiente. Visitor: no hay una estructura de objetos que recorrer.
+  - **Fragmento B.** Bridge: no hay dos jerarquías que varíen por separado, solo dos proveedores. Abstract Factory: no se crean familias de objetos relacionados. Template Method: obligaría a una clase base para dos subclases cuyas diferencias son de formato, no de pasos. Facade: sin una API que simplificar, solo hay que aislar los formatos.
+  - **Fragmento C.** Strategy, Template Method, Facade y Decorator: no hay variación ni cambio previsto en cuarenta líneas que nadie toca desde hace un año; cualquiera de ellos solo agregaría indirección.
+  - **Medición.** El resultado de la herramienta suma por archivo y no por carpeta, así que no se copió tal cual: el equipo contó por carpeta, como en el ejemplo del laboratorio.
+- **Registra:** Roy Puris

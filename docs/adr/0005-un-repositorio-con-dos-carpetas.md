@@ -6,9 +6,11 @@ Aceptado, 18/10/2026. Registrado a posteriori.
 
 ## Contexto
 
-TEFIIS tiene dos aplicaciones web: la de estudiantes, junto con la API, y el panel del Tercio. Las desarrollamos en repositorios separados porque el panel surgió después, con otros usuarios, su propio inicio de sesión con Firebase y un despliegue aparte. Las dos no comparten código.
+TEFIIS tiene dos aplicaciones web: la de estudiantes, junto con la API, y el panel del Tercio. Creamos las dos aplicaciones por separado porque no queríamos que los estudiantes llegaran al panel del Tercio desde su aplicación. El panel tiene otros usuarios, su propio inicio de sesión con Firebase y un despliegue aparte, y la aplicación de estudiantes no incluye ni su dirección ni su código. Las dos no comparten código.
 
-Para el curso las subimos como `ricco-drs/sistema-reclamos` y `ricco-drs/sistema-admin`. En la semana 3, el profesor nos hizo notar que el curso trabaja con un repositorio por equipo y que, al tener dos, el historial, los diagramas, los ADR y la evidencia quedaban repartidos. También vimos que no era solo un tema de la entrega: las dos aplicaciones forman un solo sistema, el panel depende de la API y nuestro modelo C4 y nuestros ADR describen ambas partes.
+Al empezar el curso, subimos cada aplicación a su propio repositorio: `ricco-drs/sistema-reclamos` y `ricco-drs/sistema-admin`. En la revisión de la semana 3, el profesor observó que el curso trabaja con un solo repositorio por equipo y que, con dos, el historial, los diagramas, los ADR y la evidencia quedaban repartidos.
+
+Al analizarlo, vimos que el problema iba más allá de la entrega. Las dos aplicaciones forman un mismo sistema: el panel depende de la API, y el modelo C4 y los ADR describen ambas partes.
 
 La API está desplegada en Railway, la aplicación de estudiantes en Cloudflare y el panel en Firebase Hosting, y al reorganizar no queríamos afectar esos despliegues.
 

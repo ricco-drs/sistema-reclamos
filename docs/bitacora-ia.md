@@ -182,6 +182,15 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se descartó y por qué:** La firma pedida, `componerConfirmacion({ id, nombre, categoria })`, no alcanzaba: cuando el nombre no trae coma, el saludo se arma con el correo. Se agregó `email` como campo opcional, que el consumidor ya recibe en el evento. No se tocó `server.js`: la copia de `emailTemplate` que sigue ahí la usan el código de verificación y la respuesta del Tercio, y la reemplaza quien conecta el bus.
 - **Registra:** Roy Puris
 
+### Entrada del 20 de noviembre, inmutabilidad real de CursosResueltos
+
+- **Fecha y tarea:** 20 de noviembre. Issue #55, que abrió Lenin: la entidad `CursosResueltos` del #26 se decía inmutable, pero compartía listas y objetos con las entradas y con lo que devuelve `aPlano()`.
+- **Herramienta y versión:** Claude Code (Sonnet 5.5).
+- **Qué se le pidió:** Comprobar si la observación de Lenin era cierta y corregir la entidad sin cambiar la forma persistida, el límite de 50 entradas ni los códigos HTTP.
+- **Qué se aceptó:** Reproducir primero las tres mutaciones (cambiar la lista de entrada, cambiar el resultado de `aPlano()` y cambiar el historial devuelto): las tres alteraban la instancia. Después, copiar con `structuredClone` al construir, congelar todo el árbol, y devolver una copia desde `aPlano()`. Se agregaron 6 pruebas; 5 fallan con el código anterior y las 58 pasan con el nuevo, con `arch:check` limpio.
+- **Qué se descartó y por qué:** Dejar el `Object.freeze` de primer nivel, que fue lo que la IA propuso en el #26: congelaba el contenedor y no lo que contiene. Tampoco se devuelven copias del historial en cada lectura: el historial ya queda congelado y modificarlo lanza `TypeError`.
+- **Registra:** Roy Puris
+
 ## Semana 11 · 14 de noviembre
 
 ### Entrada del 20 de noviembre, identidades de Git

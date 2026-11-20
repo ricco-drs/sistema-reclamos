@@ -4,9 +4,9 @@ Este documento describe el flujo por eventos del registro de reclamos (Lab10). E
 
 ## Qué cambia
 
-Hoy, cuando un estudiante registra un reclamo, la aplicación de estudiantes hace dos llamadas más por su cuenta: pide el correo de confirmación a `POST /api/reclamos/confirmar` y registra el expediente en el servicio M2 con un `fetch` directo. Si alguna falla, el estudiante no se entera y nadie reintenta.
+Hoy, cuando un estudiante registra un reclamo, la aplicación de estudiantes hace dos llamadas más por su cuenta: pide el correo de confirmación a `POST /api/reclamos/confirmar` y registra el expediente en el servicio M2 con un `fetch` directo. Si alguna falla, la aplicación solo deja un aviso en la consola del navegador, y esa llamada sale del navegador del estudiante, no de la API.
 
-Con el flujo por eventos, la API guarda el reclamo y publica un solo evento, `ReclamoRegistrado`. Dos consumidores reaccionan a él: el notificador de correo y el envío a M2. El endpoint no cambia para quien lo llama.
+Con el flujo por eventos, la API guarda el reclamo y publica un solo evento, `ReclamoRegistrado`. Dos consumidores reaccionan a él: el notificador de correo y el envío a M2. El endpoint no cambia para quien lo llama. El flujo por eventos no reintenta (ver «Limitaciones conocidas»).
 
 ```
 POST /api/reclamos
@@ -93,6 +93,11 @@ Content-Type: application/json, sin Authorization
 
 `motivoReclamo` es el texto de la categoría. No hay contrato escrito de M2; esto es lo que hace hoy `useReclamos.ts`. A diferencia de la aplicación, que solo deja un `console.warn`, el adaptador falla con error y corta a los 10 segundos, para que el bus lo registre.
 
+Hay dos diferencias con lo que manda hoy la aplicación:
+
+- `codigoEstudiante` sale del reclamo guardado (el código UNI que escribió el estudiante). La aplicación manda el leído del SIGA. Casi siempre coinciden, pero no siempre.
+- La URL ya no está escrita en el código: sale de `M2_URL` (ver más abajo).
+
 ## Puertos y adaptadores
 
 | Puerto | Adaptador de producción | Adaptador para pruebas |
@@ -114,7 +119,9 @@ const reclamos = crearRepositorioReclamosSupabase(sbRest);
 
 bus.suscribir(RECLAMO_REGISTRADO, crearNotificadorDeReclamo({ componerCorreo: componerConfirmacion, enviarCorreo: sendEmail }), 'correo');
 bus.suscribir(RECLAMO_REGISTRADO, crearEnviadorDeExpediente({
-  reclamos, m2: crearClienteM2Http({ url: process.env.M2_URL }),
+  reclamos,
+  // Sin M2_URL (desarrollo y Compose) no se llama al M2 real: así la prueba E1 no le manda expedientes falsos.
+  m2: process.env.M2_URL ? crearClienteM2Http({ url: process.env.M2_URL }) : crearClienteM2Memoria(),
 }), 'm2');
 
 const registrarReclamo = crearRegistrarReclamo({
@@ -127,7 +134,17 @@ app.post('/api/reclamos', requireStudentAuth, crearRegistrarReclamoHandler(regis
 
 Falta extraer `componerConfirmacion({ id, nombre, categoria })` de `/api/reclamos/confirmar` (la plantilla HTML y `primerNombre`), para que el consumidor y la ruta antigua usen la misma.
 
-**Cuidado al activarlo.** Mientras la aplicación de estudiantes siga llamando a `/api/reclamos/confirmar` y a M2, el estudiante recibiría dos correos y M2 dos expedientes. Hay que quitar esas dos llamadas de `useReclamos.ts` en el mismo cambio que conecta el bus. Hasta entonces, `/api/reclamos/confirmar` se mantiene.
+**Cuidado al activarlo.** Al conectar el bus hay que cambiar tres cosas en el mismo cambio:
+
+1. **Quitar las dos llamadas de `useReclamos.ts`** (`/api/reclamos/confirmar` y el `fetch` a M2). Mientras sigan, el estudiante recibe dos correos y M2 dos expedientes. Hasta entonces, `/api/reclamos/confirmar` se mantiene.
+2. **Cambiar el aviso de `ReclamosPanel.tsx`** (líneas 500 a 502). Sin la llamada a `/confirmar`, `avisoCorreo` ya no se activa y la pantalla diría siempre «Te enviamos la confirmación a tu correo», aunque el envío falle. El texto debe decir que la confirmación llegará a su correo, sin asegurarlo.
+3. **Definir `M2_URL`** en Railway. Si está vacía y el código usa el cliente real, cada reclamo falla al enviar a M2; si usa el cliente en memoria, no llega ningún expediente. En Compose se deja vacía a propósito.
+
+## Limitaciones conocidas
+
+- **Sin reintentos.** Si un consumidor falla, el error se registra y no se vuelve a intentar. El estudiante no recibe el correo o M2 no recibe el expediente hasta que alguien lo detecte en los registros.
+- **Se pierde lo que está en curso al reiniciar.** El bus vive en el proceso: si Railway reinicia el servicio (un despliegue, por ejemplo) mientras un consumidor trabaja, ese evento no se retoma. Resolverlo pide una cola o una tabla de eventos pendientes, y no está en este alcance.
+- **Sin límite de envíos en la confirmación.** `/api/reclamos/confirmar` tenía `limiteEnvioCodigo`; con el evento, el correo sale sin ese límite. El riesgo es bajo porque el correo va al propio estudiante, pero consume cuota de los proveedores (escenario E5).
 
 ## Pruebas
 

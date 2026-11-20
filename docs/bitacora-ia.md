@@ -127,3 +127,14 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
   - **Fragmento C.** Strategy, Template Method, Facade y Decorator: no hay variación ni cambio previsto en cuarenta líneas que nadie toca desde hace un año; cualquiera de ellos solo agregaría indirección.
   - **Medición.** El resultado de la herramienta suma por archivo y no por carpeta, así que no se copió tal cual: el equipo contó por carpeta, como en el ejemplo del laboratorio.
 - **Registra:** Roy Puris
+
+## Semana 10 · 20 de noviembre
+
+### Entrada del 20 de noviembre, Lab10: flujo por eventos y entidad de cursos resueltos
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Leer `server.js` y proponer la ruta, los campos y el evento `ReclamoRegistrado` antes de acordarlos con Christopher. Después, escribir el caso de uso `registrarReclamo` con sus puertos y adaptadores en memoria, las pruebas, `docs/api/eventos.md` y el refactor de la entidad `CursosResueltos`, usando la rodaja de cursos resueltos como plantilla.
+- **Qué se aceptó:** La estructura de la rodaja existente aplicada al registro de reclamos, el bus en proceso que no espera a los consumidores y el cliente de M2 con tiempo límite. De la revisión de Christopher contra `server.js`, sus cuatro ajustes: agregar el 401 y el 500, aclarar que los cursos se cortan en 30 sin devolver error, que `categoria` es el texto y que el consumidor de M2 lee la descripción por id. Se comprobó con `npm test` y `npm run arch:check` (evidencia en `docs/evidencias/lab10-pruebas.txt`).
+- **Qué se descartó y por qué:** El contrato inicial de la IA, que no tenía el 401 ni el 500, daba el límite de 30 cursos como si fuera un 400 y no mencionaba que el servidor numera con el método anterior si la secuencia no responde; Christopher lo encontró al compararlo con `server.js`. Además, el adaptador en memoria de reclamos usaba el reloj real y dos pruebas fallaban contra la fecha fija; se le inyectó el reloj. La IA no encontró el contrato de M2 en el repositorio; se usó la llamada de `useReclamos.ts` que indicó Christopher. La conexión al arranque de `server.js` no se hizo: solo Ricco lo modifica.
+- **Registra:** Roy Puris

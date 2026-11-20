@@ -172,3 +172,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Las dos alternativas (por módulos de negocio y por capas técnicas), el cuadro de E1 a E6 y usar como criterio de desempate la prioridad de los escenarios que ya fijaba el informe (tabla 2.7), en vez de inventar uno nuevo. También que la elegida sea la que el informe de acoplamiento ya se comprometió a medir en la semana 13.
 - **Qué se descartó y por qué:** Un ejemplo del borrador que ponía `multer` como dependencia exclusiva de `documentos`: al revisar `server.js`, lo usan también Tefi y reclamos, y se cambió por `firebase-admin`, que solo usa `acceso`. La forma exacta del build y de las reglas no se fijó en el documento, porque la decide Ricco al implementarla.
 - **Registra:** Christopher Albino
+
+### Entrada del 20 de noviembre, plantilla de confirmación del reclamo
+
+- **Fecha y tarea:** 20 de noviembre. Sacar de `server.js` la plantilla del correo de confirmación (`componerConfirmacion`) a su propio archivo, a pedido de Ricco, para que él solo la importe al conectar el bus de eventos.
+- **Herramienta y versión:** Claude Code (Sonnet 5.5).
+- **Qué se le pidió:** Mover la plantilla y el cálculo de `primerNombre` de `POST /api/reclamos/confirmar` a `backend/presentacion/`, sin cambiar el mensaje que recibe el estudiante, y probarla.
+- **Qué se aceptó:** `componerConfirmacion` y `plantillaCorreo.js` (`emailTemplate`, `escaparHtml`, URL de las imágenes), con 6 pruebas. La IA comparó la salida con el código original de `server.js` en seis casos, incluidos nombres sin coma y con HTML en la categoría: el contenido es idéntico y solo cambia la sangría del HTML. Se verificó con `npm test` (49 pruebas) y `npm run arch:check`.
+- **Qué se descartó y por qué:** La firma pedida, `componerConfirmacion({ id, nombre, categoria })`, no alcanzaba: cuando el nombre no trae coma, el saludo se arma con el correo. Se agregó `email` como campo opcional, que el consumidor ya recibe en el evento. No se tocó `server.js`: la copia de `emailTemplate` que sigue ahí la usan el código de verificación y la respuesta del Tercio, y la reemplaza quien conecta el bus.
+- **Registra:** Roy Puris

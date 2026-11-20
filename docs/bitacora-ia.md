@@ -138,3 +138,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Las dos reglas, después de verlas fallar con un import prohibido de cada tipo, en la terminal y en la CI (ejecución #114), y volver a verde al quitar esos imports (ejecución #115).
 - **Qué se descartó y por qué:** Su propuesta de guardar las capturas sueltas en `docs/evidencias/`: se guardaron en `docs/evidencias/img/` para no mezclarlas con los archivos de texto del Lab04-05.
 - **Registra:** Ricco Rashuaman
+
+### Entrada del 20 de noviembre, generador de tokens para E1 y E3
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Escribir `sistema-reclamos/pruebas/generar-tokens.js` a partir de lo que piden E1 y E3 en el informe, y probarlo contra `requireStudentAuth` levantando `server.js` con una clave local y sin conexión a Supabase.
+- **Qué se aceptó:** El script con 200 tokens válidos, uno vencido y uno falsificado; los correos en el dominio reservado `prueba.test`; que el secreto se pase explícito y no se lea del `.env` del proyecto, que suele tener el de producción; y `tokens.json` fuera de git. Se comprobó que sin token, con el vencido, con el falsificado y con uno firmado con otra clave la API responde 401, y que los 200 válidos pasan la autenticación (evidencia en el PR #32).
+- **Qué se descartó y por qué:** Agregar un script en `package.json` y sumar `pruebas/` a `eslint.config.js`: el build solo lo modifica Ricco, así que se importó `process` en el propio archivo. La primera prueba del token firmado con otra clave no valía: el archivo se escribió en otra ruta, el token salió vacío y el 401 era por falta de token. Se repitió con un token real.
+- **Registra:** Christopher Albino

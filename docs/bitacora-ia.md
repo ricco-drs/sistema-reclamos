@@ -127,3 +127,14 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
   - **Fragmento C.** Strategy, Template Method, Facade y Decorator: no hay variación ni cambio previsto en cuarenta líneas que nadie toca desde hace un año; cualquiera de ellos solo agregaría indirección.
   - **Medición.** El resultado de la herramienta suma por archivo y no por carpeta, así que no se copió tal cual: el equipo contó por carpeta, como en el ejemplo del laboratorio.
 - **Registra:** Roy Puris
+
+## Semana 10 · 7 de noviembre
+
+### Entrada del 20 de noviembre, reglas de arquitectura por capas
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Escribir las dos reglas nuevas de `sistema-reclamos/.dependency-cruiser.cjs` (que `aplicacion/` no importe infraestructura ni presentación, y que el dominio no importe paquetes de npm) y revisar que el código actual y el de la rama `feat/evento-reclamo-registrado` las cumplan.
+- **Qué se aceptó:** Las dos reglas, después de verlas fallar con un import prohibido de cada tipo, en la terminal y en la CI (ejecución #114), y volver a verde al quitar esos imports (ejecución #115).
+- **Qué se descartó y por qué:** Su propuesta de guardar las capturas sueltas en `docs/evidencias/`: se guardaron en `docs/evidencias/img/` para no mezclarlas con los archivos de texto del Lab04-05.
+- **Registra:** Ricco Rashuaman

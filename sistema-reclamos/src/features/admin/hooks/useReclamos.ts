@@ -156,9 +156,6 @@ export function useReclamos(onDocumentsProcessed?: (data: any) => void, emailSes
   // ── Envío y consulta ──────────────────────────────────────────────────────
   const [enviandoFormal, setEnviandoFormal] = useState(false);
   const enviandoRef = useRef(false);
-  // El reclamo se registró pero su correo de acuse no salió. Se avisa sin
-  // presentarlo como un fallo del envío, que es lo que provocaba reintentos.
-  const [avisoCorreo, setAvisoCorreo] = useState(false);
   const [reclamoEnviado, setReclamoEnviado] = useState<any>(null);
   const [reclamosExistentes, setReclamosExistentes] = useState<any[]>([]);
   const [loadingConsulta, setLoadingConsulta] = useState(false);
@@ -861,7 +858,6 @@ INSTRUCCIONES ESTRICTAS:
     // antes de que el botón llegue a deshabilitarse.
     if (enviandoRef.current) return;
     enviandoRef.current = true;
-    setAvisoCorreo(false);
     setEnviandoFormal(true);
     try {
       const resReclamo = await fetch(`${apiUrl}/api/reclamos`, {
@@ -892,27 +888,10 @@ INSTRUCCIONES ESTRICTAS:
       if (!resReclamo.ok) throw new Error(dataReclamo.error || 'Error al registrar el reclamo');
       const caseId = dataReclamo.id;
 
-      // Solo se manda el id: el destinatario y los datos del caso los saca el
-      // servidor de la base. Enviarlos desde aquí convertía este endpoint en un
-      // enviador de correos a direcciones arbitrarias.
-      const resConfirmar = await fetch(`${apiUrl}/api/reclamos/confirmar`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${activeToken}`,
-        },
-        body: JSON.stringify({ caseId })
-      });
-      // Un fallo aquí NO cancela el envío: el reclamo ya está creado. Antes se
-      // lanzaba, el alert decía "Error al registrar el reclamo" —que era falso—
-      // y el estudiante volvía a pulsar Enviar creando otro. El correo es un
-      // acuse de recibo, no parte del registro.
-      if (!resConfirmar.ok) {
-        const errData = await resConfirmar.json().catch(() => ({}));
-        console.warn('Reclamo registrado, pero no se pudo enviar el correo de confirmación:',
-          errData.error || resConfirmar.status);
-        setAvisoCorreo(true);
-      }
+      // El correo de confirmación y el expediente a M2 ya no se piden desde aquí: la
+      // API los envía sola al guardar el reclamo (evento ReclamoRegistrado, ver
+      // docs/api/eventos.md). Si fallan, el reclamo ya está registrado y no hay
+      // nada que reintentar desde el navegador.
 
       // El reclamo se envió con éxito: los documentos usados quedan habilitados
       // para reusarse en el próximo reclamo sin volver a subirlos.
@@ -931,19 +910,6 @@ INSTRUCCIONES ESTRICTAS:
           })
         }).catch(e => console.warn('No se pudo marcar documentos como confirmados:', e.message));
       }
-
-      fetch('https://tefiis-m2.onrender.com/api/v1/m2/expedientes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: caseId,
-          codigoEstudiante: datosEstudiante.codigo || datosEstudiante.codigoEstudiante || '',
-          email: emailVerificado,
-          nombre: datosEstudiante.nombre || '',
-          motivoReclamo: categoriaSeleccionada?.label || '',
-          descripcion: descripcionFormal,
-        })
-      }).catch(e => console.warn('tefiis-m2 expediente no registrado:', e.message));
 
       setReclamoEnviado({ id: caseId });
       setEtapa('enviado');
@@ -996,7 +962,7 @@ INSTRUCCIONES ESTRICTAS:
     agregarBoletaGuardada, subiendoBoleta,
     procesandoPdfs,
     camposManual, setCamposManual,
-    enviandoFormal, avisoCorreo,
+    enviandoFormal,
     reclamoEnviado,
     reclamosExistentes, loadingConsulta,
     reclamoDetalle, loadingDetalle, abrirDetalleReclamo, cerrarDetalleReclamo,

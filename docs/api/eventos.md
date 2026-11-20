@@ -55,7 +55,7 @@ Dos detalles que el contrato debe reflejar tal como son:
     "email": "ana.perez@uni.pe",
     "nombre": "PEREZ, ANA",
     "codigoEstudiante": "20240001A",
-    "categoria": "Cruce de horarios",
+    "categoria": "Matrícula",
     "cursosRetirar": [{ "codigo": "SW708", "seccion": "U" }],
     "cursosMatricular": [],
     "tieneEvidencia": true

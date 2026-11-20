@@ -90,7 +90,7 @@ paths:
                 value:
                   nombre: PEREZ, ANA
                   codigo_estudiante: 20240001A
-                  categoria: Cruce de horarios
+                  categoria: Matrícula
                   descripcion: Me matricularon en dos cursos que se cruzan el lunes de 8 a 10.
                   datos_estudiante:
                     especialidad: Ingeniería de Software
@@ -324,9 +324,9 @@ paths:
                     $ref: '#/components/schemas/CursoResueltoEntrada'
             example:
               matricular:
-                - codigo: SW709
-                  seccion: V
-                  nombre: Arquitectura de Software
+                - codigo: BFI01
+                  seccion: B
+                  nombre: FISICA I
               desmatricular:
                 - codigo: SW708
                   seccion: U
@@ -348,9 +348,9 @@ paths:
                 success: true
                 cursos_resueltos:
                   matricular:
-                    - codigo: SW709
-                      seccion: V
-                      nombre: Arquitectura de Software
+                    - codigo: BFI01
+                      seccion: B
+                      nombre: FISICA I
                   desmatricular:
                     - codigo: SW708
                       seccion: U
@@ -361,9 +361,9 @@ paths:
                     - admin: miembro.tercio@uni.pe
                       fecha: '2026-11-21T16:20:00.000Z'
                       matricular:
-                        - codigo: SW709
-                          seccion: V
-                          nombre: Arquitectura de Software
+                        - codigo: BFI01
+                          seccion: B
+                          nombre: FISICA I
                       desmatricular:
                         - codigo: SW708
                           seccion: U
@@ -422,7 +422,7 @@ paths:
             example:
               respuesta: |-
                 Revisamos tu caso y confirmamos el cruce.
-                Te retiramos de SW708 U y te matriculamos en SW709 V.
+                Te retiramos de SW708 U y te matriculamos en BFI01 B.
       responses:
         '200':
           description: Correo enviado.

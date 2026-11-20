@@ -11,17 +11,26 @@ export class ErrorDeCursos extends Error {
 
 const MAX_HISTORIAL = 50;
 
+// Congela el valor y todo lo que contiene, no solo el primer nivel.
+function congelar(valor) {
+  if (valor && typeof valor === 'object') {
+    Object.values(valor).forEach(congelar);
+    Object.freeze(valor);
+  }
+  return valor;
+}
+
 /**
  * Decisión del Tercio sobre qué cursos-sección se matriculan y cuáles se retiran.
- * Es inmutable: registrar una decisión devuelve otra instancia.
+ * Es inmutable: registrar una decisión devuelve otra instancia. Copia lo que recibe y congela
+ * las listas y los objetos anidados, así que cambiar la entrada original o lo que devuelve
+ * `aPlano()` no altera una instancia ya creada.
  */
 export class CursosResueltos {
   #datos;
 
   constructor({ matricular = [], desmatricular = [], actualizadoPor = null, actualizadoEn = null, historial = [] } = {}) {
-    this.#datos = Object.freeze({
-      matricular, desmatricular, actualizadoPor, actualizadoEn, historial: Object.freeze([...historial]),
-    });
+    this.#datos = congelar(structuredClone({ matricular, desmatricular, actualizadoPor, actualizadoEn, historial }));
     Object.freeze(this);
   }
 
@@ -38,10 +47,9 @@ export class CursosResueltos {
     return new CursosResueltos({ matricular, desmatricular, actualizadoPor: admin, actualizadoEn: fecha, historial });
   }
 
-  /** Forma que se guarda en la columna `cursos_resueltos`. */
+  /** Forma que se guarda en la columna `cursos_resueltos`. Es una copia: quien la reciba puede modificarla. */
   aPlano() {
-    const { matricular, desmatricular, actualizadoPor, actualizadoEn, historial } = this.#datos;
-    return { matricular, desmatricular, actualizadoPor, actualizadoEn, historial: [...historial] };
+    return structuredClone(this.#datos);
   }
 }
 

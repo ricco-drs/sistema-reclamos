@@ -144,3 +144,68 @@ test('entidad: reconstruye desde lo persistido y recorta a 50', () => {
   assert.equal(e.historial[0].numero, 11);
   assert.equal(CursosResueltos.desde({ historial: 'roto' }).historial.length, 0);
 });
+
+test('entidad: cambiar la entrada original no altera la instancia', () => {
+  const matricular = [{ codigo: 'SW708', seccion: 'U', nombre: 'Arquitectura' }];
+  const previo = { matricular: [{ codigo: 'A', seccion: 'U' }], historial: [{ admin: 'a', matricular: [{ codigo: 'A', seccion: 'U' }] }] };
+  const e = CursosResueltos.desde(previo).registrar(matricular, [], 'admin', 'f1');
+  matricular[0].codigo = 'HACK';
+  matricular.push({ codigo: 'OTRO', seccion: 'U' });
+  previo.historial[0].admin = 'hack';
+  previo.historial[0].matricular.pop();
+  assert.deepEqual(e.aPlano().matricular, [{ codigo: 'SW708', seccion: 'U', nombre: 'Arquitectura' }]);
+  assert.equal(e.aPlano().historial[0].admin, 'a');
+  assert.equal(e.aPlano().historial[0].matricular.length, 1);
+});
+
+test('entidad: aPlano() devuelve una copia que se puede modificar sin alterar la instancia', () => {
+  const e = CursosResueltos.desde(null).registrar([{ codigo: 'SW708', seccion: 'U' }], [], 'admin', 'f1');
+  const plano = e.aPlano();
+  plano.matricular.push({ codigo: 'Z', seccion: 'U' });
+  plano.matricular[0].codigo = 'HACK';
+  plano.historial[0].admin = 'otro';
+  plano.historial.push({ numero: 99 });
+  assert.deepEqual(e.aPlano().matricular, [{ codigo: 'SW708', seccion: 'U' }]);
+  assert.equal(e.aPlano().historial.length, 1);
+  assert.equal(e.aPlano().historial[0].admin, 'admin');
+  assert.notEqual(e.aPlano().matricular, e.aPlano().matricular);
+});
+
+test('entidad: el historial que se devuelve no se puede modificar', () => {
+  const e = CursosResueltos.desde(null).registrar([{ codigo: 'SW708', seccion: 'U' }], [], 'admin', 'f1');
+  assert.throws(() => e.historial.push({ numero: 1 }), TypeError);
+  assert.throws(() => { e.historial[0].admin = 'otro'; }, TypeError);
+  assert.throws(() => e.historial[0].matricular.push({ codigo: 'Z', seccion: 'U' }), TypeError);
+  assert.equal(e.historial.length, 1);
+  assert.equal(e.historial[0].admin, 'admin');
+});
+
+test('entidad: registrar no comparte listas ni objetos con la instancia anterior', () => {
+  const antes = CursosResueltos.desde(null).registrar([{ codigo: 'A', seccion: 'U' }], [], 'a', 'f1');
+  const despues = antes.registrar([{ codigo: 'B', seccion: 'U' }], [], 'b', 'f2');
+  assert.notEqual(despues.historial[0], antes.historial[0]);
+  assert.deepEqual(antes.aPlano().matricular, [{ codigo: 'A', seccion: 'U' }]);
+  assert.equal(antes.historial.length, 1);
+  assert.equal(despues.historial.length, 2);
+});
+
+test('entidad: conserva la forma persistida y el límite de 50 entradas', () => {
+  const persistido = { historial: Array.from({ length: 60 }, (_, i) => ({ numero: i })) };
+  const plano = CursosResueltos.desde(persistido).registrar([{ codigo: 'SW708', seccion: 'U', nombre: 'N' }], [], 'admin', 'f').aPlano();
+  assert.deepEqual(Object.keys(plano), ['matricular', 'desmatricular', 'actualizadoPor', 'actualizadoEn', 'historial']);
+  assert.deepEqual(plano.matricular, [{ codigo: 'SW708', seccion: 'U', nombre: 'N' }]);
+  assert.deepEqual(plano.desmatricular, []);
+  assert.equal(plano.actualizadoPor, 'admin');
+  assert.equal(plano.actualizadoEn, 'f');
+  assert.equal(plano.historial.length, 50);
+  assert.deepEqual(plano.historial.at(-1), { admin: 'admin', fecha: 'f', matricular: [{ codigo: 'SW708', seccion: 'U', nombre: 'N' }], desmatricular: [] });
+  assert.equal(JSON.stringify(plano), JSON.stringify(JSON.parse(JSON.stringify(plano))));
+});
+
+test('dominio: prepararCursosResueltos no modifica el valor previo anidado', () => {
+  const previo = { matricular: [{ codigo: 'A', seccion: 'U' }], historial: [{ admin: 'a', matricular: [{ codigo: 'A', seccion: 'U' }] }] };
+  const copia = JSON.parse(JSON.stringify(previo));
+  const valor = prepararCursosResueltos(previo, [{ codigo: 'B', seccion: 'U' }], [], 'admin', 'f');
+  valor.historial[0].matricular.push({ codigo: 'X', seccion: 'U' });
+  assert.deepEqual(previo, copia);
+});

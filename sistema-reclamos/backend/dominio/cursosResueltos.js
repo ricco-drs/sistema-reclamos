@@ -1,3 +1,5 @@
+import express from 'express';
+
 export class ErrorDeCursos extends Error {
   constructor(message, status = 400) {
     super(message);

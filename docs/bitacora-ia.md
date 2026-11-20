@@ -139,6 +139,7 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se descartó y por qué:** Su propuesta de guardar las capturas sueltas en `docs/evidencias/`: se guardaron en `docs/evidencias/img/` para no mezclarlas con los archivos de texto del Lab04-05.
 - **Registra:** Ricco Rashuaman
 
+<<<<<<< HEAD
 ### Entrada del 20 de noviembre, generador de tokens para E1 y E3
 
 - **¿Se usó IA?** Sí
@@ -147,3 +148,13 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** El script con 200 tokens válidos, uno vencido y uno falsificado; los correos en el dominio reservado `prueba.test`; que el secreto se pase explícito y no se lea del `.env` del proyecto, que suele tener el de producción; y `tokens.json` fuera de git. Se comprobó que sin token, con el vencido, con el falsificado y con uno firmado con otra clave la API responde 401, y que los 200 válidos pasan la autenticación (evidencia en el PR #32).
 - **Qué se descartó y por qué:** Agregar un script en `package.json` y sumar `pruebas/` a `eslint.config.js`: el build solo lo modifica Ricco, así que se importó `process` en el propio archivo. La primera prueba del token firmado con otra clave no valía: el archivo se escribió en otra ruta, el token salió vacío y el 401 era por falta de token. Se repitió con un token real.
 - **Registra:** Christopher Albino
+=======
+### Entrada del 20 de noviembre, Lab10: flujo por eventos y entidad de cursos resueltos
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Leer `server.js` y proponer la ruta, los campos y el evento `ReclamoRegistrado` antes de acordarlos con Christopher. Después, escribir el caso de uso `registrarReclamo` con sus puertos y adaptadores en memoria, las pruebas, `docs/api/eventos.md` y el refactor de la entidad `CursosResueltos`, usando la rodaja de cursos resueltos como plantilla.
+- **Qué se aceptó:** La estructura de la rodaja existente aplicada al registro de reclamos, el bus en proceso que no espera a los consumidores y el cliente de M2 con tiempo límite. De la revisión de Christopher contra `server.js`, sus cuatro ajustes: agregar el 401 y el 500, aclarar que los cursos se cortan en 30 sin devolver error, que `categoria` es el texto y que el consumidor de M2 lee la descripción por id. Se comprobó con `npm test` y `npm run arch:check` (evidencia en `docs/evidencias/lab10-pruebas.txt`). También sus observaciones de la revisión: usar el cliente de M2 en memoria cuando `M2_URL` esté vacía, y presentar la falta de reintentos como limitación conocida.
+- **Qué se descartó y por qué:** El contrato inicial de la IA, que no tenía el 401 ni el 500, daba el límite de 30 cursos como si fuera un 400 y no mencionaba que el servidor numera con el método anterior si la secuencia no responde; Christopher lo encontró al compararlo con `server.js`. En la revisión del PR #27, Christopher encontró tres afirmaciones de `docs/api/eventos.md` que no eran ciertas: que hoy «nadie reintenta» (el bus tampoco reintenta), que el cuerpo a M2 era «el mismo que manda la aplicación» (el código UNI ahora sale del reclamo guardado) y que bastaba quitar las dos llamadas del front (faltaba cambiar el aviso de `ReclamosPanel.tsx` y definir `M2_URL`). Se verificó cada punto contra el código (`ReclamosPanel.tsx` líneas 500 a 502, `useReclamos.ts` línea 940 y `limiteEnvioCodigo`) y se corrigió el documento, con una sección de limitaciones conocidas. Además, el adaptador en memoria de reclamos usaba el reloj real y dos pruebas fallaban contra la fecha fija; se le inyectó el reloj. La IA no encontró el contrato de M2 en el repositorio; se usó la llamada de `useReclamos.ts` que indicó Christopher. La conexión al arranque de `server.js` no se hizo: solo Ricco lo modifica.
+- **Registra:** Roy Puris
+>>>>>>> origin/develop

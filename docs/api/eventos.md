@@ -55,7 +55,7 @@ Dos detalles que el contrato debe reflejar tal como son:
     "email": "ana.perez@uni.pe",
     "nombre": "PEREZ, ANA",
     "codigoEstudiante": "20240001A",
-    "categoria": "Cruce de horarios",
+    "categoria": "Matrícula",
     "cursosRetirar": [{ "codigo": "SW708", "seccion": "U" }],
     "cursosMatricular": [],
     "tieneEvidencia": true
@@ -132,7 +132,7 @@ const registrarReclamo = crearRegistrarReclamo({
 app.post('/api/reclamos', requireStudentAuth, crearRegistrarReclamoHandler(registrarReclamo));
 ```
 
-Falta extraer `componerConfirmacion({ id, nombre, categoria })` de `/api/reclamos/confirmar` (la plantilla HTML y `primerNombre`), para que el consumidor y la ruta antigua usen la misma.
+`componerConfirmacion({ id, nombre, categoria, email })` ya está extraída de `/api/reclamos/confirmar` en `backend/presentacion/componerConfirmacion.js` (la plantilla HTML y `primerNombre`). `email` es opcional: solo sirve para el saludo cuando `nombre` no trae el formato «APELLIDOS, NOMBRES». Al conectar el bus, `server.js` la importa (`import { componerConfirmacion } from './presentacion/componerConfirmacion.js'`), y la ruta `/api/reclamos/confirmar` puede usarla mientras exista. `emailTemplate`, `escaparHtml` y las tres URL de imagen están en `backend/presentacion/plantillaCorreo.js`: `server.js` puede importarlas y borrar su copia, que la usan también el código de verificación y la respuesta del Tercio.
 
 **Cuidado al activarlo.** Al conectar el bus hay que cambiar tres cosas en el mismo cambio:
 

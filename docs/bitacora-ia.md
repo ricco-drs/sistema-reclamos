@@ -148,6 +148,40 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se descartó y por qué:** El contrato inicial de la IA, que no tenía el 401 ni el 500, daba el límite de 30 cursos como si fuera un 400 y no mencionaba que el servidor numera con el método anterior si la secuencia no responde; Christopher lo encontró al compararlo con `server.js`. En la revisión del PR #27, Christopher encontró tres afirmaciones de `docs/api/eventos.md` que no eran ciertas: que hoy «nadie reintenta» (el bus tampoco reintenta), que el cuerpo a M2 era «el mismo que manda la aplicación» (el código UNI ahora sale del reclamo guardado) y que bastaba quitar las dos llamadas del front (faltaba cambiar el aviso de `ReclamosPanel.tsx` y definir `M2_URL`). Se verificó cada punto contra el código (`ReclamosPanel.tsx` líneas 500 a 502, `useReclamos.ts` línea 940 y `limiteEnvioCodigo`) y se corrigió el documento, con una sección de limitaciones conocidas. Además, el adaptador en memoria de reclamos usaba el reloj real y dos pruebas fallaban contra la fecha fija; se le inyectó el reloj. La IA no encontró el contrato de M2 en el repositorio; se usó la llamada de `useReclamos.ts` que indicó Christopher. La conexión al arranque de `server.js` no se hizo: solo Ricco lo modifica.
 - **Registra:** Roy Puris
 
+### Entrada del 20 de noviembre, generador de tokens para E1 y E3
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Escribir `sistema-reclamos/pruebas/generar-tokens.js` a partir de lo que piden E1 y E3 en el informe, y probarlo contra `requireStudentAuth` levantando `server.js` con una clave local y sin conexión a Supabase.
+- **Qué se aceptó:** El script con 200 tokens válidos, uno vencido y uno falsificado; los correos en el dominio reservado `prueba.test`; que el secreto se pase explícito y no se lea del `.env` del proyecto, que suele tener el de producción; y `tokens.json` fuera de git. Se comprobó que sin token, con el vencido, con el falsificado y con uno firmado con otra clave la API responde 401, y que los 200 válidos pasan la autenticación (evidencia en el PR #32).
+- **Qué se descartó y por qué:** Agregar un script en `package.json` y sumar `pruebas/` a `eslint.config.js`: el build solo lo modifica Ricco, así que se importó `process` en el propio archivo. La primera prueba del token firmado con otra clave no valía: el archivo se escribió en otra ruta, el token salió vacío y el 401 era por falta de token. Se repitió con un token real.
+
+### Entrada del 20 de noviembre, Lab10: contrato OpenAPI
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Leer en `server.js` las 18 rutas de `/api/admin/*` y `POST /api/reclamos`, y redactar `docs/api/openapi.yaml` con sus ejemplos y errores. También para comparar el contrato con la tabla de errores de `docs/api/eventos.md` (#27) y para escribir un validador local, `sistema-reclamos/pruebas/validar-openapi.cjs`.
+- **Qué se aceptó:** El contrato escrito sobre el comportamiento actual del código, con los mensajes de error copiados de `server.js`, y el validador: las 19 operaciones coinciden con las rutas del código, y los 192 ejemplos y los 34 mensajes de error se comprueban (evidencia en `docs/evidencias/lab10-openapi.txt`). Lo que el código hace de forma discutible quedó documentado tal cual: un cuerpo que no es JSON válido responde 500, `POST /api/admin/maintenance` no crea su fila y los interruptores usan tres nombres de campo distintos.
+- **Qué se descartó y por qué:** Validar con Redocly por `npx`, porque descarga y ejecuta un paquete de internet; se usaron `js-yaml` y `ajv`, que ya instala `npm ci`. Corregir esos comportamientos en este PR, porque son cambios a `server.js` y los decide el equipo. Cambiar la fila del informe de la Entrega 1 que limita el contrato a `/api/admin/*`, porque es un documento ya entregado. La primera versión del validador se caía ante una `$ref` rota sin informar los demás errores; se corrigió para que la cuente como un problema más.
+
+### Entrada del 20 de noviembre, Lab09: particiones del backend
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Clasificar por módulo las 41 rutas de `server.js`, revisar qué piezas comparten (PostgREST, correo, sesión, interruptores) y redactar el borrador de `docs/particiones.md`, con las dos particiones, el cuadro por escenario y la recomendación.
+- **Qué se aceptó:** Las dos alternativas (por módulos de negocio y por capas técnicas), el cuadro de E1 a E6 y usar como criterio de desempate la prioridad de los escenarios que ya fijaba el informe (tabla 2.7), en vez de inventar uno nuevo. También que la elegida sea la que el informe de acoplamiento ya se comprometió a medir en la semana 13.
+- **Qué se descartó y por qué:** Un ejemplo del borrador que ponía `multer` como dependencia exclusiva de `documentos`: al revisar `server.js`, lo usan también Tefi y reclamos, y se cambió por `firebase-admin`, que solo usa `acceso`. La forma exacta del build y de las reglas no se fijó en el documento, porque la decide Ricco al implementarla.
+- **Registra:** Christopher Albino
+
+### Entrada del 20 de noviembre, plantilla de confirmación del reclamo
+
+- **Fecha y tarea:** 20 de noviembre. Sacar de `server.js` la plantilla del correo de confirmación (`componerConfirmacion`) a su propio archivo, a pedido de Ricco, para que él solo la importe al conectar el bus de eventos.
+- **Herramienta y versión:** Claude Code (Sonnet 5.5).
+- **Qué se le pidió:** Mover la plantilla y el cálculo de `primerNombre` de `POST /api/reclamos/confirmar` a `backend/presentacion/`, sin cambiar el mensaje que recibe el estudiante, y probarla.
+- **Qué se aceptó:** `componerConfirmacion` y `plantillaCorreo.js` (`emailTemplate`, `escaparHtml`, URL de las imágenes), con 6 pruebas. La IA comparó la salida con el código original de `server.js` en seis casos, incluidos nombres sin coma y con HTML en la categoría: el contenido es idéntico y solo cambia la sangría del HTML. Se verificó con `npm test` (49 pruebas) y `npm run arch:check`.
+- **Qué se descartó y por qué:** La firma pedida, `componerConfirmacion({ id, nombre, categoria })`, no alcanzaba: cuando el nombre no trae coma, el saludo se arma con el correo. Se agregó `email` como campo opcional, que el consumidor ya recibe en el evento. No se tocó `server.js`: la copia de `emailTemplate` que sigue ahí la usan el código de verificación y la respuesta del Tercio, y la reemplaza quien conecta el bus.
+- **Registra:** Roy Puris
+
 ## Semana 11 · 14 de noviembre
 
 ### Entrada del 20 de noviembre, identidades de Git

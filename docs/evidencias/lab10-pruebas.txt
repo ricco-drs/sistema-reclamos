@@ -1,0 +1,55 @@
+# Evidencia Lab10 (rama feat/25-evento-reclamo-registrado)
+# Comandos: cd sistema-reclamos; npm ci; npm test; npm run arch:check
+
+$ npm test
+> interfaz-tefiis@0.0.0 test
+> node --test backend/tests/*.test.js
+✔ dominio: normaliza código y sección y limita nombre (4.3316ms)
+✔ dominio: rechaza listas incorrectas, exceso y cursos incompletos (0.5673ms)
+✔ dominio: conserva 49 entradas previas y añade autor y fecha sin mutar (0.3978ms)
+✔ caso de uso: guarda con repositorio falso sin base ni credenciales (0.4844ms)
+✔ caso de uso: entrada inválida nunca consulta ni guarda (1.692ms)
+✔ caso de uso: inexistencia y desaparición al guardar producen 404 (2.3168ms)
+✔ adaptador: consulta y PATCH conservan contrato PostgREST (0.4731ms)
+✔ adaptador: informa esquema ausente y reconoce PATCH sin filas (0.3227ms)
+✔ adaptador Supabase: el caso de uso guarda y normaliza igual (0.2962ms)
+✔ adaptador Memoria: el caso de uso guarda y normaliza igual (0.4332ms)
+✔ HTTP: comunica resultado y registra auditoría con identidad autenticada (0.6604ms)
+✔ HTTP: traduce errores de validación, ausencia e infraestructura (0.4491ms)
+✔ registra el reclamo y publica ReclamoRegistrado sin la descripción (5.3971ms)
+✔ un reintento devuelve el reclamo existente y no publica otro evento (0.4186ms)
+✔ el mismo estudiante puede mandar dos reclamos distintos (0.3752ms)
+✔ valida categoría, descripción y número de pruebas antes de tocar la base (1.4593ms)
+✔ una prueba ajena es NO_PERMITIDO (0.2242ms)
+✔ la política cierra la recepción con 503 antes de validar el cuerpo (0.2646ms)
+✔ los cursos: corta en 30 y descarta sin avisar los que no están en el catálogo (0.526ms)
+✔ numeración: reintenta tras choques de id y sigue (0.6104ms)
+✔ numeración: 10 choques seguidos dan 503 y no publican (0.482ms)
+✔ numeración: si la secuencia no responde usa el método anterior (0.6032ms)
+✔ un error real de la base no es colisión: se propaga y no publica (0.3713ms)
+✔ si publicar falla, el reclamo igual queda registrado (0.7839ms)
+✔ registra la actividad con el correo autenticado (0.3273ms)
+✔ HTTP: 200 con id; duplicado lo marca (0.4762ms)
+✔ HTTP: traduce 400, 403, 503 y todo lo demás a 500 (0.5934ms)
+✔ evento: es inmutable y su id sirve para descartar repetidos (0.3616ms)
+✔ bus: cada consumidor recibe el evento y la falla de uno no afecta a los demás (0.391ms)
+✔ bus: publicar no espera a un consumidor lento (34.1355ms)
+✔ flujo completo en memoria: un POST produce el correo y el expediente de M2 (0.804ms)
+✔ consumidor de M2: si el reclamo no existe, falla en vez de enviar vacío (0.1316ms)
+✔ cliente M2 HTTP: manda el contrato actual y falla con error si M2 responde mal (0.3876ms)
+✔ política: respeta el orden y los mensajes de la ruta actual (0.2381ms)
+✔ adaptador Supabase: duplicado, secuencia, último id e insert conservan el contrato PostgREST (0.4272ms)
+✔ adaptador Supabase: una secuencia ausente o rota devuelve null en vez de fallar (0.1499ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 166.1153
+
+$ npm run arch:check
+> interfaz-tefiis@0.0.0 arch:check
+> depcruise backend --config .dependency-cruiser.cjs
+✔ no dependency violations found (39 modules, 43 dependencies cruised)

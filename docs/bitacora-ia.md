@@ -138,3 +138,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Las dos reglas, después de verlas fallar con un import prohibido de cada tipo, en la terminal y en la CI (ejecución #114), y volver a verde al quitar esos imports (ejecución #115).
 - **Qué se descartó y por qué:** Su propuesta de guardar las capturas sueltas en `docs/evidencias/`: se guardaron en `docs/evidencias/img/` para no mezclarlas con los archivos de texto del Lab04-05.
 - **Registra:** Ricco Rashuaman
+
+### Entrada del 20 de noviembre, Lab10: contrato OpenAPI
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Leer en `server.js` las 18 rutas de `/api/admin/*` y `POST /api/reclamos`, y redactar `docs/api/openapi.yaml` con sus ejemplos y errores. También para comparar el contrato con la tabla de errores de `docs/api/eventos.md` (#27) y para escribir un validador local, `sistema-reclamos/pruebas/validar-openapi.cjs`.
+- **Qué se aceptó:** El contrato escrito sobre el comportamiento actual del código, con los mensajes de error copiados de `server.js`, y el validador: las 19 operaciones coinciden con las rutas del código, y los 192 ejemplos y los 34 mensajes de error se comprueban (evidencia en `docs/evidencias/lab10-openapi.txt`). Lo que el código hace de forma discutible quedó documentado tal cual: un cuerpo que no es JSON válido responde 500, `POST /api/admin/maintenance` no crea su fila y los interruptores usan tres nombres de campo distintos.
+- **Qué se descartó y por qué:** Validar con Redocly por `npx`, porque descarga y ejecuta un paquete de internet; se usaron `js-yaml` y `ajv`, que ya instala `npm ci`. Corregir esos comportamientos en este PR, porque son cambios a `server.js` y los decide el equipo. Cambiar la fila del informe de la Entrega 1 que limita el contrato a `/api/admin/*`, porque es un documento ya entregado. La primera versión del validador se caía ante una `$ref` rota sin informar los demás errores; se corrigió para que la cuente como un problema más.
+- **Registra:** Christopher Albino

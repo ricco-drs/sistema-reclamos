@@ -190,3 +190,14 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Reproducir primero las tres mutaciones (cambiar la lista de entrada, cambiar el resultado de `aPlano()` y cambiar el historial devuelto): las tres alteraban la instancia. Después, copiar con `structuredClone` al construir, congelar todo el árbol, y devolver una copia desde `aPlano()`. Se agregaron 6 pruebas; 5 fallan con el código anterior y las 58 pasan con el nuevo, con `arch:check` limpio.
 - **Qué se descartó y por qué:** Dejar el `Object.freeze` de primer nivel, que fue lo que la IA propuso en el #26: congelaba el contenedor y no lo que contiene. Tampoco se devuelven copias del historial en cada lectura: el historial ya queda congelado y modificarlo lanza `TypeError`.
 - **Registra:** Roy Puris
+
+## Semana 11 · 14 de noviembre
+
+### Entrada del 20 de noviembre, identidades de Git
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Codex
+- **Para qué se usó:** Revisar las identidades del historial remoto, contrastar las equivalencias propuestas por Roy en el PR #48 y preparar el `.mailmap` que pidió el docente.
+- **Qué se aceptó:** Los correos institucionales y las equivalencias verificadas en el historial. Se comprobó que las 13 combinaciones de nombre y correo quedan agrupadas en seis identidades, correspondientes al equipo y al docente.
+- **Qué se descartó y por qué:** Reescribir commits para cambiar su autor. Git puede agrupar las contribuciones con `.mailmap` y conservar los commits publicados.
+- **Registra:** Lenin Castro

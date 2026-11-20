@@ -28,7 +28,7 @@ info:
     son para mostrarlos a una persona, no para que el cliente los compare.
     Tres casos generales que valen para todas las rutas:
     - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde hoy **500**
-      `Error interno del servidor.`, no 400 ni 413.
+      `Error interno del servidor.`, no 400 ni 413. Se corrige en el issue #40.
     - Si `ALLOWED_ORIGINS` está definida, una petición desde un origen que no
       está en la lista responde **403** `Origen no permitido por CORS.`
     - Cuando falla Supabase, el 500 puede traer en `error` el texto crudo que
@@ -46,7 +46,10 @@ tags:
   - name: Conversaciones
     description: Auditoría de lo que los estudiantes le preguntan a Tefi.
   - name: Interruptores
-    description: Ventana de reclamos y modos de la plataforma. Solo el administrador principal.
+    description: |
+      Ventana de reclamos y modos de la plataforma. Solo el administrador principal.
+      Cada interruptor conserva su propio nombre de campo (`habilitados`, `activo`
+      o `enabled`): unificarlos rompería el panel, que ya los usa así.
   - name: Actividad
     description: Historial de acciones del sistema.
 security:
@@ -578,7 +581,8 @@ paths:
         resultado. Se conserva el contacto que escribió el estudiante
         (`datos_parseados._contacto`), porque no sale de los PDF.
 
-        Si la lectura de la base falla, también responde 404.
+        Si la lectura de la base falla, también responde 404, en vez de 500
+        (se corrige en el issue #40).
       parameters:
         - name: email
           in: path
@@ -662,7 +666,8 @@ paths:
       description: |
         Los buckets son privados: lo guardado en la base es una referencia
         (bucket y ruta), no un enlace descargable. El enlace firmado vale
-        10 minutos. Una referencia que no se puede interpretar responde 500, no 400.
+        10 minutos. Una referencia que no se puede interpretar responde 500, no 400
+        (se corrige en el issue #40).
       parameters:
         - name: url
           in: query
@@ -936,7 +941,7 @@ paths:
       description: |
         Pausa la aplicación de estudiantes para todos. A diferencia de los otros
         interruptores, **no crea la fila**: si `maintenance_mode` no existe en
-        `app_settings`, responde 200 sin guardar nada.
+        `app_settings`, responde 200 sin guardar nada. Se corrige en el issue #40.
       requestBody:
         required: true
         content:

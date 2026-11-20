@@ -121,9 +121,18 @@ const sobran = operaciones.filter((o) => !enCodigo.includes(o));
 if (faltan.length) fallo(`rutas del código que no están en el contrato: ${faltan.join(', ')}`);
 if (sobran.length) fallo(`rutas del contrato que no están en el código: ${sobran.join(', ')}`);
 
-// 6. Cada mensaje de error de los ejemplos existe en el código
-const codigo = [servidor, ...['dominio/cursosResueltos.js', 'aplicacion/guardarCursosResueltos.js']
-  .map((f) => fs.readFileSync(path.join(raiz, 'sistema-reclamos/backend', f), 'utf8'))].join('\n');
+// 6. Cada mensaje de error de los ejemplos existe en el código.
+// Se lee todo backend/ menos tests/: los mensajes cambian de archivo cuando una
+// ruta se mueve a su caso de uso, y el contrato no tiene por qué fallar por eso.
+function archivosJs(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const ruta = path.join(dir, e.name);
+    if (e.isDirectory()) return e.name === 'tests' || e.name === 'node_modules' ? [] : archivosJs(ruta);
+    return e.name.endsWith('.js') ? [ruta] : [];
+  });
+}
+const codigo = archivosJs(path.join(raiz, 'sistema-reclamos/backend'))
+  .map((f) => fs.readFileSync(f, 'utf8')).join('\n');
 const mensajes = new Set();
 (function juntar(n) {
   if (Array.isArray(n)) return n.forEach(juntar);

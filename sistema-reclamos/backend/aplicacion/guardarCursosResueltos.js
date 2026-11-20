@@ -1,4 +1,3 @@
-import { crearRepositorioCursosMemoria } from '../infraestructura/repositorioCursosMemoria.js';
 import { cursosValidos, prepararCursosResueltos, ErrorDeCursos } from '../dominio/cursosResueltos.js';
 
 /** @param {import('../dominio/repositorioCursosResueltos.js').RepositorioCursosResueltos} repositorio */

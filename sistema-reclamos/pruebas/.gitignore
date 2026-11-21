@@ -1,0 +1,5 @@
+# Sesiones válidas para la API de Compose: se regeneran con generar-tokens.js.
+tokens.json
+
+# Copia temporal del backend que crea probar-registro-con-bus.mjs (sin .env).
+.tmp-bus/

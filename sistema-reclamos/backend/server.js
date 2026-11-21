@@ -1,6 +1,19 @@
 import { crearGuardarCursosResueltos } from './aplicacion/guardarCursosResueltos.js';
 import { crearRepositorioCursosSupabase } from './infraestructura/repositorioCursosSupabase.js';
 import { crearGuardarCursosHandler } from './presentacion/guardarCursosHandler.js';
+import { crearRegistrarReclamo } from './aplicacion/registrarReclamo.js';
+import { crearNotificadorDeReclamo } from './aplicacion/consumidores/notificarReclamoRegistrado.js';
+import { crearEnviadorDeExpediente } from './aplicacion/consumidores/enviarExpedienteAM2.js';
+import { RECLAMO_REGISTRADO } from './dominio/eventos.js';
+import { crearBusEnProceso } from './infraestructura/busEnProceso.js';
+import { crearClienteM2Http, crearClienteM2Memoria } from './infraestructura/clienteM2.js';
+import { crearEnviadorCorreo } from './infraestructura/enviadorCorreo.js';
+import { crearPoliticaDeRecepcion } from './infraestructura/politicaDeRecepcion.js';
+import { crearRepositorioReclamosSupabase } from './infraestructura/repositorioReclamosSupabase.js';
+import { componerConfirmacion } from './presentacion/componerConfirmacion.js';
+import { EMAIL_CODIGO_IMG_URL, emailTemplate } from './presentacion/plantillaCorreo.js';
+import { crearRegistrarReclamoHandler } from './presentacion/registrarReclamoHandler.js';
+import { respuestaDeCuerpoInvalido } from './presentacion/cuerpoInvalido.js';
 import express from 'express';
 import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
@@ -126,13 +139,13 @@ if (!process.env.JWT_SECRET) {
 function requireStudentAuth(req, res, next) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token) return res.status(401).json({ error: 'Sesión requerida. Verifica tu correo primero.' });
+  if (!token) return res.status(401).json({ error: 'Sesión requerida. Verifica tu correo primero.', codigo: 'SESION_REQUERIDA' });
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.studentEmail = payload.email;
     next();
   } catch {
-    return res.status(401).json({ error: 'Sesión inválida o expirada. Verifica tu correo de nuevo.' });
+    return res.status(401).json({ error: 'Sesión inválida o expirada. Verifica tu correo de nuevo.', codigo: 'SESION_INVALIDA' });
   }
 }
 
@@ -242,137 +255,28 @@ async function requireAdminAuth(req, res, next) {
 // Inicializar el nuevo SDK de Gemini
 const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
 
-// ── Envío de correo con respaldo entre proveedores (todos por HTTP API — sin SMTP, funciona en Railway) ──
-async function sendViaBrevo({ to, subject, html }) {
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'api-key': process.env.BREVO_API_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sender: { name: 'TEFIIS · FIIS UNI', email: process.env.FROM_EMAIL },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `Brevo error ${res.status}`);
-  }
-}
+// ── Envío de correo: Brevo, luego Resend y luego Mailjet, todos por HTTP (sin SMTP, funciona en Railway) ──
+// El adaptador de infraestructura/enviadorCorreo.js (#34) mantiene ese orden de
+// respaldo y agrega un tiempo límite por proveedor: si uno se cuelga, se pasa al
+// siguiente en vez de esperar para siempre (escenario E5).
+const sendEmail = crearEnviadorCorreo({ timeoutMs: tiempoLimiteCorreoMs() });
 
-async function sendViaResend({ to, subject, html }) {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: `TEFIIS · FIIS UNI <${process.env.FROM_EMAIL}>`,
-      to: [to],
-      subject,
-      html,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `Resend error ${res.status}`);
-  }
-}
-
-async function sendViaMailjet({ to, subject, html }) {
-  const auth = Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString('base64');
-  const res = await fetch('https://api.mailjet.com/v3.1/send', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      Messages: [{
-        From: { Email: process.env.FROM_EMAIL, Name: 'TEFIIS · FIIS UNI' },
-        To: [{ Email: to }],
-        Subject: subject,
-        HTMLPart: html,
-      }],
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.ErrorMessage || `Mailjet error ${res.status}`);
-  }
-}
-
-// Intenta enviar por Brevo primero. Si falla (ej. se acabaron los créditos del
-// día), cae automáticamente a Resend, y si ese también falla, a Mailjet.
-async function sendEmail({ to, subject, html }) {
-  const cleanEmail = typeof to === 'string' ? to.trim().toLowerCase() : '';
-  if (!cleanEmail) {
-    throw new Error('No se especificó un correo destinatario válido.');
-  }
-
-  const proveedores = [
-    { nombre: 'Brevo', enviar: sendViaBrevo, disponible: !!process.env.BREVO_API_KEY },
-    { nombre: 'Resend', enviar: sendViaResend, disponible: !!process.env.RESEND_API_KEY },
-    { nombre: 'Mailjet', enviar: sendViaMailjet, disponible: !!(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) },
-  ].filter(p => p.disponible);
-
-  let ultimoError = null;
-  for (const proveedor of proveedores) {
-    try {
-      await proveedor.enviar({ to: cleanEmail, subject, html });
-      return;
-    } catch (err) {
-      console.error(`[EMAIL] ${proveedor.nombre} falló, probando el siguiente proveedor:`, err.message);
-      ultimoError = err;
-    }
-  }
-  throw ultimoError || new Error('No hay proveedores de correo configurados.');
+// EMAIL_TIMEOUT_MS en milisegundos; 0 desactiva el límite. Un valor que no es
+// número desactivaría el límite sin avisar, así que se avisa y se usan 3 s.
+function tiempoLimiteCorreoMs() {
+  const crudo = process.env.EMAIL_TIMEOUT_MS;
+  if (crudo === undefined || crudo.trim() === '') return 3000;
+  const ms = Number(crudo);
+  if (Number.isFinite(ms) && ms >= 0) return ms;
+  console.warn(`EMAIL_TIMEOUT_MS="${crudo}" no es un número válido; se usan 3000 ms.`);
+  return 3000;
 }
 
 // Códigos de verificación en memoria: email → { code, expiresAt }
 const codesStore = new Map();
 
-const EMAIL_LOGO_URL = 'https://sistema-tefiis.reclamos.workers.dev/Tefiis.png';
-const EMAIL_CODIGO_IMG_URL = 'https://sistema-tefiis.reclamos.workers.dev/codigo-enviado.png';
-const EMAIL_RECLAMO_IMG_URL = 'https://sistema-tefiis.reclamos.workers.dev/reclamo-recibido.png';
-
-// Envoltorio visual compartido por todos los correos transaccionales: header con
-// logo + footer institucional. Usa tablas e inline styles (no <style> en <head>)
-// porque es lo único que Gmail/Outlook renderizan de forma consistente.
-function emailTemplate(bodyHtml) {
-  return `
-    <div style="background:#f3f4f6;padding:32px 16px;font-family:Arial,Helvetica,sans-serif">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto">
-        <tr>
-          <td style="background:#ffffff;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08);overflow:hidden">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td style="padding:28px 32px 16px;text-align:center;border-bottom:1px solid #f0f0f2">
-                  <img src="${EMAIL_LOGO_URL}" width="48" height="48" alt="TEFIIS" style="display:block;margin:0 auto 10px" />
-                  <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:#2563EB">TEFIIS</span>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:28px 32px">
-                  ${bodyHtml}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:16px 32px 24px;border-top:1px solid #f0f0f2">
-                  <p style="color:#aaa;font-size:11px;margin:12px 0 0;text-align:center">TEFIIS — Facultad de Ingeniería Industrial y de Sistemas, UNI</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </div>
-  `;
-}
+// La plantilla de los correos (emailTemplate y sus imágenes) vive en
+// presentacion/plantillaCorreo.js, la misma que usa el correo de confirmación.
 
 // ==========================================
 // EMAIL: ENVIAR CÓDIGO DE VERIFICACIÓN
@@ -507,54 +411,18 @@ app.post('/api/reclamos/confirmar', requireStudentAuth, limiteEnvioCodigo, async
   }
   if (!reclamo) return res.status(404).json({ error: 'No se encontró ese reclamo.' });
 
-  const email = reclamo.email;
-  const nombre = reclamo.nombre;
-
-  // Se escapa todo lo que se interpola: aunque ahora venga de la base, lo
-  // escribió el estudiante y puede traer <, > o & que romperían el correo.
-  const esc = (t) => String(t || '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-  const categoria = esc(reclamo.categoria);
-  const caseIdSeguro = esc(reclamo.id);
-
-  // Formato peruano: "APELLIDO1 APELLIDO2, NOMBRE1 NOMBRE2" → tomar después de la coma
-  const primerNombre = (() => {
-    if (typeof nombre === 'string' && nombre.includes(',')) {
-      const splitNombre = nombre.split(',');
-      if (splitNombre[1]) {
-        const parteNombres = splitNombre[1].trim();
-        const primer = parteNombres.split(' ').find(p => p.length > 0) || '';
-        if (primer) {
-          return esc(primer.charAt(0).toUpperCase() + primer.slice(1).toLowerCase());
-        }
-      }
-    }
-    const fromEmail = (email || '').split('@')[0].split('.')[0];
-    return esc(fromEmail.charAt(0).toUpperCase() + fromEmail.slice(1).toLowerCase() || 'Estudiante');
-  })();
+  // La misma plantilla que manda el consumidor de ReclamoRegistrado
+  // (presentacion/componerConfirmacion.js): escapa lo que escribió el estudiante
+  // y saluda por su primer nombre. Esta ruta queda durante la transición (ver
+  // POST /api/reclamos): la llama el front anterior, y el nuevo solo cuando habla
+  // con una API que todavía no envía el correo.
+  const { subject, html } = componerConfirmacion({
+    id: reclamo.id, nombre: reclamo.nombre, categoria: reclamo.categoria, email: reclamo.email,
+  });
 
   try {
-    await sendEmail({
-      to: email,
-      subject: `Reclamo registrado: ${reclamo.id} — TEFIIS`,
-      html: emailTemplate(`
-        <img src="${EMAIL_RECLAMO_IMG_URL}" width="220" alt="Tu reclamo ha sido recibido" style="display:block;margin:0 auto 20px;max-width:220px;height:auto" />
-        <h2 style="color:#1a1a1a;margin:0 0 8px;font-size:20px;text-align:center">Tu reclamo fue registrado</h2>
-        <p style="color:#666;margin:0 0 20px;font-size:14px;line-height:1.5;text-align:center">Hola <strong>${primerNombre}</strong>, tu reclamo ha sido enviado correctamente a la FIIS.</p>
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:18px 20px">
-              <p style="margin:0;color:#166534;font-size:12px;font-weight:600;letter-spacing:0.5px">ID DE TU CASO</p>
-              <p style="font-size:24px;font-weight:700;color:#111;margin:6px 0">${caseIdSeguro}</p>
-              <p style="margin:0;color:#4b5563;font-size:13px">Categoría: ${categoria}</p>
-            </td>
-          </tr>
-        </table>
-        <p style="color:#666;font-size:13px;margin:20px 0 0">Guarda este ID para consultar el estado de tu reclamo en cualquier momento desde TEFIIS.</p>
-      `)
-    });
-    console.log(`Confirmación enviada a ${email} — ${caseId}`);
+    await sendEmail({ to: reclamo.email, subject, html });
+    console.log(`Confirmación enviada a ${reclamo.email} — ${caseId}`);
     res.json({ success: true });
   } catch (err) {
     console.error('Error enviando confirmación:', err);
@@ -615,203 +483,74 @@ function logActividad({ actorEmail, actorType, accion, detalle }) {
   }).catch(err => console.error('No se pudo registrar actividad:', err.message));
 }
 
+// ── Registro de reclamos y evento ReclamoRegistrado (Lab10, #27; docs/api/eventos.md) ──
+// La ruta solo traduce HTTP: las reglas del registro (ventana, pruebas propias,
+// cursos del catálogo, duplicados y numeración) están en aplicacion/registrarReclamo.js.
+// Cuando el reclamo queda guardado se publica ReclamoRegistrado, y sus dos
+// consumidores envían el correo de confirmación y el expediente a M2. El bus no los
+// espera: si uno falla, el estudiante igual recibe su número y el error queda en el
+// registro del servidor.
+const bus = crearBusEnProceso({
+  alFallar: (evento, consumidor, err) =>
+    console.error(`[EVENTOS] ${consumidor} falló en ${evento.eventoId}:`, err?.message ?? err),
+});
+const repositorioReclamos = crearRepositorioReclamosSupabase(sbRest);
+
+// M2 recibe el expediente de cada reclamo, igual que cuando lo enviaba el front.
+// Sin M2_URL (desarrollo y Compose) el expediente queda en memoria y no se llama al
+// M2 real, para que las pruebas no le manden expedientes falsos. En Railway tiene
+// que estar definida, o los expedientes dejan de llegar a M2.
+if (!process.env.M2_URL) {
+  console.warn('M2_URL no está definida: los expedientes se guardan en memoria y no llegan a M2.');
+}
+// M2 está en Render, que lo duerme cuando no tiene tráfico, y despertarlo tarda más
+// de 25 s. El cliente corta a los 10 s por defecto y no reintenta, así que se
+// perdería el expediente del primer reclamo después de cada pausa. Como el bus no
+// hace esperar al estudiante, darle 60 s no demora su respuesta.
+const ESPERA_M2_MS = 60_000;
+const clienteM2 = process.env.M2_URL
+  ? crearClienteM2Http({ url: process.env.M2_URL, timeoutMs: ESPERA_M2_MS })
+  : crearClienteM2Memoria();
+
+bus.suscribir(
+  RECLAMO_REGISTRADO,
+  crearNotificadorDeReclamo({ componerCorreo: componerConfirmacion, enviarCorreo: sendEmail }),
+  'correo',
+);
+bus.suscribir(
+  RECLAMO_REGISTRADO,
+  crearEnviadorDeExpediente({ reclamos: repositorioReclamos, m2: clienteM2 }),
+  'm2',
+);
+
+const dependenciasDelRegistro = {
+  reclamos: repositorioReclamos,
+  // Se comprueba en el servidor y no solo en la interfaz: ocultar el botón no
+  // impide llamar al endpoint, así que el cierre tiene que valer aquí.
+  politica: crearPoliticaDeRecepcion({ tefiDurmiendoActivo, despedidaActivaPara, puedeEnviarReclamo }),
+  catalogoCursos: CATALOGO_CURSOS,
+  esEvidenciaPropia,
+  // Las referencias de `documentos` (ficha, avance, boleta) tienen que estar en la carpeta del propio estudiante,
+  // la misma comprobación que hace /api/docs/signed-url.
+  esDocumentoPropio: (ref, email) => rutaDentroDe(ref, `${sanitizeEmail(email)}/`),
+  logActividad,
+  registrarError: (mensaje, err) => console.error(mensaje, err?.message ?? ''),
+};
+const registrarReclamo = crearRegistrarReclamo({ ...dependenciasDelRegistro, publicador: bus });
+
+// Transición (#46). El front anterior envía él mismo el correo (/api/reclamos/confirmar)
+// y el expediente a M2; el nuevo manda `avisos: "api"` y se los deja a la API. Para las
+// peticiones del anterior se registra sin publicar el evento, así cada reclamo manda un
+// solo correo y un solo expediente, sin importar qué se despliega primero ni si el
+// estudiante tiene abierta la página anterior. Se quita, junto con /api/reclamos/confirmar,
+// cuando ya no quede el front anterior.
+const sinPublicar = { publicar: async () => {} };
+const registrarReclamoSinAvisos = crearRegistrarReclamo({ ...dependenciasDelRegistro, publicador: sinPublicar });
+const manejarRegistro = crearRegistrarReclamoHandler(registrarReclamo, { sinAvisos: registrarReclamoSinAvisos });
+
 // Estudiante: crear un reclamo nuevo. El email SIEMPRE sale de la sesión
 // verificada (req.studentEmail), nunca de lo que mande el cliente en el body.
-app.post('/api/reclamos', requireStudentAuth, async (req, res) => {
-  // Se comprueba aquí y no solo en la interfaz: ocultar el botón no impide que
-  // alguien llame al endpoint directamente, así que el cierre tiene que valer
-  // en el servidor para ser un cierre de verdad.
-  if (await tefiDurmiendoActivo()) {
-    // Aparte de la ventana de reclamos: aquélla la abre y cierra El Tercio para
-    // regular el flujo; esta apaga la plataforma entera, y antes solo lo hacía
-    // en la pantalla, no en el servidor —una pestaña abierta desde antes podía
-    // seguir enviando reclamos sin que nadie se enterara—.
-    return res.status(503).json({ error: 'Tefi está durmiendo y no se pueden enviar reclamos por ahora. Vuelve a intentarlo cuando despierte.' });
-  }
-  if (await despedidaActivaPara(req.studentEmail)) {
-    return res.status(503).json({ error: 'El proceso de matrícula ha terminado. Nos vemos el siguiente ciclo.' });
-  }
-  if (!(await puedeEnviarReclamo(req.studentEmail))) {
-    return res.status(503).json({ error: 'La ventana de reclamos está cerrada en este momento. Vuelve a intentarlo cuando El Tercio la habilite.' });
-  }
-
-  const { nombre, codigo_estudiante, categoria, descripcion, datos_estudiante, documentos, evidencias, cursos_retirar, cursos_matricular } = req.body;
-  if (!categoria || !descripcion) return res.status(400).json({ error: 'Categoría y descripción son requeridas.' });
-
-  // Las evidencias llegan como referencias que el cliente recibió al subirlas.
-  // Se revalidan aquí porque el navegador podría mandar la referencia de otro
-  // estudiante: sin esta comprobación, un reclamo apuntaría a archivos ajenos.
-  const listaEvidencias = Array.isArray(evidencias) ? evidencias : [];
-  if (listaEvidencias.length > MAX_EVIDENCIAS) {
-    return res.status(400).json({ error: 'Solo puedes adjuntar un archivo PDF como prueba.' });
-  }
-  const evidenciasValidas = listaEvidencias.filter((e) => esEvidenciaPropia(e?.ref, req.studentEmail));
-  if (evidenciasValidas.length !== listaEvidencias.length) {
-    return res.status(403).json({ error: 'Alguno de los archivos adjuntos no te pertenece.' });
-  }
-
-  // Los cursos llegan del catálogo cerrado que ve el estudiante, pero el cuerpo
-  // de la petición lo controla el navegador: se recortan y se acotan para que un
-  // cliente manipulado no meta texto arbitrario ni una lista enorme.
-  const MAX_CURSOS = 30;
-  const sanearCursos = (lista) => (Array.isArray(lista) ? lista : [])
-    .slice(0, MAX_CURSOS)
-    .map((c) => {
-      const codigo = String(c?.codigo || '').trim().toUpperCase();
-      const seccion = String(c?.seccion || '').trim().toUpperCase();
-      const delCatalogo = CATALOGO_CURSOS.get(codigo);
-      // El nombre se toma del catálogo y no del cliente: así no puede llegar un
-      // código real con un nombre falso al lado.
-      if (!delCatalogo || !delCatalogo.secciones.includes(seccion)) return null;
-      return { codigo, nombre: delCatalogo.nombre, seccion };
-    })
-    .filter(Boolean);
-
-  const cursosRetirar = sanearCursos(cursos_retirar);
-  const cursosMatricular = sanearCursos(cursos_matricular);
-
-  // Se guardan dentro de `documentos` y no en una columna nueva para no exigir
-  // un cambio de esquema; la clave es aparte, así que los reclamos viejos —que
-  // no la traen— siguen leyéndose igual.
-  const documentosConEvidencias = {
-    ...(documentos && typeof documentos === 'object' ? documentos : {}),
-    ...(evidenciasValidas.length ? { evidencias: evidenciasValidas.map((e) => ({
-      ref: e.ref,
-      nombre: String(e.nombre || 'archivo').slice(0, 120),
-      tipo: String(e.tipo || '').slice(0, 60),
-      bytes: Number(e.bytes) || 0,
-    })) } : {}),
-  };
-
-  try {
-    const year = new Date().getFullYear();
-
-    // El id se arma leyendo el último y sumando uno. Eso es una condición de
-    // carrera: con muchos alumnos reclamando a la vez, varios leen el mismo
-    // "último" y calculan el mismo id. Como id es la PK de la tabla, todos menos
-    // uno reciben 409 y el reclamo se pierde con un error genérico — justo en el
-    // momento de mayor demanda (cierre de matrícula).
-    //
-    // Se reintenta releyendo el máximo. El desfase por intento evita que todos
-    // los que colisionaron vuelvan a pelear por el mismo número siguiente.
-    // Guarda contra duplicados. Un reintento del mismo reclamo devuelve el que
-    // ya existe en vez de crear otro, así que la operación es idempotente y da
-    // igual si el cliente reintenta por un fallo de red, por un doble clic o
-    // porque su versión de la página le mostró un error después de haberlo
-    // creado. Se compara el texto porque un mismo alumno sí puede mandar dos
-    // reclamos distintos seguidos, y esos deben pasar.
-    const VENTANA_DUPLICADO_MS = 10 * 60 * 1000;
-    try {
-      const desde = new Date(Date.now() - VENTANA_DUPLICADO_MS).toISOString();
-      const previos = await sbRest(`/reclamos?select=id,descripcion&email=eq.${encodeURIComponent(req.studentEmail)}&created_at=gte.${encodeURIComponent(desde)}&order=created_at.desc&limit=10`);
-      if (previos.ok) {
-        const filas = await previos.json();
-        const mismo = filas.find((f) => String(f.descripcion || '').trim() === String(descripcion).trim());
-        if (mismo) {
-          console.log(`Reclamo duplicado evitado para ${req.studentEmail}: ya existe ${mismo.id}`);
-          return res.json({ success: true, id: mismo.id, duplicado: true });
-        }
-      }
-    } catch (err) {
-      // Si la comprobación falla se sigue adelante: perder un reclamo por no
-      // poder comprobar si es repetido sería peor que aceptar un duplicado.
-      console.error('No se pudo comprobar duplicados:', err.message);
-    }
-
-    const MAX_INTENTOS_ID = 10;
-    let caseId = null;
-    let insertado = false;
-    let ultimoError = null;
-
-    // El número sale de una secuencia de Postgres, no del id más alto de la
-    // tabla. Dos motivos:
-    //
-    // 1. Una secuencia nunca retrocede. Con el máximo de la tabla, borrar el
-    //    último reclamo dejaba su número libre y el siguiente lo heredaba junto
-    //    con lo que colgara de él —así apareció la respuesta de una prueba en el
-    //    reclamo de otra estudiante—.
-    // 2. nextval es atómico. Leer el máximo y luego insertar es una carrera:
-    //    con varios alumnos enviando a la vez, dos leían el mismo número, uno
-    //    fallaba por clave duplicada y reintentaba con el siguiente, dejando
-    //    huecos en la numeración.
-    //
-    // Si la secuencia todavía no existe se sigue con el método anterior, para
-    // no dejar de aceptar reclamos por un paso pendiente en la base.
-    let numeroDeSecuencia = null;
-    try {
-      const r = await sbRest('/rpc/siguiente_id_reclamo', { method: 'POST', body: '{}' });
-      if (r.ok) {
-        const n = await r.json();
-        if (Number.isFinite(Number(n))) numeroDeSecuencia = Number(n);
-      }
-    } catch (err) {
-      console.error('No se pudo usar la secuencia de ids:', err.message);
-    }
-
-    for (let intento = 0; intento < MAX_INTENTOS_ID && !insertado; intento++) {
-      let nextNum;
-      if (numeroDeSecuencia !== null) {
-        // Cada reintento pide otro número, porque el anterior ya se consumió.
-        nextNum = intento === 0 ? numeroDeSecuencia : null;
-        if (nextNum === null) {
-          const r2 = await sbRest('/rpc/siguiente_id_reclamo', { method: 'POST', body: '{}' });
-          nextNum = r2.ok ? Number(await r2.json()) : numeroDeSecuencia + intento;
-        }
-        caseId = `REC-${year}-${String(nextNum).padStart(4, '0')}`;
-      } else {
-        const lastRes = await sbRest(`/reclamos?select=id&id=like.REC-${year}-*&order=id.desc&limit=1`);
-        const last = lastRes.ok ? await lastRes.json() : [];
-        nextNum = 1;
-        if (last.length > 0) {
-          const partes = last[0].id.split('-');
-          const ultimo = parseInt(partes[2], 10);
-          if (!isNaN(ultimo)) nextNum = ultimo + 1;
-        }
-        caseId = `REC-${year}-${String(nextNum + intento).padStart(4, '0')}`;
-      }
-
-      const r = await sbRest('/reclamos', {
-        method: 'POST',
-        headers: { 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          id: caseId,
-          email: req.studentEmail,
-          nombre: nombre || null,
-          codigo_estudiante: codigo_estudiante || null,
-          categoria,
-          descripcion,
-          datos_estudiante: {
-          ...(datos_estudiante && typeof datos_estudiante === 'object' ? datos_estudiante : {}),
-          cursosRetirar,
-          cursosMatricular,
-        },
-          documentos: documentosConEvidencias,
-          estado: 'PENDIENTE',
-          // Columnas heredadas del esquema anterior: se mantienen espejadas para no dejarlas vacías.
-          nombres: nombre || null,
-          codigo: codigo_estudiante || null,
-          urls: documentosConEvidencias,
-          datos_academicos: datos_estudiante || null,
-        }),
-      });
-
-      if (r.ok) { insertado = true; break; }
-
-      ultimoError = await r.text();
-      // 409 / 23505 = otro reclamo ganó ese id. Cualquier otro error es real.
-      const esColision = r.status === 409 || ultimoError.includes('23505');
-      if (!esColision) return res.status(500).json({ error: ultimoError });
-    }
-
-    if (!insertado) {
-      console.error('No se pudo asignar un id de reclamo tras varios intentos:', ultimoError);
-      return res.status(503).json({ error: 'El sistema está recibiendo muchos reclamos a la vez. Intenta de nuevo en unos segundos.' });
-    }
-
-    logActividad({ actorEmail: req.studentEmail, actorType: 'estudiante', accion: 'reclamo_creado', detalle: { caseId, categoria, evidencias: evidenciasValidas.length } });
-    res.json({ success: true, id: caseId });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
+app.post('/api/reclamos', requireStudentAuth, manejarRegistro);
 
 // Estudiante: ver solo sus propios reclamos (filtrado por el email de su sesión, no por query param)
 app.get('/api/reclamos/mine', requireStudentAuth, async (req, res) => {
@@ -861,7 +600,9 @@ app.put('/api/admin/estudiantes/:email/datos', requireAdminAuth, async (req, res
 
   try {
     const r = await sbRest(`/documentos_estudiante?select=datos_parseados&email=eq.${encodeURIComponent(email)}&limit=1`);
-    const fila = r.ok ? (await r.json())?.[0] : null;
+    // Si la base falla, es un 500: antes se confundía con «no tiene documentos».
+    if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
+    const fila = (await r.json())?.[0];
     if (!fila) return res.status(404).json({ error: 'Ese estudiante no tiene documentos guardados.' });
 
     // El contacto lo escribe el estudiante y no sale de los PDF: se conserva
@@ -1191,7 +932,7 @@ app.patch('/api/admin/reclamos/:id', requireAdminAuth, async (req, res) => {
     }
     // En el registro va solo la especialidad, no el JSON entero: el historial
     // debe poder leerse.
-    const { datos_estudiante, ...paraElLog } = patch;
+    const { datos_estudiante: _datosEstudiante, ...paraElLog } = patch;
     logActividad({
       actorEmail: req.adminEmail, actorType: 'admin', accion: 'reclamo_actualizado',
       detalle: { caseId: req.params.id, ...paraElLog, ...(especialidad !== undefined ? { especialidad } : {}) },
@@ -1212,6 +953,9 @@ app.put('/api/admin/reclamos/:id/cursos-resueltos', requireAdminAuth,
 app.get('/api/admin/docs/signed-url', requireAdminAuth, async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'url requerida' });
+  // Una referencia que no se puede interpretar es un error de la petición, no
+  // del servidor: antes llegaba hasta createSignedUrl y salía como 500.
+  if (!parseStorageRef(url)) return res.status(400).json({ error: 'Referencia de archivo inválida' });
   try {
     const signedUrl = await createSignedUrl(url);
     res.json({ signedUrl });
@@ -1566,16 +1310,6 @@ function parseStorageRef(storedUrl) {
   return null;
 }
 
-async function downloadStorageFile(storedUrl) {
-  const ref = parseStorageRef(storedUrl);
-  if (!ref) throw new Error(`No se pudo interpretar la referencia de archivo: ${storedUrl}`);
-  const res = await fetch(`${process.env.SUPABASE_URL}/storage/v1/object/${encodeURIComponent(ref.bucket)}/${ref.path.split('/').map(encodeURIComponent).join('/')}`, {
-    headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
-  });
-  if (!res.ok) throw new Error(`Error descargando el archivo: ${storedUrl}`);
-  return await res.arrayBuffer();
-}
-
 async function deleteStorageFile(storedUrl) {
   const ref = parseStorageRef(storedUrl);
   if (!ref) throw new Error(`No se pudo interpretar la referencia de archivo: ${storedUrl}`);
@@ -1623,7 +1357,7 @@ app.get('/api/docs/signed-url', requireStudentAuth, async (req, res) => {
 
 app.post('/api/docs/save', requireStudentAuth, async (req, res) => {
   const email = req.studentEmail;
-  const { boleta_url, record_notas_url, record_matricula_url, codigo_estudiante, datos_parseados, force_reparse } = req.body;
+  const { boleta_url, record_notas_url, record_matricula_url, codigo_estudiante, datos_parseados } = req.body;
   try {
     // 1. Obtener registro existente en Supabase para no perder URLs previas si solo se subió un archivo
     const getRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/documentos_estudiante?email=eq.${encodeURIComponent(email)}&limit=1`, {
@@ -1731,8 +1465,8 @@ const DOCS_BUCKET = 'Documentos Tefiis';
 // igual para estas y un estudiante no puede firmar las de otro.
 // Una sola prueba y en PDF. Antes se admitían hasta 5 archivos y fotos sueltas,
 // que llegaban como capturas de móvil difíciles de leer y desordenadas. Un PDF
-// obliga al estudiante a juntar lo que quiera probar en un solo documento.
-const MAX_EVIDENCIAS = 1;
+// obliga al estudiante a juntar lo que quiera probar en un solo documento. El
+// límite de una prueba por reclamo lo aplica dominio/reclamo.js (MAX_EVIDENCIAS).
 const MAX_EVIDENCIA_BYTES = 10 * 1024 * 1024;   // 10 MB
 
 // Los reclamos anteriores pueden tener imágenes guardadas y se siguen mostrando
@@ -2134,10 +1868,12 @@ app.post('/api/admin/maintenance', requireAdminAuth, async (req, res) => {
   const { enabled } = req.body;
   if (typeof enabled !== 'boolean') return res.status(400).json({ error: 'El campo "enabled" debe ser true o false.' });
   try {
-    const r = await sbRest('/app_settings?key=eq.maintenance_mode', {
-      method: 'PATCH',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ value: enabled, updated_at: new Date().toISOString() }),
+    // Upsert, como los demás interruptores. Antes era un PATCH: si la fila no
+    // existía, no actualizaba nada y aun así respondía que el modo quedó activo.
+    const r = await sbRest('/app_settings', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ key: 'maintenance_mode', value: enabled, updated_at: new Date().toISOString() }),
     });
     if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
     logActividad({ actorEmail: req.adminEmail, actorType: 'admin', accion: enabled ? 'mantenimiento_activado' : 'mantenimiento_desactivado' });
@@ -2329,6 +2065,8 @@ app.get('/api/admin/activity', requireAdminAuth, async (req, res) => {
 // alumno qué pasó. También evita filtrar detalles internos en la respuesta.
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
+  const cuerpoInvalido = respuestaDeCuerpoInvalido(err);
+  if (cuerpoInvalido) return res.status(cuerpoInvalido.status).json(cuerpoInvalido.body);
   if (err?.code === 'LIMIT_FILE_SIZE') {
     const tope = (req.limiteBytes || MAX_PDF_BYTES) / (1024 * 1024);
     return res.status(413).json({ error: `El archivo supera el máximo de ${tope} MB.` });

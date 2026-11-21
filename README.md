@@ -18,7 +18,7 @@ El entorno permite registrar y consultar reclamos con sesiones sintéticas. Para
 
 ### Datos para los escenarios E1, E2 y E3
 
-Ejecuta estos pasos desde la raíz, en una revisión que ya incluya el [generador de tokens](https://github.com/ricco-drs/sistema-reclamos/pull/18) y el [script de siembra](https://github.com/ricco-drs/sistema-reclamos/pull/21).
+Ejecuta estos pasos desde la raíz. El [generador de tokens](sistema-reclamos/pruebas/generar-tokens.js) y el [script de siembra](sistema-reclamos/scripts/sembrar-reclamos.js) ya están en el repositorio.
 
 1. Copia `.env.example` a `.env`, asigna un `JWT_SECRET` de prueba y vuelve a ejecutar `docker compose up --detach --wait` para aplicar ese valor a la API. Con Node.js 22, ejecuta `npm --prefix sistema-reclamos ci` y genera los tokens con `node --env-file=.env sistema-reclamos/pruebas/generar-tokens.js`.
 2. Para sembrar E2, copia el script al contenedor y ejecútalo allí. PostgREST es accesible desde la red de Compose.

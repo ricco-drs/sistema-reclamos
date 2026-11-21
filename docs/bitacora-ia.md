@@ -202,6 +202,16 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se descartó y por qué:** Reescribir commits para cambiar su autor. Git puede agrupar las contribuciones con `.mailmap` y conservar los commits publicados.
 - **Registra:** Lenin Castro
 
+### Entrada del 21 de noviembre, arranque reproducible de TEFIIS con Compose
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Codex
+- **Para qué se usó:** Preparar el Dockerfile de dos etapas y el entorno de Compose de Lab11, y verificar el arranque del portal, la API y PostgreSQL desde un clon limpio.
+- **Qué se aceptó:** Servir el portal compilado y conectar la API a PostgreSQL por PostgREST con los datos y las sesiones sintéticas del laboratorio. Se probó el arranque, el registro y consulta de reclamos, el rechazo de un token vencido y la siembra de 1 500 filas.
+- **Qué se corrigió y por qué:** En la primera compilación el backend no pudo crear el directorio de adjuntos como usuario sin privilegios. La imagen ahora lo prepara con el propietario correcto. Tras la revisión del PR #29, se actualizaron las imágenes con su nombre completo y se repitió el arranque en una copia limpia.
+- **Evidencia:** [Portal de TEFIIS levantado en Compose](evidencias/img/lab11-compose.jpg).
+- **Registra:** Lenin Castro
+
 ### Entrada del 20 de noviembre, conexión del bus y del correo con timeout en server.js
 
 - **¿Se usó IA?** Sí

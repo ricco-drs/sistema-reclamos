@@ -23,7 +23,7 @@ services:
       retries: 12
 
   rest:
-    image: nginx:1.28-alpine
+    image: docker.io/library/nginx:1.28-alpine
     volumes:
       - ./docker/rest.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
@@ -47,7 +47,7 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     environment:
       POSTGRES_USER: tefiis
       POSTGRES_PASSWORD: tefiis-db-solo-laboratorio

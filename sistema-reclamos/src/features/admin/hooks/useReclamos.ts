@@ -886,16 +886,23 @@ INSTRUCCIONES ESTRICTAS:
           evidencias,
           cursos_retirar: cursosRetirar,
           cursos_matricular: cursosMatricular,
+          // Le pide a la API que envíe ella el correo de confirmación y el expediente a M2 (evento
+          // ReclamoRegistrado). Una API anterior ignora el campo; ver docs/api/eventos.md.
+          avisos: 'api',
         }),
       });
       const dataReclamo = await resReclamo.json();
       if (!resReclamo.ok) throw new Error(dataReclamo.error || 'Error al registrar el reclamo');
       const caseId = dataReclamo.id;
+      // La API confirma con `avisos: "api"` que ella enviará el correo y el expediente. Si no lo
+      // confirma, está desplegada una versión anterior y los envía este navegador, como antes:
+      // así sale un solo correo y un solo expediente, sin importar qué se despliega primero.
+      const apiAvisa = dataReclamo.avisos === 'api';
 
       // Solo se manda el id: el destinatario y los datos del caso los saca el
       // servidor de la base. Enviarlos desde aquí convertía este endpoint en un
       // enviador de correos a direcciones arbitrarias.
-      const resConfirmar = await fetch(`${apiUrl}/api/reclamos/confirmar`, {
+      const resConfirmar = apiAvisa ? null : await fetch(`${apiUrl}/api/reclamos/confirmar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -907,7 +914,7 @@ INSTRUCCIONES ESTRICTAS:
       // lanzaba, el alert decía "Error al registrar el reclamo" —que era falso—
       // y el estudiante volvía a pulsar Enviar creando otro. El correo es un
       // acuse de recibo, no parte del registro.
-      if (!resConfirmar.ok) {
+      if (resConfirmar && !resConfirmar.ok) {
         const errData = await resConfirmar.json().catch(() => ({}));
         console.warn('Reclamo registrado, pero no se pudo enviar el correo de confirmación:',
           errData.error || resConfirmar.status);
@@ -932,18 +939,20 @@ INSTRUCCIONES ESTRICTAS:
         }).catch(e => console.warn('No se pudo marcar documentos como confirmados:', e.message));
       }
 
-      fetch('https://tefiis-m2.onrender.com/api/v1/m2/expedientes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: caseId,
-          codigoEstudiante: datosEstudiante.codigo || datosEstudiante.codigoEstudiante || '',
-          email: emailVerificado,
-          nombre: datosEstudiante.nombre || '',
-          motivoReclamo: categoriaSeleccionada?.label || '',
-          descripcion: descripcionFormal,
-        })
-      }).catch(e => console.warn('tefiis-m2 expediente no registrado:', e.message));
+      if (!apiAvisa) {
+        fetch('https://tefiis-m2.onrender.com/api/v1/m2/expedientes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: caseId,
+            codigoEstudiante: datosEstudiante.codigo || datosEstudiante.codigoEstudiante || '',
+            email: emailVerificado,
+            nombre: datosEstudiante.nombre || '',
+            motivoReclamo: categoriaSeleccionada?.label || '',
+            descripcion: descripcionFormal,
+          })
+        }).catch(e => console.warn('tefiis-m2 expediente no registrado:', e.message));
+      }
 
       setReclamoEnviado({ id: caseId });
       setEtapa('enviado');

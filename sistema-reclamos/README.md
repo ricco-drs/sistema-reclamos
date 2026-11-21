@@ -83,6 +83,8 @@ Crea un archivo `.env` en esta carpeta (`sistema-reclamos/`):
 | `VITE_API_KEY`                                                              | Clave de Gemini, para Tefi.                                             | Sí           |
 | `FROM_EMAIL`                                                                | Remitente de los correos.                                               | Sí           |
 | `BREVO_API_KEY`, `RESEND_API_KEY`, `MAILJET_API_KEY` y `MAILJET_SECRET_KEY` | Proveedores de correo, en ese orden de respaldo.                        | Al menos uno |
+| `EMAIL_TIMEOUT_MS`                                                          | Espera máxima por proveedor de correo, en ms. Por defecto, 3000.        | No           |
+| `BREVO_API_URL`, `RESEND_API_URL` y `MAILJET_API_URL`                       | Otra URL por proveedor, por ejemplo uno simulado en pruebas.            | No           |
 | `ADMIN_EMAILS_SOLO_LECTURA`                                                 | Cuentas del panel que solo pueden consultar.                            | No           |
 | `ALLOWED_ORIGINS`                                                           | Orígenes permitidos por CORS. Sin ella se acepta cualquiera.            | No           |
 | `PORT`                                                                      | Puerto de la API. Por defecto, 3005.                                    | No           |

@@ -91,7 +91,7 @@ Content-Type: application/json, sin Authorization
 { id, codigoEstudiante, email, nombre, motivoReclamo, descripcion }
 ```
 
-`motivoReclamo` es el texto de la categoría. No hay contrato escrito de M2; esto es lo que hace hoy `useReclamos.ts`. A diferencia de la aplicación, que solo deja un `console.warn`, el adaptador falla con error y corta a los 10 segundos, para que el bus lo registre.
+`motivoReclamo` es el texto de la categoría. No hay contrato escrito de M2; esto es lo que hace hoy `useReclamos.ts`. A diferencia de la aplicación, que solo deja un `console.warn`, el adaptador falla con error y corta a los 10 segundos, para que el bus lo registre. Si se vuelve a usar, conviene darle más tiempo: M2 está en Render, que lo duerme cuando no tiene tráfico, y el 20/11/2026 no respondió en 90 segundos.
 
 Hay dos diferencias con lo que manda hoy la aplicación:
 
@@ -109,9 +109,9 @@ Hay dos diferencias con lo que manda hoy la aplicación:
 
 Los puertos están descritos en `backend/dominio/puertosReclamos.js`. El dominio no conoce HTTP: sus errores llevan un `motivo`, y la traducción a 400, 403 o 503 vive en `presentacion/registrarReclamoHandler.js`.
 
-## Conexión al arranque compartido (pendiente, `server.js`)
+## Conexión al arranque compartido (`server.js`)
 
-Esto lo hace quien modifica el arranque del backend. El punto de enganche es este:
+Está conectado en `server.js` desde el #51, pero solo con el consumidor del correo. El de M2 no se suscribe: nada en TEFIIS lee de M2 (el panel lee de la API, que lee de Supabase) y al 20/11/2026 M2 no responde. Si el equipo decide volver a usarlo, el enganche completo es este (en el código, el repositorio se llama `repositorioReclamos`):
 
 ```js
 const bus = crearBusEnProceso({ alFallar: (ev, quien, err) => console.error(`${quien} falló en ${ev.eventoId}:`, err.message) });
@@ -132,9 +132,9 @@ const registrarReclamo = crearRegistrarReclamo({
 app.post('/api/reclamos', requireStudentAuth, crearRegistrarReclamoHandler(registrarReclamo));
 ```
 
-`componerConfirmacion({ id, nombre, categoria, email })` ya está extraída de `/api/reclamos/confirmar` en `backend/presentacion/componerConfirmacion.js` (la plantilla HTML y `primerNombre`). `email` es opcional: solo sirve para el saludo cuando `nombre` no trae el formato «APELLIDOS, NOMBRES». Al conectar el bus, `server.js` la importa (`import { componerConfirmacion } from './presentacion/componerConfirmacion.js'`), y la ruta `/api/reclamos/confirmar` puede usarla mientras exista. `emailTemplate`, `escaparHtml` y las tres URL de imagen están en `backend/presentacion/plantillaCorreo.js`: `server.js` puede importarlas y borrar su copia, que la usan también el código de verificación y la respuesta del Tercio.
+`componerConfirmacion({ id, nombre, categoria, email })` ya está extraída de `/api/reclamos/confirmar` en `backend/presentacion/componerConfirmacion.js` (la plantilla HTML y `primerNombre`). `email` es opcional: solo sirve para el saludo cuando `nombre` no trae el formato «APELLIDOS, NOMBRES». `server.js` la importa, y la ruta `/api/reclamos/confirmar` también la usa mientras exista, así que las dos mandan el mismo correo. `emailTemplate`, `escaparHtml` y las tres URL de imagen están en `backend/presentacion/plantillaCorreo.js`, y `server.js` ya no tiene su propia copia: el código de verificación y la respuesta del Tercio usan la misma plantilla.
 
-**Cuidado al activarlo.** Al conectar el bus hay que cambiar tres cosas en el mismo cambio:
+**Cuidado al activarlo.** Conectar el bus (#51) no basta. Faltan las dos primeras cosas de esta lista, que están en el #46 y se integran justo después del #51. La tercera solo aplica si se vuelve a usar M2.
 
 1. **Quitar las dos llamadas de `useReclamos.ts`** (`/api/reclamos/confirmar` y el `fetch` a M2). Mientras sigan, el estudiante recibe dos correos y M2 dos expedientes. Hasta entonces, `/api/reclamos/confirmar` se mantiene.
 2. **Cambiar el aviso de `ReclamosPanel.tsx`** (líneas 500 a 502). Sin la llamada a `/confirmar`, `avisoCorreo` ya no se activa y la pantalla diría siempre «Te enviamos la confirmación a tu correo», aunque el envío falle. El texto debe decir que la confirmación llegará a su correo, sin asegurarlo.

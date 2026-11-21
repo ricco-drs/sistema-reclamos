@@ -80,10 +80,10 @@ Las cuatro preguntas del paso 3, escenario por escenario y en el orden de priori
 |---|---|---|---|---|
 | **E1** Disponibilidad: 200 reclamos al cierre | Cuatro paquetes: el registro está en `presentacion`, `aplicacion`, `dominio` e `infraestructura` (el #27 tocó tres de ellos). | Sí, y sin contrato: los interruptores viven en los mismos paquetes, y nada impide que el registro lea `app_settings` directamente. | No: un solo proceso. | Sí: el caso de uso se prueba con dobles. |
 | **E4** Modificabilidad: historial de 50 a 100 | Uno: `dominio`. | No. | No aplica: no hay carga. | Sí. |
-| **E6** Auditabilidad: autor y fecha de cada decisión | Tres: el historial en `dominio`, el registro de actividad en `infraestructura` y el autor del token en `presentacion`. | Escribe `activity_log`, que escriben todas las partes. | No aplica. | Sí: la prueba de la rodaja comprueba que el autor sale del token. |
 | **E3** Seguridad: matriz ruta × actor | Dos: los middlewares en `presentacion` y las consultas filtradas por correo en `infraestructura`. | No. | No aplica. | Solo montando las 41 rutas: todas viven en `presentacion`. |
-| **E5** Confiabilidad: si Brevo falla, otro proveedor envía | Uno: el enviador de correo en `infraestructura`. | No. | No aplica. | Sí: hay pruebas con proveedores falsos (#34). |
+| **E6** Auditabilidad: autor y fecha de cada decisión | Tres: el historial en `dominio`, el registro de actividad en `infraestructura` y el autor del token en `presentacion`. | Escribe `activity_log`, que escriben todas las partes. | No aplica. | Sí: la prueba de la rodaja comprueba que el autor sale del token. |
 | **E2** Rendimiento: la bandeja con 1 500 reclamos | Dos: la ruta en `presentacion` y la consulta paginada en `infraestructura`. | No. | No: la lectura del panel cae en el mismo proceso que los envíos de los estudiantes. | No: se mide con k6 sobre Compose. |
+| **E5** Confiabilidad: si Brevo falla, otro proveedor envía | Uno: el enviador de correo en `infraestructura`. | No. | No aplica. | Sí: hay pruebas con proveedores falsos (#34). |
 
 **Partición B, por módulos:**
 
@@ -91,10 +91,10 @@ Las cuatro preguntas del paso 3, escenario por escenario y en el orden de priori
 |---|---|---|---|---|
 | **E1** Disponibilidad | Uno: `reclamos`. | Sí, los interruptores de `configuracion`, pero por contrato: el puerto `PoliticaDeRecepcion` que inyecta `server.js`. | No: un solo proceso. Pero es justo el módulo que recibe la carga del cierre, y queda aislado si algún día hay que sacarlo. | Sí, con dobles en la frontera: la política y el repositorio en memoria. |
 | **E4** Modificabilidad | Uno: `reclamos`. | No. | No aplica. | Sí. |
-| **E6** Auditabilidad | Uno: `reclamos`, más el registro de actividad de `compartido`. | Escribe `activity_log`, pero a través de `compartido`, no directo. | No aplica. | Sí. |
 | **E3** Seguridad | Dos: las cinco rutas de la matriz son de `reclamos`, y los middlewares son de `acceso`. | Sí, los middlewares de `acceso`, por contrato: `server.js` se los pasa. | No aplica. | Sí: se monta solo `reclamos`, con un verificador falso de Firebase, sin las otras 36 rutas. |
-| **E5** Confiabilidad | Ninguno: el correo está en `compartido`. | No. | No aplica. | Sí: hay pruebas con proveedores falsos (#34). |
+| **E6** Auditabilidad | Uno: `reclamos`, más el registro de actividad de `compartido`. | Escribe `activity_log`, pero a través de `compartido`, no directo. | No aplica. | Sí. |
 | **E2** Rendimiento | Uno: `reclamos`. | No. | No: un solo proceso, igual que en A. | No: se mide con k6 sobre Compose. |
+| **E5** Confiabilidad | Ninguno: el correo está en `compartido`. | No. | No aplica. | Sí: hay pruebas con proveedores falsos (#34). |
 
 **Resumen.** Las dos particiones ordenan el código, no lo que pasa en ejecución, así que ninguna cambia por sí sola si E1, E2 o E5 cumplen su medida. Lo que cambia es cuánto hay que tocar y si la frontera la protege el build.
 
@@ -102,14 +102,14 @@ Las cuatro preguntas del paso 3, escenario por escenario y en el orden de priori
 |---|---|---|---|
 | 1 | E1 | **B** | Un módulo en vez de cuatro paquetes, y los interruptores llegan por contrato en vez de por acceso libre. |
 | 2 | E4 | **B** | Las dos cumplen la medida con un archivo de dominio. Pero en B el build impide que otro módulo dependa del dominio de reclamos, y en A eso depende de que nadie se equivoque. |
-| 3 | E6 | **B** | Un módulo y `compartido`, en vez de tres paquetes. |
-| 4 | E3 | **B** | La matriz se prueba montando solo `reclamos`. |
-| 5 | E5 | Empate | El correo vive en un solo lugar en las dos. |
-| 6 | E2 | **B**, leve | Paginar toca un módulo en vez de dos paquetes. La medida depende de la consulta, no de la partición. |
+| 3 | E3 | **B** | La matriz se prueba montando solo `reclamos`. |
+| 4 | E6 | **B** | Un módulo y `compartido`, en vez de tres paquetes. |
+| 5 | E2 | **B**, leve | Paginar toca un módulo en vez de dos paquetes. La medida depende de la consulta, no de la partición. |
+| 6 | E5 | Empate | El correo vive en un solo lugar en las dos. |
 
 ## Criterio de desempate
 
-Lo fijamos antes de comparar: se recorren los escenarios en el orden de prioridad del informe (E1, E4, E6, E3, E5, E2) y decide el primero donde una partición tiene ventaja. Así no se elige el criterio a la medida del resultado. En este caso no hizo falta, porque B tiene ventaja desde E1.
+Lo fijamos antes de comparar: se recorren los escenarios en el orden de prioridad del informe (E1, E4, E3, E6, E2, E5) y decide el primero donde una partición tiene ventaja. Así no se elige el criterio a la medida del resultado. En este caso no hizo falta, porque B tiene ventaja desde E1.
 
 ## La elegida: B, por módulos de negocio
 

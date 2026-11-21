@@ -499,7 +499,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
           <p className="text-xs text-claude-muted mt-2">
             {avisoCorreo
               ? 'Guarda este ID. Tu reclamo quedó registrado, aunque el correo de confirmación no pudo enviarse.'
-              : 'Guarda este ID. Te enviamos la confirmación a tu correo.'}
+              : 'Guarda este ID. La confirmación llegará a tu correo.'}
           </p>
         </div>
         <div className="w-full flex flex-col gap-3">

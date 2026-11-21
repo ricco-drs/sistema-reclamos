@@ -1405,8 +1405,12 @@ components:
         codigo_estudiante:
           type: string
           nullable: true
-          pattern: ^\d{7,8}[A-Z]$
-          description: Código UNI. Si viene, tiene que tener 7 u 8 dígitos y una letra mayúscula al final; si no, se responde 400 `CODIGO_UNI_INVALIDO`.
+          pattern: ^\s*\d{7,8}[A-Za-z]\s*$
+          description: |
+            Código UNI: 7 u 8 dígitos y una letra al final, como 20240001A. Se
+            admiten espacios en los bordes y la letra en minúscula; el servidor
+            lo guarda sin espacios y en mayúsculas. Si no cumple el formato, se
+            responde 400 `CODIGO_UNI_INVALIDO`. Vacío o ausente, no se valida.
         datos_estudiante:
           type: object
           additionalProperties: true

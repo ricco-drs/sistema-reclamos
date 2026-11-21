@@ -60,10 +60,10 @@ El campo `avisos` (#58) llegó después de la revisión, para la transición ent
 | **Una prueba podía colarse por `documentos`.** Si el cliente ponía `evidencias` dentro de `documentos`, se guardaba sin revisar y podía apuntar al archivo de otro estudiante. No estaba en el contrato. | Se ignora: las pruebas solo valen por el campo `evidencias`, que se revalida. El contrato lo dice en `documentos`. |
 | **`Retry-After` no tenía valor acordado.** | Hoy siempre es 5 segundos, y el contrato lo dice. |
 | **Los mensajes de tres errores** se escribieron distinto en el código que en el contrato (`CODIGO_UNI_INVALIDO`, `DOCUMENTO_AJENO` y `DESCRIPCION_DEMASIADO_LARGA`). | El contrato usa los del código. Lo estable es el `codigo`, y el mensaje puede cambiar. |
-| **El código UNI** se valida solo si viene. | Coincide con el contrato: `codigo_estudiante` es opcional. |
+| **El código UNI** se valida solo si viene, y se aceptan espacios en los bordes y la letra en minúscula: se guarda normalizado. El contrato pedía la letra en mayúscula. | El contrato se ajusta a lo implementado, en vez de volver estricto el servidor: el front ya lo manda en mayúsculas, y aceptarlo normalizado no perjudica a ningún cliente. Un consumidor que mande `20240001a` recibe 201, no 400. |
 | **`lista` en `cursos_descartados`:** la primera implementación devolvía `cursos_retirar` y `cursos_matricular`. | Se mantiene lo acordado con el consumidor, `retirar` y `matricular`, y se ajusta el código. Cambiar el valor ahora obligaría a avisarle al consumidor un cambio de contrato. |
 
 ## Estado
 
 - **Contrato:** actualizado en `openapi.yaml` 2.0.0. Los tres ejemplos con mensajes que el código todavía no devuelve llevan `x-pendiente`, y el validador los cuenta aparte hasta que entre el #61. El de `CUERPO_INVALIDO` ya no la lleva: lo implementó el #40.
-- **Implementación:** el #61 está en la rama `feat/61-contrato-post-reclamos`, sobre el #58, que conecta el bus. Cuando entre, se quitan las marcas `x-pendiente` de sus tres mensajes, y el validador avisa si queda alguna.
+- **Implementación:** el #61 se implementa en el #62 (`feat/61-contrato-reclamos`), que ya trae `estado` y `creado_en` en el 201, `creado_en` en el 200 y el `codigo` del 401. Cuando entre, se quitan las marcas `x-pendiente` de sus tres mensajes, y el validador avisa si queda alguna.

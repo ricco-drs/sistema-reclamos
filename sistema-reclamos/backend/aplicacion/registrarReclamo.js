@@ -6,6 +6,7 @@ import {
 import { crearReclamoRegistrado } from '../dominio/eventos.js';
 
 const VENTANA_DUPLICADO_MS = 10 * 60 * 1000;
+const ESTADO_INICIAL = 'PENDIENTE';
 const MAX_INTENTOS_ID = 10;
 
 /**
@@ -86,9 +87,10 @@ export function crearRegistrarReclamo({
   }
 
   /**
-   * @returns {Promise<{id: string, duplicado?: true,
+   * @returns {Promise<{id: string, creadoEn: string, duplicado?: true, estado?: 'PENDIENTE',
    *   cursosDescartados?: {lista: string, codigo: string, seccion: string, motivo: string}[]}>}
-   *   `cursosDescartados` solo viene cuando se crea el reclamo; un reintento no guarda nada nuevo.
+   *   `estado` y `cursosDescartados` solo vienen cuando se crea el reclamo; un reintento no guarda
+   *   nada nuevo y devuelve la fecha de creación del reclamo que ya existía.
    */
   return async function registrarReclamo({ email, entrada }) {
     const rechazo = await politica.motivoDeRechazo(email);
@@ -113,11 +115,12 @@ export function crearRegistrarReclamo({
     try {
       const desde = new Date(reloj().getTime() - VENTANA_DUPLICADO_MS).toISOString();
       const existente = await reclamos.buscarDuplicado(email, String(descripcion).trim(), desde);
-      if (existente) return { id: existente, duplicado: true };
+      if (existente) return { id: existente.id, duplicado: true, creadoEn: existente.creadoEn };
     } catch (err) {
       registrarError('No se pudo comprobar duplicados', err);
     }
 
+    const creadoEn = reloj().toISOString();
     const anio = reloj().getFullYear();
     const siguiente = await numerar(anio);
     let id = null;
@@ -138,7 +141,8 @@ export function crearRegistrarReclamo({
           cursosMatricular,
         },
         documentos: documentosConEvidencias,
-        estado: 'PENDIENTE',
+        estado: ESTADO_INICIAL,
+        created_at: creadoEn,
         // Columnas heredadas del esquema anterior: se mantienen espejadas.
         nombres: nombre || null,
         codigo: codigoUni,
@@ -171,6 +175,6 @@ export function crearRegistrarReclamo({
       cursosRetirar, cursosMatricular, tieneEvidencia: evidenciasValidas.length > 0,
     }, reloj().toISOString()));
 
-    return { id, cursosDescartados };
+    return { id, estado: ESTADO_INICIAL, creadoEn, cursosDescartados };
   };
 }

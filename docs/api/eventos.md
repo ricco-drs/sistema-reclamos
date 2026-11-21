@@ -30,13 +30,14 @@ infraestructura/busEnProceso.js
 
 | Código | `codigo` | Cuándo |
 |---|---|---|
-| 201 | | Reclamo creado: `{ success: true, id, cursos_descartados }`, con la cabecera `Location: /api/reclamos/mine/{id}`. |
-| 200 | | Reenvío del mismo texto en 10 minutos: `{ success: true, id, duplicado: true }`, con `Location`. No guarda nada del segundo envío, así que no trae `cursos_descartados`. |
+| 201 | | Reclamo creado: `{ success: true, id, estado: "PENDIENTE", creado_en, cursos_descartados }`, con la cabecera `Location: /api/reclamos/mine/{id}`. `creado_en` es la fecha que se guarda en la fila. |
+| 200 | | Reenvío del mismo texto en 10 minutos: `{ success: true, id, duplicado: true, creado_en }`, con `Location`. `creado_en` es el del reclamo que ya existía. No guarda nada del segundo envío, así que no trae `estado` ni `cursos_descartados`. |
 | 400 | `DATOS_INCOMPLETOS` | Falta `categoria` o `descripcion`. |
 | 400 | `DESCRIPCION_DEMASIADO_LARGA` | La descripción pasa de 5 000 caracteres. |
 | 400 | `CODIGO_UNI_INVALIDO` | `codigo_estudiante` no cumple `^\d{7,8}[A-Z]$` (se acepta en minúsculas y con espacios en los bordes; se guarda normalizado). |
 | 400 | `DEMASIADAS_PRUEBAS` | Hay más de una evidencia. |
-| 401 | `SESION_REQUERIDA`, `SESION_INVALIDA` | Sin sesión o sesión vencida. Lo responde `requireStudentAuth`, antes del manejador. |
+| 401 | `SESION_REQUERIDA` | Sin token. Lo responde `requireStudentAuth`, antes del manejador. |
+| 401 | `SESION_INVALIDA` | Token vencido o falsificado. Igual que el anterior: el `codigo` lo agrega `requireStudentAuth`, y vale para todas las rutas del estudiante. |
 | 403 | `PRUEBA_AJENA` | Una evidencia no pertenece al estudiante. |
 | 403 | `DOCUMENTO_AJENO` | Una referencia de `documentos` (ficha, avance, boleta) no está en la carpeta del estudiante. |
 | 409 | `CICLO_CERRADO` | El proceso de matrícula terminó. |

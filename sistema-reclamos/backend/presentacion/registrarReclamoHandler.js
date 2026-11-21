@@ -27,7 +27,7 @@ export const ubicacionDeReclamo = (id) => `/api/reclamos/mine/${encodeURICompone
 /**
  * Adaptador Express de POST /api/reclamos. Espera `req.studentEmail` ya autenticado.
  *
- * Respuestas: 201 con `Location` y `cursos_descartados` al crear; 200 con `Location` y
+ * Respuestas: 201 con `Location`, `estado`, `creado_en` y `cursos_descartados` al crear; 200 con `Location`, `creado_en` y
  * `duplicado: true` si es el reenvío de un reclamo de los últimos 10 minutos (no guarda nada,
  * así que no trae `cursos_descartados`). Los errores llevan `error` (mensaje) y `codigo` (estable);
  * la pausa por falta de número agrega `Retry-After`.
@@ -50,12 +50,14 @@ export function crearRegistrarReclamoHandler(registrarReclamo, { sinAvisos } = {
     const pideAvisos = req.body?.avisos === AVISOS_POR_API;
     const registrar = pideAvisos || !sinAvisos ? registrarReclamo : sinAvisos;
     try {
-      const { id, duplicado, cursosDescartados } = await registrar({ email: req.studentEmail, entrada: req.body });
+      const { id, duplicado, estado, creadoEn, cursosDescartados } = await registrar({ email: req.studentEmail, entrada: req.body });
       res.set('Location', ubicacionDeReclamo(id));
       return res.status(duplicado ? 200 : 201).json({
         success: true,
         id,
-        ...(duplicado ? { duplicado: true } : { cursos_descartados: cursosDescartados ?? [] }),
+        ...(duplicado ? { duplicado: true } : { estado }),
+        creado_en: creadoEn,
+        ...(duplicado ? {} : { cursos_descartados: cursosDescartados ?? [] }),
         ...(pideAvisos ? { avisos: AVISOS_POR_API } : {}),
       });
     } catch (err) {

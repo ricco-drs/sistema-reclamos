@@ -52,7 +52,8 @@ test('registra el reclamo y publica ReclamoRegistrado sin la descripción', asyn
       evidencias: [{ ref: `${EMAIL}/boleta.pdf`, nombre: 'boleta.pdf', tipo: 'application/pdf', bytes: 10 }],
     }),
   });
-  assert.deepEqual(r, { id: 'REC-2026-0001', cursosDescartados: [] });
+  assert.deepEqual(r, { id: 'REC-2026-0001', estado: 'PENDIENTE', creadoEn: AHORA.toISOString(), cursosDescartados: [] });
+  assert.equal(reclamos.filas[0].created_at, AHORA.toISOString());
   assert.equal(reclamos.filas[0].estado, 'PENDIENTE');
   assert.equal(reclamos.filas[0].datos_estudiante.cursosMatricular[0].nombre, 'Arquitectura de Software');
   assert.equal(publicador.publicados.length, 1);
@@ -74,8 +75,23 @@ test('un reintento devuelve el reclamo existente y no publica otro evento', asyn
   const { registrar, publicador } = armar();
   const primero = await registrar({ email: EMAIL, entrada: entrada() });
   const segundo = await registrar({ email: EMAIL, entrada: entrada({ descripcion: '  Me cruzan dos cursos ' }) });
-  assert.deepEqual(segundo, { id: primero.id, duplicado: true });
+  assert.deepEqual(segundo, { id: primero.id, duplicado: true, creadoEn: primero.creadoEn });
   assert.equal(publicador.publicados.length, 1);
+});
+
+test('el reenvío devuelve la fecha de creación del reclamo original, no la del segundo envío', async () => {
+  let ahora = new Date('2026-11-21T15:00:00.000Z');
+  const reclamos = crearRepositorioReclamosMemoria({ reloj: () => ahora });
+  const registrar = crearRegistrarReclamo({
+    reclamos, publicador: crearPublicadorMemoria(), politica: abierta, catalogoCursos: CATALOGO,
+    esEvidenciaPropia: () => true, reloj: () => ahora,
+  });
+  const primero = await registrar({ email: EMAIL, entrada: entrada() });
+  ahora = new Date('2026-11-21T15:04:00.000Z');
+  const segundo = await registrar({ email: EMAIL, entrada: entrada() });
+  assert.equal(primero.creadoEn, '2026-11-21T15:00:00.000Z');
+  assert.equal(segundo.duplicado, true);
+  assert.equal(segundo.creadoEn, '2026-11-21T15:00:00.000Z');
 });
 
 test('el mismo estudiante puede mandar dos reclamos distintos', async () => {
@@ -313,13 +329,13 @@ test('HTTP: 201 con Location y cursos_descartados al crear; 200 con Location y d
   assert.equal(a.codigo, 201);
   assert.equal(a.cabeceras.Location, '/api/reclamos/mine/REC-2026-0001');
   assert.deepEqual(a.body, {
-    success: true, id: 'REC-2026-0001',
+    success: true, id: 'REC-2026-0001', estado: 'PENDIENTE', creado_en: AHORA.toISOString(),
     cursos_descartados: [{ lista: 'retirar', codigo: 'XX999', seccion: 'U', motivo: 'NO_EXISTE_EN_CATALOGO' }],
   });
   const b = respuesta(); await handler({ studentEmail: EMAIL, body: entrada() }, b);
   assert.equal(b.codigo, 200);
   assert.equal(b.cabeceras.Location, '/api/reclamos/mine/REC-2026-0001');
-  assert.deepEqual(b.body, { success: true, id: 'REC-2026-0001', duplicado: true });
+  assert.deepEqual(b.body, { success: true, id: 'REC-2026-0001', duplicado: true, creado_en: AHORA.toISOString() });
 });
 
 test('HTTP: sin cursos descartados el 201 trae la lista vacía', async () => {
@@ -473,14 +489,15 @@ test('política: respeta el orden y los mensajes de la ruta actual, y da el cód
 test('adaptador Supabase: duplicado, secuencia, último id e insert conservan el contrato PostgREST', async () => {
   const llamadas = [];
   const respuestas = [
-    { ok: true, json: async () => [{ id: 'REC-2026-0003', descripcion: ' texto ' }] },
+    { ok: true, json: async () => [{ id: 'REC-2026-0003', descripcion: ' texto ', created_at: '2026-11-21T14:58:00.123456+00:00' }] },
     { ok: true, json: async () => 12 },
     { ok: true, json: async () => [{ id: 'REC-2026-0011' }] },
     { ok: false, status: 409, text: async () => 'duplicate key' },
     { ok: false, status: 400, text: async () => 'columna inexistente' },
   ];
   const repo = crearRepositorioReclamosSupabase(async (url, op) => { llamadas.push({ url, op }); return respuestas.shift(); });
-  assert.equal(await repo.buscarDuplicado('a@uni.pe', 'texto', '2026-11-21T00:00:00Z'), 'REC-2026-0003');
+  assert.deepEqual(await repo.buscarDuplicado('a@uni.pe', 'texto', '2026-11-21T00:00:00Z'), { id: 'REC-2026-0003', creadoEn: '2026-11-21T14:58:00.123456+00:00' });
+  assert.ok(llamadas[0].url.includes('select=id,descripcion,created_at'));
   assert.ok(llamadas[0].url.includes('email=eq.a%40uni.pe'));
   assert.equal(await repo.siguienteNumero(), 12);
   assert.equal(llamadas[1].url, '/rpc/siguiente_id_reclamo');

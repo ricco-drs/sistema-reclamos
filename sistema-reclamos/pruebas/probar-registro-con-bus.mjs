@@ -64,14 +64,15 @@ const falso = http.createServer(async (req, res) => {
   }
   if (ruta === '/rest/v1/rpc/siguiente_id_reclamo') return responder(res, 200, ++estado.secuencia);
   if (ruta === '/rest/v1/reclamos' && req.method === 'POST') {
-    estado.reclamos.push({ ...JSON.parse(cuerpo), created_at: new Date().toISOString() });
+    const fila = JSON.parse(cuerpo);
+    estado.reclamos.push({ ...fila, created_at: fila.created_at ?? new Date().toISOString() });
     return responder(res, 201, {});
   }
   if (ruta === '/rest/v1/reclamos' && req.method === 'GET') {
     const deEseCorreo = (r) => `eq.${r.email}` === q.email;
     const conEseId = (r) => `eq.${r.id}` === q.id;
-    if (q.select === 'id,descripcion') {
-      return responder(res, 200, estado.reclamos.filter(deEseCorreo).map(({ id, descripcion }) => ({ id, descripcion })));
+    if (q.select === 'id,descripcion,created_at') {
+      return responder(res, 200, estado.reclamos.filter(deEseCorreo).map(({ id, descripcion, created_at }) => ({ id, descripcion, created_at })));
     }
     if (q.select === 'id') return responder(res, 200, []);
     if (q.select?.startsWith('id,codigo_estudiante')) return responder(res, 200, estado.reclamos.filter(conEseId));
@@ -180,7 +181,17 @@ try {
 
   // ── Rechazos ──
   let r = await registrar(reclamo('sin sesión'), { sesion: false });
-  comprobar('Sin sesión', '401', r.status, r.status === 401);
+  comprobar('Sin sesión', '401 SESION_REQUERIDA', `${r.status} ${r.cuerpo.codigo}`, r.status === 401 && r.cuerpo.codigo === 'SESION_REQUERIDA');
+
+  {
+    const malo = await fetch(`${base}/api/reclamos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token.slice(0, -2)}xx` },
+      body: JSON.stringify(reclamo('token falsificado')),
+    });
+    const cuerpoMalo = await malo.json();
+    comprobar('Token falsificado', '401 SESION_INVALIDA', `${malo.status} ${cuerpoMalo.codigo}`, malo.status === 401 && cuerpoMalo.codigo === 'SESION_INVALIDA');
+  }
 
   r = await registrar({ descripcion: 'sin categoría' });
   comprobar('Sin categoría', '400 DATOS_INCOMPLETOS, sin avisos en la respuesta', `${r.status} ${JSON.stringify(r.cuerpo)}`,
@@ -212,6 +223,9 @@ try {
   const guardado = estado.reclamos.find((x) => x.id === id);
   comprobar('Front nuevo: registro', '201 con número, avisos: "api" y Location', `${r.status} ${JSON.stringify(r.cuerpo)}; ${r.location}`,
     r.status === 201 && /^REC-\d{4}-\d{4}$/.test(id) && r.cuerpo.avisos === 'api' && r.location === `/api/reclamos/mine/${id}`);
+  comprobar('  estado y creado_en en el 201', 'PENDIENTE y una fecha ISO', `${r.cuerpo.estado} ${r.cuerpo.creado_en}`,
+    r.cuerpo.estado === 'PENDIENTE' && /^\d{4}-\d{2}-\d{2}T/.test(r.cuerpo.creado_en) && guardado?.created_at === r.cuerpo.creado_en);
+  const creadoEnOriginal = r.cuerpo.creado_en;
   comprobar('  cursos_descartados en el 201', 'XX999 por NO_EXISTE_EN_CATALOGO', JSON.stringify(r.cuerpo.cursos_descartados),
     JSON.stringify(r.cuerpo.cursos_descartados) === JSON.stringify([{ lista: 'retirar', codigo: 'XX999', seccion: 'Z', motivo: 'NO_EXISTE_EN_CATALOGO' }]));
   comprobar('  el documento propio se guarda', docPropio, guardado?.documentos?.ficha, guardado?.documentos?.ficha === docPropio);
@@ -230,9 +244,10 @@ try {
 
   r = await registrar({ ...reclamo(TEXTO), documentos: { ficha: docPropio } });
   await dejarTerminarConsumidores();
-  comprobar('Front nuevo: reintento del mismo texto', '200 con Location, duplicado, sin cursos_descartados y sin envíos nuevos',
+  comprobar('Front nuevo: reintento del mismo texto', '200 con Location, duplicado, el creado_en original, sin estado ni cursos_descartados y sin envíos nuevos',
     `${r.status} ${JSON.stringify(r.cuerpo)}; ${r.location}; ${contar()}`,
     r.status === 200 && r.location === `/api/reclamos/mine/${id}` && r.cuerpo.duplicado === true && r.cuerpo.id === id
+      && r.cuerpo.creado_en === creadoEnOriginal && !('estado' in r.cuerpo)
       && r.cuerpo.avisos === 'api' && !('cursos_descartados' in r.cuerpo)
       && estado.correos.length === 1 && estado.expedientes.length === 1);
 

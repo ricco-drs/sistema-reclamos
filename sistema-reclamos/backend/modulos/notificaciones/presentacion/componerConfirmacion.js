@@ -1,4 +1,4 @@
-import { EMAIL_RECLAMO_IMG_URL, emailTemplate, escaparHtml } from './plantillaCorreo.js';
+import { EMAIL_RECLAMO_IMG_URL, emailTemplate, escaparHtml } from '@tefiis/compartido';
 
 // Formato peruano: "APELLIDO1 APELLIDO2, NOMBRE1 NOMBRE2" → el primer nombre, después de la coma.
 // Si el nombre no trae coma, se usa la parte del correo antes del primer punto; sin correo, "Estudiante".

@@ -1,19 +1,12 @@
-import { crearGuardarCursosResueltos } from './aplicacion/guardarCursosResueltos.js';
-import { crearRepositorioCursosSupabase } from './infraestructura/repositorioCursosSupabase.js';
-import { crearGuardarCursosHandler } from './presentacion/guardarCursosHandler.js';
-import { crearRegistrarReclamo } from './aplicacion/registrarReclamo.js';
-import { crearNotificadorDeReclamo } from './aplicacion/consumidores/notificarReclamoRegistrado.js';
-import { crearEnviadorDeExpediente } from './aplicacion/consumidores/enviarExpedienteAM2.js';
-import { RECLAMO_REGISTRADO } from './dominio/eventos.js';
-import { crearBusEnProceso } from './infraestructura/busEnProceso.js';
-import { crearClienteM2Http, crearClienteM2Memoria } from './infraestructura/clienteM2.js';
-import { crearEnviadorCorreo } from './infraestructura/enviadorCorreo.js';
-import { crearPoliticaDeRecepcion } from './infraestructura/politicaDeRecepcion.js';
-import { crearRepositorioReclamosSupabase } from './infraestructura/repositorioReclamosSupabase.js';
-import { componerConfirmacion } from './presentacion/componerConfirmacion.js';
-import { EMAIL_CODIGO_IMG_URL, emailTemplate } from './presentacion/plantillaCorreo.js';
-import { crearRegistrarReclamoHandler } from './presentacion/registrarReclamoHandler.js';
-import { respuestaDeCuerpoInvalido } from './presentacion/cuerpoInvalido.js';
+// Módulos del backend (Lab09, docs/particiones.md). Cada uno es un workspace de npm y
+// se entra solo por su paquete: server.js es el único lugar que los conecta.
+import { crearModuloReclamos, RECLAMO_REGISTRADO } from '@tefiis/reclamos';
+import {
+  crearConsumidoresDeReclamoRegistrado, crearClienteM2Http, crearClienteM2Memoria, componerConfirmacion,
+} from '@tefiis/notificaciones';
+import {
+  crearBusEnProceso, crearEnviadorCorreo, EMAIL_CODIGO_IMG_URL, emailTemplate, respuestaDeCuerpoInvalido,
+} from '@tefiis/compartido';
 import express from 'express';
 import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
@@ -256,7 +249,7 @@ async function requireAdminAuth(req, res, next) {
 const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
 
 // ── Envío de correo: Brevo, luego Resend y luego Mailjet, todos por HTTP (sin SMTP, funciona en Railway) ──
-// El adaptador de infraestructura/enviadorCorreo.js (#34) mantiene ese orden de
+// El enviador de compartido (correo/enviadorCorreo.js, #34) mantiene ese orden de
 // respaldo y agrega un tiempo límite por proveedor: si uno se cuelga, se pasa al
 // siguiente en vez de esperar para siempre (escenario E5).
 const sendEmail = crearEnviadorCorreo({ timeoutMs: tiempoLimiteCorreoMs() });
@@ -275,8 +268,8 @@ function tiempoLimiteCorreoMs() {
 // Códigos de verificación en memoria: email → { code, expiresAt }
 const codesStore = new Map();
 
-// La plantilla de los correos (emailTemplate y sus imágenes) vive en
-// presentacion/plantillaCorreo.js, la misma que usa el correo de confirmación.
+// La plantilla de los correos (emailTemplate y sus imágenes) vive en compartido
+// (correo/plantillaCorreo.js), la misma que usa el correo de confirmación.
 
 // ==========================================
 // EMAIL: ENVIAR CÓDIGO DE VERIFICACIÓN
@@ -412,7 +405,7 @@ app.post('/api/reclamos/confirmar', requireStudentAuth, limiteEnvioCodigo, async
   if (!reclamo) return res.status(404).json({ error: 'No se encontró ese reclamo.' });
 
   // La misma plantilla que manda el consumidor de ReclamoRegistrado
-  // (presentacion/componerConfirmacion.js): escapa lo que escribió el estudiante
+  // (módulo notificaciones): escapa lo que escribió el estudiante
   // y saluda por su primer nombre. Esta ruta queda durante la transición (ver
   // POST /api/reclamos): la llama el front anterior, y el nuevo solo cuando habla
   // con una API que todavía no envía el correo.
@@ -483,18 +476,36 @@ function logActividad({ actorEmail, actorType, accion, detalle }) {
   }).catch(err => console.error('No se pudo registrar actividad:', err.message));
 }
 
-// ── Registro de reclamos y evento ReclamoRegistrado (Lab10, #27; docs/api/eventos.md) ──
-// La ruta solo traduce HTTP: las reglas del registro (ventana, pruebas propias,
-// cursos del catálogo, duplicados y numeración) están en aplicacion/registrarReclamo.js.
-// Cuando el reclamo queda guardado se publica ReclamoRegistrado, y sus dos
-// consumidores envían el correo de confirmación y el expediente a M2. El bus no los
-// espera: si uno falla, el estudiante igual recibe su número y el error queda en el
-// registro del servidor.
+// ── Módulos reclamos y notificaciones, y el evento ReclamoRegistrado ──
+// (Lab09 y Lab10; docs/particiones.md y docs/api/eventos.md)
+// Las reglas del registro (ventana, pruebas propias, cursos del catálogo, duplicados
+// y numeración) viven en el módulo reclamos, que también registra sus rutas. Cuando el
+// reclamo queda guardado publica ReclamoRegistrado en el bus, y los dos consumidores del
+// módulo notificaciones envían el correo de confirmación y el expediente a M2. El bus no
+// los espera: si uno falla, el estudiante igual recibe su número y el error queda en el
+// registro del servidor. Ningún módulo importa a otro: lo que uno necesita del otro se
+// lo pasa este archivo.
 const bus = crearBusEnProceso({
   alFallar: (evento, consumidor, err) =>
     console.error(`[EVENTOS] ${consumidor} falló en ${evento.eventoId}:`, err?.message ?? err),
 });
-const repositorioReclamos = crearRepositorioReclamosSupabase(sbRest);
+
+const reclamos = crearModuloReclamos({
+  sbRest,
+  publicador: bus,
+  // Los interruptores (configuración) deciden si hoy se reciben reclamos; reclamos
+  // los recibe como el puerto PoliticaDeRecepcion.
+  interruptores: { tefiDurmiendoActivo, despedidaActivaPara, puedeEnviarReclamo },
+  catalogoCursos: CATALOGO_CURSOS,
+  esEvidenciaPropia,
+  // Las referencias de `documentos` (ficha, avance, boleta) tienen que estar en la carpeta del propio estudiante,
+  // la misma comprobación que hace /api/docs/signed-url.
+  esDocumentoPropio: (ref, email) => rutaDentroDe(ref, `${sanitizeEmail(email)}/`),
+  logActividad,
+  registrarError: (mensaje, err) => console.error(mensaje, err?.message ?? ''),
+  exigirEstudiante: requireStudentAuth,
+  exigirAdmin: requireAdminAuth,
+});
 
 // M2 recibe el expediente de cada reclamo, igual que cuando lo enviaba el front.
 // Sin M2_URL (desarrollo y Compose) el expediente queda en memoria y no se llama al
@@ -512,45 +523,20 @@ const clienteM2 = process.env.M2_URL
   ? crearClienteM2Http({ url: process.env.M2_URL, timeoutMs: ESPERA_M2_MS })
   : crearClienteM2Memoria();
 
-bus.suscribir(
-  RECLAMO_REGISTRADO,
-  crearNotificadorDeReclamo({ componerCorreo: componerConfirmacion, enviarCorreo: sendEmail }),
-  'correo',
-);
-bus.suscribir(
-  RECLAMO_REGISTRADO,
-  crearEnviadorDeExpediente({ reclamos: repositorioReclamos, m2: clienteM2 }),
-  'm2',
-);
+// Los consumidores viven en notificaciones, un módulo distinto del que publica (Lab10,
+// paso 6). El nombre del evento se lo da este archivo, y el de M2 lee la descripción por
+// la fuente que le deja reclamos, porque el evento no la lleva.
+const consumidores = crearConsumidoresDeReclamoRegistrado({
+  enviarCorreo: sendEmail,
+  fuenteDeExpedientes: reclamos.fuenteDeExpedientes,
+  m2: clienteM2,
+});
+bus.suscribir(RECLAMO_REGISTRADO, consumidores.correo, 'correo');
+bus.suscribir(RECLAMO_REGISTRADO, consumidores.m2, 'm2');
 
-const dependenciasDelRegistro = {
-  reclamos: repositorioReclamos,
-  // Se comprueba en el servidor y no solo en la interfaz: ocultar el botón no
-  // impide llamar al endpoint, así que el cierre tiene que valer aquí.
-  politica: crearPoliticaDeRecepcion({ tefiDurmiendoActivo, despedidaActivaPara, puedeEnviarReclamo }),
-  catalogoCursos: CATALOGO_CURSOS,
-  esEvidenciaPropia,
-  // Las referencias de `documentos` (ficha, avance, boleta) tienen que estar en la carpeta del propio estudiante,
-  // la misma comprobación que hace /api/docs/signed-url.
-  esDocumentoPropio: (ref, email) => rutaDentroDe(ref, `${sanitizeEmail(email)}/`),
-  logActividad,
-  registrarError: (mensaje, err) => console.error(mensaje, err?.message ?? ''),
-};
-const registrarReclamo = crearRegistrarReclamo({ ...dependenciasDelRegistro, publicador: bus });
-
-// Transición (#46). El front anterior envía él mismo el correo (/api/reclamos/confirmar)
-// y el expediente a M2; el nuevo manda `avisos: "api"` y se los deja a la API. Para las
-// peticiones del anterior se registra sin publicar el evento, así cada reclamo manda un
-// solo correo y un solo expediente, sin importar qué se despliega primero ni si el
-// estudiante tiene abierta la página anterior. Se quita, junto con /api/reclamos/confirmar,
-// cuando ya no quede el front anterior.
-const sinPublicar = { publicar: async () => {} };
-const registrarReclamoSinAvisos = crearRegistrarReclamo({ ...dependenciasDelRegistro, publicador: sinPublicar });
-const manejarRegistro = crearRegistrarReclamoHandler(registrarReclamo, { sinAvisos: registrarReclamoSinAvisos });
-
-// Estudiante: crear un reclamo nuevo. El email SIEMPRE sale de la sesión
-// verificada (req.studentEmail), nunca de lo que mande el cliente en el body.
-app.post('/api/reclamos', requireStudentAuth, manejarRegistro);
+// POST /api/reclamos y PUT /api/admin/reclamos/:id/cursos-resueltos. La transición del
+// front anterior (#46) también vive en el módulo.
+app.use(reclamos.rutas);
 
 // Estudiante: ver solo sus propios reclamos (filtrado por el email de su sesión, no por query param)
 app.get('/api/reclamos/mine', requireStudentAuth, async (req, res) => {
@@ -940,14 +926,6 @@ app.patch('/api/admin/reclamos/:id', requireAdminAuth, async (req, res) => {
     res.json({ success: true, ...(especialidad !== undefined ? { datos_estudiante: patch.datos_estudiante } : {}) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
-// Admin: guardar qué cursos-sección se matriculan y cuáles se retiran de
-// verdad. Es la decisión del Tercio, no lo que pidió el estudiante, y NO se le
-// muestra a él: vive en su propia columna y los dos endpoints que consulta el
-// estudiante piden columnas por nombre, así que esta no sale por ahí.
-const guardarCursosResueltos = crearGuardarCursosResueltos(crearRepositorioCursosSupabase(sbRest));
-app.put('/api/admin/reclamos/:id/cursos-resueltos', requireAdminAuth,
-  crearGuardarCursosHandler(guardarCursosResueltos, logActividad));
 
 // Admin: obtener una signed URL para ver el documento de cualquier estudiante
 app.get('/api/admin/docs/signed-url', requireAdminAuth, async (req, res) => {
@@ -1466,7 +1444,8 @@ const DOCS_BUCKET = 'Documentos Tefiis';
 // Una sola prueba y en PDF. Antes se admitían hasta 5 archivos y fotos sueltas,
 // que llegaban como capturas de móvil difíciles de leer y desordenadas. Un PDF
 // obliga al estudiante a juntar lo que quiera probar en un solo documento. El
-// límite de una prueba por reclamo lo aplica dominio/reclamo.js (MAX_EVIDENCIAS).
+// límite de una prueba por reclamo lo aplica el dominio del módulo reclamos
+// (modulos/reclamos/dominio/reclamo.js, MAX_EVIDENCIAS).
 const MAX_EVIDENCIA_BYTES = 10 * 1024 * 1024;   // 10 MB
 
 // Los reclamos anteriores pueden tener imágenes guardadas y se siguen mostrando

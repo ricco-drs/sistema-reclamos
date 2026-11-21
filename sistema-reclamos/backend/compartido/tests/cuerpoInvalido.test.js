@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
-import { respuestaDeCuerpoInvalido, MENSAJE_CUERPO_INVALIDO } from '../presentacion/cuerpoInvalido.js';
+import { respuestaDeCuerpoInvalido, MENSAJE_CUERPO_INVALIDO } from '../http/cuerpoInvalido.js';
 
 const esperado = { codigo: 'CUERPO_INVALIDO', error: MENSAJE_CUERPO_INVALIDO };
 

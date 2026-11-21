@@ -14,6 +14,8 @@
  * @property {(fila: object) => Promise<{ok: true} | {ok: false, colision: boolean, detalle: string}>} insertar
  * @property {(id: string) => Promise<{id: string, codigo_estudiante: string|null, email: string,
  *   nombre: string|null, categoria: string, descripcion: string} | null>} obtenerParaExpediente
+ *   Lo que el consumidor de M2 (módulo notificaciones) lee de un reclamo. Se lo pasa server.js
+ *   como el puerto FuenteDeExpedientes de ese módulo.
  */
 
 /**
@@ -26,10 +28,4 @@
 /**
  * @typedef {Object} PublicadorEventos
  * @property {(evento: import('./eventos.js').EventoReclamoRegistrado) => Promise<void>} publicar
- */
-
-/**
- * @typedef {Object} ClienteM2
- * @property {(expediente: {id: string, codigoEstudiante: string, email: string, nombre: string,
- *   motivoReclamo: string, descripcion: string}) => Promise<void>} registrarExpediente
  */

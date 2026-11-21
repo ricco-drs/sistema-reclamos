@@ -22,11 +22,11 @@ En la revisión del modelo C4 ([docs/c4/leyenda.md](c4/leyenda.md)) y en la form
 
 ### 2.1 `crearEnviadorCorreo` con Timeout por proveedor y URLs configurables (`enviadorCorreo.js`)
 
-En [sistema-reclamos/backend/infraestructura/enviadorCorreo.js](../sistema-reclamos/backend/infraestructura/enviadorCorreo.js) se agregó `crearEnviadorCorreo` (que se activa en el servidor cuando se conecta en `backend/server.js` en reemplazo de `sendViaBrevo`, `sendViaResend`, `sendViaMailjet` y `sendEmail`):
+En [sistema-reclamos/backend/compartido/correo/enviadorCorreo.js](../sistema-reclamos/backend/compartido/correo/enviadorCorreo.js) (antes `backend/infraestructura/`, hasta el #50) se agregó `crearEnviadorCorreo` (que se activa en el servidor cuando se conecta en `backend/server.js` en reemplazo de `sendViaBrevo`, `sendViaResend`, `sendViaMailjet` y `sendEmail`):
 
 - **Timeout por proveedor (`AbortSignal.timeout(timeoutMs)`):** Cada intento hacia `Brevo`, `Resend` o `Mailjet` lleva una señal de corte (por defecto `3 000 ms`, configurable por opciones o mediante `EMAIL_TIMEOUT_MS`; el valor `0` desactiva el timeout). Si el proveedor no responde dentro de ese límite, la petición se aborta con `TimeoutError`, se registra en `registrarError` y se conmuta al siguiente proveedor disponible.
 - **URLs y credenciales leídas al momento del envío (`BREVO_API_URL`, `RESEND_API_URL`, `MAILJET_API_URL`):** Se consultan en cada envío desde las opciones inyectadas o desde `process.env` (sin inventar un `FROM_EMAIL` por defecto si falta la variable), de modo que no dependen del orden de carga de `dotenv` y permiten redirigir el tráfico a un proveedor simulado.
-- **Doble de pruebas separado del código de producción:** El proveedor simulado (`crearProveedorCorreoSimulado`) vive en [sistema-reclamos/pruebas/proveedorCorreoSimulado.js](../sistema-reclamos/pruebas/proveedorCorreoSimulado.js), fuera de `backend/infraestructura/`.
+- **Doble de pruebas separado del código de producción:** El proveedor simulado (`crearProveedorCorreoSimulado`) vive en [sistema-reclamos/pruebas/proveedorCorreoSimulado.js](../sistema-reclamos/pruebas/proveedorCorreoSimulado.js), fuera del backend.
 
 ### 2.2 Combinación con el flujo por eventos `ReclamoRegistrado` (#27)
 
@@ -102,7 +102,7 @@ node pruebas/experimento-resiliencia.js
 Se conectó en el #51. Al integrar este adaptador en `backend/server.js`, se deben **eliminar** las funciones locales `sendViaBrevo`, `sendViaResend`, `sendViaMailjet` y `sendEmail` de `server.js` (para no dejar dos copias del envío de correo) y reemplazarlas por:
 
 ```js
-import { crearEnviadorCorreo } from './infraestructura/enviadorCorreo.js';
+import { crearEnviadorCorreo } from '@tefiis/compartido';
 
 const sendEmail = crearEnviadorCorreo({
   timeoutMs: process.env.EMAIL_TIMEOUT_MS !== undefined

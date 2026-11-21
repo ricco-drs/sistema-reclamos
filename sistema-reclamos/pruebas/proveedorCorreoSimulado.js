@@ -2,7 +2,7 @@ import {
   URL_BREVO_DEFAULT,
   URL_RESEND_DEFAULT,
   URL_MAILJET_DEFAULT,
-} from '../backend/infraestructura/enviadorCorreo.js';
+} from '@tefiis/compartido';
 
 /**
  * Proveedor simulado local de las tres APIs de correo (Brevo, Resend y Mailjet) para las

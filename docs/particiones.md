@@ -1,6 +1,6 @@
 # Particiones del backend (Lab09)
 
-> **Estado:** confirmada. Ricco confirmó la partición B (por módulos de negocio) en la revisión del #42.
+> **Estado:** confirmada. Ricco confirmó la partición B (por módulos de negocio) en la revisión del #42. El #50 la lleva al build en dos partes: la primera declara los workspaces, mueve `reclamos`, crea `notificaciones` y `compartido` y amplía las reglas; la segunda mueve lo que sigue en `server.js`. Ver [Cómo quedó en el build](#cómo-quedó-en-el-build).
 
 ## Qué se parte y por qué
 
@@ -62,6 +62,7 @@ Un módulo por cada capacidad que muestran los rastros. Cada uno tiene adentro s
 | Módulo | Rutas | Qué contiene | Rastro que lo separa |
 |---|---|---|---|
 | `reclamos` | 12 | Registro, consulta del estudiante, bandeja, estados, cursos resueltos, respuestas por correo y pruebas adjuntas. | Dueño (el Tercio) y ciclo de datos (ráfagas al cierre). |
+| `notificaciones` | 0 | Los consumidores de `ReclamoRegistrado`: el correo de confirmación al estudiante y el expediente a M2. Se agregó al implementar el #50. | Reacciona a lo que pasa en `reclamos` sin escribir sus tablas, y sus fallas (el correo, M2) no deben tocar el registro (E5). |
 | `configuracion` | 14 | Ventana de reclamos, modos almuerzo, mantenimiento, Tefi durmiendo y despedida, `/health` y el historial de actividad. | Dueño (el administrador principal) y ciclo de datos (se lee siempre, se escribe a mano). |
 | `documentos` | 8 | Documentos del SIGA del estudiante, los datos extraídos y los enlaces firmados. | Palabra («documento» frente a «prueba») y ciclo de datos (una vez por estudiante). |
 | `tefi` | 5 | Consultas a Tefi, carga de la base de conocimiento y auditoría de conversaciones. | Ciclo de datos (crece con cada pregunta). |
@@ -146,21 +147,28 @@ Ninguna de las cuatro descarta B. La 2 y la 4 dejan dos cosas a vigilar: `activi
 - un módulo necesita leer las tablas de otro, en vez de pedírselo por un puerto;
 - `compartido` empieza a recibir reglas de negocio.
 
-## Qué cambia en el build y en las reglas
+## Cómo quedó en el build
 
-Esto lo implementa Ricco y la forma exacta la decide él; aquí queda lo que la partición pide.
+Lo implementó Ricco en el #50. Esta sección empezó como lo que la partición pedía; ahora dice qué se hizo y qué falta.
 
-- **Build.** `sistema-reclamos/package.json` declara los módulos como workspaces de npm (`backend/compartido` y `backend/modulos/*`), cada uno con su `package.json` y sus dependencias explícitas: por ejemplo, Gemini solo en `tefi` y `firebase-admin` solo en `acceso`.
-- **Esto no reabre el ADR-0005.** Ese ADR descartó un monorepo con workspaces que uniera la aplicación de estudiantes y el panel, porque obligaba a cambiar la instalación y la construcción en Railway, Cloudflare y Firebase Hosting. Estos workspaces viven solo dentro de `sistema-reclamos/`: el panel no se toca, y Railway y Cloudflare siguen construyendo desde `sistema-reclamos/`, como hoy.
-- **Reglas de límites**, en `.dependency-cruiser.cjs`:
-  - las tres reglas actuales (`dominio-limpio`, `aplicacion-sin-infraestructura`, `dominio-sin-paquetes`), aplicadas dentro de cada módulo;
-  - un módulo no importa a otro: desde `modulos/X/` hacia `modulos/Y/`, con Y distinto de X;
-  - `compartido` no importa ningún módulo.
-- **El catálogo de cursos** (`src/data/cursos_secciones.json`) no se mueve en este cambio: lo importan el backend y también `useReclamos.ts`, del front. Su lugar se decide en el PR del build.
-- **Los consumidores de `ReclamoRegistrado`** (Lab10, paso 6) tienen que vivir en un módulo distinto de `reclamos`. Falta decidir con Roy en cuál, y cómo obtiene el consumidor de M2 la descripción sin leer la tabla de reclamos: un puerto que le pase `server.js`, o que el evento la lleve.
-- **Arranque.** `server.js` queda como el único lugar que conecta los módulos: crea `compartido`, le pasa a cada módulo lo que necesita y registra sus rutas.
+- **Build.** `sistema-reclamos/package.json` declara los workspaces de npm `backend/compartido` y `backend/modulos/*`. Cada módulo tiene su `package.json`, con su nombre (`@tefiis/reclamos`, `@tefiis/notificaciones`, `@tefiis/compartido`), sus dependencias explícitas y un `exports` que solo deja entrar por su `index.js`: si alguien importa `@tefiis/reclamos/dominio/reclamo.js`, Node lo rechaza. `server.js` importa cada módulo por su paquete.
+- **Esto no reabre el ADR-0005.** Ese ADR descartó un monorepo con workspaces que uniera la aplicación de estudiantes y el panel, porque obligaba a cambiar la instalación y la construcción en Railway, Cloudflare y Firebase Hosting. Estos workspaces viven solo dentro de `sistema-reclamos/`: el panel no se toca, y Railway y Cloudflare siguen construyendo desde `sistema-reclamos/`, como hoy. `npm ci` y `npm install` enlazan los módulos solos.
+- **Reglas de límites**, en `.dependency-cruiser.cjs`, con la misma herramienta de la semana 6:
+  - las tres reglas de capas (`dominio-limpio`, `aplicacion-sin-infraestructura`, `dominio-sin-paquetes`), ahora dentro de cada módulo; además, el dominio y la aplicación no pueden importar `compartido`, que es técnico;
+  - `modulo-no-importa-otro-modulo`: desde `modulos/X/` hacia `modulos/Y/`, con Y distinto de X, sea por el paquete o por una ruta relativa;
+  - `compartido-no-importa-modulos` y `modulo-no-importa-el-arranque`: `compartido` no depende de ningún módulo, y ningún módulo depende de `server.js`;
+  - `entrada-publica-de-los-modulos` y `entrada-publica-de-compartido`: desde fuera, solo se entra por el `index.js`;
+  - `paquetes-declarados`: cada módulo declara en su `package.json` los paquetes de npm que importa. Por ejemplo, `reclamos` declara `express` porque registra sus rutas.
+- **Módulos de esta primera parte:**
+  - `reclamos`: el registro y su evento, los cursos resueltos, sus repositorios y sus rutas (`POST /api/reclamos` y `PUT /api/admin/reclamos/:id/cursos-resueltos`, en `presentacion/rutas.js`). `crearModuloReclamos` recibe lo que necesita de afuera: PostgREST, el bus, los interruptores de configuración (con ellos arma el puerto `PoliticaDeRecepcion`) y los middlewares de sesión.
+  - `notificaciones`, **nuevo**, acordado con Roy: los dos consumidores de `ReclamoRegistrado`, `componerConfirmacion` y el cliente de M2. Ninguno de los cinco módulos de la tabla calzaba con ellos, y el Lab10 (paso 6) pide que el consumidor viva en un módulo distinto del que publica. No importa a `reclamos`: el nombre del evento se lo pasa `server.js`, de cada evento usa solo `id`, `email`, `nombre` y `categoria`, y la descripción la lee por el puerto `FuenteDeExpedientes`, que define él e implementa `reclamos` (`obtenerParaExpediente`). El evento sigue en la versión 1, sin la descripción. `backend/tests/flujoReclamoRegistrado.test.js` prueba ese contrato fuera de los dos módulos.
+  - `compartido`: el enviador de correo con sus proveedores, la plantilla de los correos (la usan el código de verificación, la respuesta del Tercio y la confirmación), el bus de eventos y la respuesta al cuerpo inválido.
+- **Pruebas por módulo.** Cada módulo tiene sus pruebas en `tests/` y se prueba solo: `npm test -w @tefiis/reclamos`, o `npm run test:modulos` para todos. `modulo.test.js` monta solo `reclamos` en un Express aparte, con sesiones falsas, como se dijo para E3 en la confrontación con los escenarios. Las pruebas que cruzan módulos están en `backend/tests/`.
+- **El catálogo de cursos** (`src/data/cursos_secciones.json`) se queda donde está, porque también lo importa `useReclamos.ts`, del front. Lo lee `server.js` y se lo pasa a `reclamos`, así que ningún módulo lo importa.
+- **Arranque.** `server.js` es el único lugar que conecta los módulos: crea el bus, arma `reclamos`, le pasa a `notificaciones` la fuente de expedientes de `reclamos` y registra las rutas del módulo.
+- **Falta, en la segunda parte del #50:** mover lo que sigue en `server.js` a `acceso`, `configuracion`, `documentos`, `tefi` y el resto de `reclamos`, y pasar a `compartido` el cliente de PostgREST, el registro de actividad y el almacenamiento. Ahí cada módulo declara sus paquetes: Gemini solo en `tefi` y `firebase-admin` solo en `acceso`. Las reglas ya están escritas para `modulos/*` y valen para los módulos nuevos sin cambiarlas.
 
 ## Cómo se comprueba
 
-- La captura del build en rojo con un import prohibido de cada regla nueva, y en verde al quitarlo, como en el #23.
-- En la semana 13, los mismos comandos del [informe de acoplamiento](acoplamiento/2026-10-17.md#qué-se-compara-en-la-semana-13): aparecen los cinco módulos, con el dominio de cada uno en I cercano a 0, y las reglas siguen en verde.
+- La captura del build en rojo con un import prohibido de cada regla nueva, y en verde al quitarlo, como en el #23. La salida está en [lab09-reglas-de-limites.txt](evidencias/lab09-reglas-de-limites.txt).
+- En la semana 13, los mismos comandos del [informe de acoplamiento](acoplamiento/2026-10-17.md#qué-se-compara-en-la-semana-13): aparecen los seis módulos, con el dominio de cada uno en I cercano a 0, y las reglas siguen en verde.

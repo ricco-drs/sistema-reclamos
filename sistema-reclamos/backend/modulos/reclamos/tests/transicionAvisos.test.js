@@ -4,10 +4,10 @@
 // envía él mismo el correo y el expediente.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { crearPublicadorMemoria } from '@tefiis/compartido';
 import { crearRegistrarReclamo } from '../aplicacion/registrarReclamo.js';
 import { crearRegistrarReclamoHandler, AVISOS_POR_API } from '../presentacion/registrarReclamoHandler.js';
 import { crearRepositorioReclamosMemoria } from '../infraestructura/repositorioReclamosMemoria.js';
-import { crearPublicadorMemoria } from '../infraestructura/publicadorMemoria.js';
 
 const EMAIL = 'ana.perez@uni.pe';
 const AHORA = new Date('2026-11-21T15:04:05.000Z');

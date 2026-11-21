@@ -1,0 +1,14 @@
+{
+  "name": "@tefiis/compartido",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Piezas técnicas sin reglas de negocio que usan todos los módulos: envío de correo, bus de eventos y respuestas HTTP comunes.",
+  "exports": "./index.js",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\""
+  },
+  "devDependencies": {
+    "express": "^5.2.1"
+  }
+}

@@ -62,9 +62,16 @@ paths:
       summary: Registra un reclamo del estudiante
       description: |
         Guarda el reclamo con el número `REC-AAAA-NNNN`, que sale de la
-        secuencia de PostgreSQL (ADR-0003), y publica el evento
-        `ReclamoRegistrado` ([eventos.md](eventos.md)).
+        secuencia de PostgreSQL (ADR-0003).
 
+        - **Avisos (transición).** Con `avisos: "api"` en el cuerpo, la API
+          publica el evento `ReclamoRegistrado` ([eventos.md](eventos.md)), que
+          envía el correo de confirmación y el expediente a M2, y lo confirma con
+          `avisos: "api"` en la respuesta. Sin el campo, registra el reclamo sin
+          publicar el evento, y el correo y el expediente los envía el front,
+          como hace el front anterior. Si el front pidió `avisos` y la respuesta
+          no lo trae, está hablando con una API anterior y los envía él mismo.
+          El campo se quita cuando ya no quede el front anterior.
         - **Reintentos.** Si el mismo estudiante ya mandó un reclamo con la misma
           descripción en los últimos 10 minutos, se devuelve ese número con
           `duplicado: true`, no se crea otro y no se publica el evento.
@@ -107,6 +114,7 @@ paths:
                     - codigo: SW708
                       seccion: U
                   cursos_matricular: []
+                  avisos: api
       responses:
         '200':
           description: Reclamo registrado, o el que ya existía si es un reintento.
@@ -116,7 +124,13 @@ paths:
                 $ref: '#/components/schemas/ReclamoCreado'
               examples:
                 nuevo:
-                  summary: Reclamo nuevo
+                  summary: Reclamo nuevo, pedido con avisos (la API envía el correo y el expediente)
+                  value:
+                    success: true
+                    id: REC-2026-0042
+                    avisos: api
+                nuevoSinAvisos:
+                  summary: Reclamo nuevo, pedido sin avisos (los envía el front)
                   value:
                     success: true
                     id: REC-2026-0042
@@ -1273,6 +1287,13 @@ components:
           description: Se corta en 30 y se descarta sin avisar lo que no está en el catálogo.
           items:
             $ref: '#/components/schemas/Curso'
+        avisos:
+          type: string
+          enum: [api]
+          description: |
+            Opcional y temporal. Con "api", la API publica ReclamoRegistrado, que
+            envía el correo de confirmación y el expediente a M2. Sin el campo,
+            los envía el front. Cualquier otro valor se trata como si no viniera.
 
     ReclamoCreado:
       type: object
@@ -1288,6 +1309,13 @@ components:
           type: boolean
           enum: [true]
           description: Solo viene cuando es un reintento y el reclamo ya existía.
+        avisos:
+          type: string
+          enum: [api]
+          description: |
+            Solo viene si la petición traía `avisos: "api"`. Confirma que la API
+            se encarga del correo y del expediente. En un reintento también
+            viene, aunque no se publique nada: el evento corresponde al envío original.
 
     Reclamo:
       type: object

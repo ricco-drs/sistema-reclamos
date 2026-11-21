@@ -13,6 +13,7 @@ import { crearRepositorioReclamosSupabase } from './infraestructura/repositorioR
 import { componerConfirmacion } from './presentacion/componerConfirmacion.js';
 import { EMAIL_CODIGO_IMG_URL, emailTemplate } from './presentacion/plantillaCorreo.js';
 import { crearRegistrarReclamoHandler } from './presentacion/registrarReclamoHandler.js';
+import { respuestaDeCuerpoInvalido } from './presentacion/cuerpoInvalido.js';
 import express from 'express';
 import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
@@ -596,7 +597,9 @@ app.put('/api/admin/estudiantes/:email/datos', requireAdminAuth, async (req, res
 
   try {
     const r = await sbRest(`/documentos_estudiante?select=datos_parseados&email=eq.${encodeURIComponent(email)}&limit=1`);
-    const fila = r.ok ? (await r.json())?.[0] : null;
+    // Si la base falla, es un 500: antes se confundía con «no tiene documentos».
+    if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
+    const fila = (await r.json())?.[0];
     if (!fila) return res.status(404).json({ error: 'Ese estudiante no tiene documentos guardados.' });
 
     // El contacto lo escribe el estudiante y no sale de los PDF: se conserva
@@ -947,6 +950,9 @@ app.put('/api/admin/reclamos/:id/cursos-resueltos', requireAdminAuth,
 app.get('/api/admin/docs/signed-url', requireAdminAuth, async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'url requerida' });
+  // Una referencia que no se puede interpretar es un error de la petición, no
+  // del servidor: antes llegaba hasta createSignedUrl y salía como 500.
+  if (!parseStorageRef(url)) return res.status(400).json({ error: 'Referencia de archivo inválida' });
   try {
     const signedUrl = await createSignedUrl(url);
     res.json({ signedUrl });
@@ -1859,10 +1865,12 @@ app.post('/api/admin/maintenance', requireAdminAuth, async (req, res) => {
   const { enabled } = req.body;
   if (typeof enabled !== 'boolean') return res.status(400).json({ error: 'El campo "enabled" debe ser true o false.' });
   try {
-    const r = await sbRest('/app_settings?key=eq.maintenance_mode', {
-      method: 'PATCH',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ value: enabled, updated_at: new Date().toISOString() }),
+    // Upsert, como los demás interruptores. Antes era un PATCH: si la fila no
+    // existía, no actualizaba nada y aun así respondía que el modo quedó activo.
+    const r = await sbRest('/app_settings', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ key: 'maintenance_mode', value: enabled, updated_at: new Date().toISOString() }),
     });
     if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
     logActividad({ actorEmail: req.adminEmail, actorType: 'admin', accion: enabled ? 'mantenimiento_activado' : 'mantenimiento_desactivado' });
@@ -2054,6 +2062,8 @@ app.get('/api/admin/activity', requireAdminAuth, async (req, res) => {
 // alumno qué pasó. También evita filtrar detalles internos en la respuesta.
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
+  const cuerpoInvalido = respuestaDeCuerpoInvalido(err);
+  if (cuerpoInvalido) return res.status(cuerpoInvalido.status).json(cuerpoInvalido.body);
   if (err?.code === 'LIMIT_FILE_SIZE') {
     const tope = (req.limiteBytes || MAX_PDF_BYTES) / (1024 * 1024);
     return res.status(413).json({ error: `El archivo supera el máximo de ${tope} MB.` });

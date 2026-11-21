@@ -8,7 +8,7 @@ Revisión del contrato de `POST /api/reclamos` por el equipo consumidor, y cómo
 | **Quién lo revisó** | Benjamín, del equipo consumidor. |
 | **Con quién se acordó** | Ricco, por el equipo de TEFIIS. Christopher registró la revisión y resolvió los huecos. |
 | **Fecha** | 20 y 21 de noviembre de 2026. |
-| **Seguimiento** | Issue #31 (contrato y acta), #61 (implementación) y #40 (cuerpo inválido). |
+| **Seguimiento** | Issue #31 (contrato y acta), #61 (implementación) y #40 (cuerpo inválido, ya implementado). |
 
 ## 1. Lo que cambió del primer contrato a la versión acordada
 
@@ -65,5 +65,5 @@ El campo `avisos` (#58) llegó después de la revisión, para la transición ent
 
 ## Estado
 
-- **Contrato:** actualizado en `openapi.yaml` 2.0.0. Los cuatro ejemplos con mensajes que el código todavía no devuelve llevan `x-pendiente`, y el validador los cuenta aparte hasta que entren el #61 y el #40.
-- **Implementación:** el #61 está en la rama `feat/61-contrato-post-reclamos`, sobre el #58, que conecta el bus. Cuando entre, se quitan las marcas `x-pendiente` de sus tres mensajes, y el validador avisa si queda alguna. El #40 (cuerpo inválido) va después.
+- **Contrato:** actualizado en `openapi.yaml` 2.0.0. Los tres ejemplos con mensajes que el código todavía no devuelve llevan `x-pendiente`, y el validador los cuenta aparte hasta que entre el #61. El de `CUERPO_INVALIDO` ya no la lleva: lo implementó el #40.
+- **Implementación:** el #61 está en la rama `feat/61-contrato-post-reclamos`, sobre el #58, que conecta el bus. Cuando entre, se quitan las marcas `x-pendiente` de sus tres mensajes, y el validador avisa si queda alguna.

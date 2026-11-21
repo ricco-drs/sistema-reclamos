@@ -14,7 +14,7 @@ info:
     comportamiento actual del código; donde el código hace algo discutible, la
     operación lo dice en vez de esconderlo. `POST /api/reclamos` describe la
     versión acordada con el equipo consumidor ([acta](acta-ambiguedades.md)),
-    que todavía se está implementando (#61 y #40). Los ejemplos marcados con
+    que todavía se está implementando (#61). Los ejemplos marcados con
     `x-pendiente` tienen mensajes que el código aún no devuelve; el validador
     (`sistema-reclamos/pruebas/validar-openapi.cjs`) los cuenta aparte, y la
     marca se quita cuando su issue entra.
@@ -44,8 +44,9 @@ info:
     para que el cliente lo compare. `POST /api/reclamos` agrega un `codigo`
     estable (`ErrorDeReclamo`), que es lo que el cliente compara.
     Tres casos generales que valen para todas las rutas:
-    - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde hoy **500**
-      `Error interno del servidor.`, no 400. Se corrige en el issue #40.
+    - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde **400**
+      `{ "codigo": "CUERPO_INVALIDO", "error": "…" }`, antes de mirar la sesión
+      (#40).
     - Si `ALLOWED_ORIGINS` está definida, una petición desde un origen que no
       está en la lista responde **403** `Origen no permitido por CORS.`
     - Cuando falla Supabase, el 500 puede traer en `error` el texto crudo que
@@ -83,8 +84,8 @@ paths:
         se repite. El correo sale siempre del token, nunca del cuerpo.
 
         Es la versión acordada con el equipo consumidor
-        ([acta](acta-ambiguedades.md)). La implementa el issue #61, y el 400 del
-        cuerpo inválido, el #40. Hasta entonces, la API responde 200
+        ([acta](acta-ambiguedades.md)). El 400 del cuerpo inválido ya funciona
+        (#40); el resto lo implementa el issue #61. Hasta entonces, la API responde 200
         `{ success, id, duplicado? }` y sus errores no traen `codigo`.
 
         **Orden de las comprobaciones.** Se responde el primer error que aparezca:
@@ -217,7 +218,6 @@ paths:
                 $ref: '#/components/schemas/ErrorDeReclamo'
               examples:
                 cuerpoInvalido:
-                  x-pendiente: '#40'
                   value:
                     codigo: CUERPO_INVALIDO
                     error: El cuerpo de la petición no es JSON válido o pasa de 1 MB.
@@ -723,8 +723,7 @@ paths:
         resultado. Se conserva el contacto que escribió el estudiante
         (`datos_parseados._contacto`), porque no sale de los PDF.
 
-        Si la lectura de la base falla, también responde 404, en vez de 500
-        (se corrige en el issue #40).
+        Si falla la lectura de la base, responde 500.
       parameters:
         - name: email
           in: path
@@ -808,8 +807,7 @@ paths:
       description: |
         Los buckets son privados: lo guardado en la base es una referencia
         (bucket y ruta), no un enlace descargable. El enlace firmado vale
-        10 minutos. Una referencia que no se puede interpretar responde 500, no 400
-        (se corrige en el issue #40).
+        10 minutos.
       parameters:
         - name: url
           in: query
@@ -833,27 +831,29 @@ paths:
               example:
                 signedUrl: https://example.supabase.co/storage/v1/object/sign/documentos/ana_perez_at_uni_pe/avance.pdf?token=eyJhbGciOi
         '400':
-          description: Falta el parámetro url.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: url requerida
-        '401':
-          $ref: '#/components/responses/AdminNoAutenticado'
-        '403':
-          $ref: '#/components/responses/AdminSinPermiso'
-        '500':
-          description: La referencia no se pudo interpretar, o Supabase no firmó el enlace.
+          description: Falta el parámetro url, o la referencia no se puede interpretar.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               examples:
+                sinUrl:
+                  value:
+                    error: url requerida
                 referenciaInvalida:
                   value:
                     error: Referencia de archivo inválida
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminSinPermiso'
+        '500':
+          description: Supabase no firmó el enlace.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
                 noFirmado:
                   value:
                     error: 'No se pudo firmar la URL del archivo: https://example.supabase.co/storage/v1/object/documentos/ana_perez_at_uni_pe/avance.pdf'
@@ -1081,9 +1081,8 @@ paths:
       operationId: cambiarMantenimiento
       summary: Activa o desactiva el modo mantenimiento
       description: |
-        Pausa la aplicación de estudiantes para todos. A diferencia de los otros
-        interruptores, **no crea la fila**: si `maintenance_mode` no existe en
-        `app_settings`, responde 200 sin guardar nada. Se corrige en el issue #40.
+        Pausa la aplicación de estudiantes para todos. Si la fila no existe, se
+        crea, como en los demás interruptores (#40).
       requestBody:
         required: true
         content:
@@ -1310,14 +1309,14 @@ components:
             enabled: true
     ErrorInterno:
       description: |
-        Falló la base o un servicio externo, Firebase no está configurado en el
-        servidor, o el cuerpo no es JSON válido o pasa de 1 MB.
+        Falló la base o un servicio externo, o Firebase no está configurado en el
+        servidor.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
           examples:
-            cuerpoInvalido:
+            errorNoControlado:
               value:
                 error: Error interno del servidor.
             firebaseNoConfigurado:

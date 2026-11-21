@@ -85,9 +85,10 @@ paths:
         se repite. El correo sale siempre del token, nunca del cuerpo.
 
         Es la versión acordada con el equipo consumidor
-        ([acta](acta-ambiguedades.md)). El 400 del cuerpo inválido ya funciona
-        (#40); el resto lo implementa el issue #61. Hasta entonces, la API responde 200
-        `{ success, id, duplicado? }` y sus errores no traen `codigo`.
+        ([acta](acta-ambiguedades.md)). La implementaron el #40 (el 400 del cuerpo
+        inválido) y el #62 (todo lo demás). La respuesta trae además `success` y
+        `duplicado`, que no son parte del contrato: se mantienen porque el front
+        anterior los lee.
 
         **Orden de las comprobaciones.** Se responde el primer error que aparezca:
         1. Un cuerpo que no es JSON válido o que pasa de 1 MB (400

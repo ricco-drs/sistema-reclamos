@@ -65,5 +65,5 @@ El campo `avisos` (#58) llegó después de la revisión, para la transición ent
 
 ## Estado
 
-- **Contrato:** actualizado en `openapi.yaml` 2.0.0. Los tres ejemplos con mensajes que el código todavía no devuelve llevan `x-pendiente`, y el validador los cuenta aparte hasta que entre el #61. El de `CUERPO_INVALIDO` ya no la lleva: lo implementó el #40.
-- **Implementación:** el #61 se implementa en el #62 (`feat/61-contrato-reclamos`), que ya trae `estado` y `creado_en` en el 201, `creado_en` en el 200 y el `codigo` del 401. Cuando entre, se quitan las marcas `x-pendiente` de sus tres mensajes, y el validador avisa si queda alguna.
+- **Contrato:** actualizado en `openapi.yaml` 2.0.0. Ya no queda ningún ejemplo con `x-pendiente`: el #40 implementó `CUERPO_INVALIDO` y el #62, los tres mensajes que faltaban.
+- **Implementación:** el #62 (`feat/61-contrato-reclamos`) implementó el #61: `estado` y `creado_en` en el 201, `creado_en` en el 200 y el `codigo` del 401, además de los códigos, el 409 y el 503 acordados. El validador comprueba contra el código los 38 mensajes de error del contrato.

@@ -255,3 +255,14 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Un solo 400 `CUERPO_INVALIDO` para el JSON roto y para el que pasa de 1 MB, como dice el contrato acordado, en vez de un 400 y un 413. La prueba con `express.json()` de verdad, que comprueba que los tipos de error son los que pone Express y no solo los que supone la prueba. Se probó contra el `server.js` real: JSON roto con y sin sesión, cuerpo de 1,1 MB y una ruta de admin dan 400, y el JSON roto se rechaza antes de mirar la sesión, como dice el contrato.
 - **Qué se descartó y por qué:** Probar de punta a punta las tres rutas de admin: sin Firebase local, `requireAdminAuth` responde 500 antes de llegar a ellas, así que se revisaron leyendo el código. Queda pendiente para la suite de E3, que inyecta un verificador falso de Firebase.
 - **Registra:** Christopher Albino
+
+## Semana 12 · 21 de noviembre
+
+### Entrada del 21 de noviembre, siembra de reclamos para E2
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Codex
+- **Para qué se usó:** Revisar el script de siembra de la issue #54, proteger las filas existentes y comprobar el cambio con Docker Compose.
+- **Qué se aceptó:** Una sola inserción en el PostgREST interno para que una colisión cancele todo el lote. La limpieza se limita a las filas identificadas como siembra E2. Se verificó con una colisión en el último ID, una siembra de 1 500 reclamos y la conservación de un reclamo de E1 después de limpiar.
+- **Qué se descartó y por qué:** Actualizar filas con IDs repetidos y borrar todos los datos sintéticos antes de sembrar. Eso podía modificar reclamos existentes o borrar evidencia de E1.
+- **Registra:** Lenin Castro

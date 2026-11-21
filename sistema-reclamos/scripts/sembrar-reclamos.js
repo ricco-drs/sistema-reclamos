@@ -1,27 +1,17 @@
-// Siembra los 1 500 reclamos de ejemplo para el escenario de rendimiento de la
-// bandeja del panel del Tercio (E2) y permite limpiarlos al terminar las pruebas.
+// Siembra 1 500 reclamos de prueba para medir la bandeja del Tercio (E2).
+// Usa los mismos correos @prueba.test que el generador de tokens.
 //
-// Usa el mismo formato de correo que pruebas/generar-tokens.js:
-//   estudiante-001@prueba.test .. estudiante-200@prueba.test
-// Así todos los reclamos sembrados pertenecen a estudiantes que ya tienen token
-// en pruebas/tokens.json, y limpiar la base después de las pruebas se reduce a
-// borrar las filas con email LIKE '%@prueba.test' (en PostgREST: email=like.*@prueba.test).
+// Desde la raíz del repositorio, con el entorno de Lab11 levantado:
+//   docker compose cp sistema-reclamos/scripts/sembrar-reclamos.js api:/app/scripts/sembrar-reclamos.js
+//   docker compose exec -T api node scripts/sembrar-reclamos.js
+//   docker compose exec -T api node scripts/sembrar-reclamos.js --limpiar
 //
-// Uso, desde sistema-reclamos/:
-//   node --env-file=<.env de Compose> scripts/sembrar-reclamos.js
-//   node --env-file=<.env de Compose> scripts/sembrar-reclamos.js --cantidad 1500 --estudiantes 200
-//   node --env-file=<.env de Compose> scripts/sembrar-reclamos.js --limpiar
-//   node scripts/sembrar-reclamos.js --seco --cantidad 1500
+// Para revisar los datos sin escribir en la base:
+//   node sistema-reclamos/scripts/sembrar-reclamos.js --seco
 //
-// OJO: La corrida normal limpia antes todos los reclamos con correo *@prueba.test
-// (limpiarAntes: true) para que E2 arranque siempre con el conteo exacto de 1 500
-// filas. Eso borra también los reclamos que haya dejado una corrida previa de E1,
-// así que debe ejecutarse después de haber verificado los resultados de E1 (o
-// pasando --sin-limpiar-antes si se desea conservar lo existente).
-//
-// Por seguridad no lee el .env de producción por su cuenta y rechaza URLs de
-// *.supabase.co salvo que se pase --permitir-remoto: E2 se ejecuta siempre
-// contra el PostgreSQL + PostgREST de Docker Compose, nunca contra producción.
+// La siembra conserva las filas existentes y falla si choca con algún ID.
+// --limpiar solo retira las filas de la siembra E2. Conservar los reclamos
+// de E1 permite verificar sus resultados incluso después de limpiar E2.
 
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -53,6 +43,8 @@ const CURSOS_EJEMPLO = [
 ];
 
 const LETRAS_CODIGO = 'ABCDEFGHIJ';
+const PREFIJO_E2 = 'Reclamo sembrado #';
+const SUFIJO_E2 = 'para prueba de bandeja E2.';
 
 /**
  * Formatea el correo de prueba con el mismo padrón que pruebas/generar-tokens.js.
@@ -106,7 +98,7 @@ export function generarFilasReclamos({
       nombre,
       codigo_estudiante,
       categoria: 'Matrícula',
-      descripcion: `Reclamo sembrado #${i + 1} (${email}) para prueba de bandeja E2.`,
+      descripcion: `${PREFIJO_E2}${i + 1} (${email}) ${SUFIJO_E2}`,
       datos_estudiante: {
         ...datosBase,
         cursosRetirar: [cursoRetirar],
@@ -124,152 +116,114 @@ export function generarFilasReclamos({
   });
 }
 
-function crearClientePostgrest({ baseUrl, serviceKey, fetchFn = fetch }) {
-  const raiz = String(baseUrl).replace(/\/+$/, '');
-  const prefijo = raiz.endsWith('/rest/v1') ? raiz : `${raiz}/rest/v1`;
+const URL_API_COMPOSE = 'http://rest:8080';
+const CLAVE_COMPOSE = 'solo-laboratorio';
+// La lista completa supera 1 MiB. Una solicitud directa al PostgREST interno
+// permite insertar las filas en una transacción, sin el límite del proxy.
+const TABLA_RECLAMOS_COMPOSE = 'http://postgrest:3000/reclamos';
 
-  return async function sbRest(ruta, opts = {}) {
-    return fetchFn(`${prefijo}${ruta}`, {
-      ...opts,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(serviceKey ? {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
-        } : {}),
-        ...opts.headers,
-      },
-    });
-  };
+function tablaDePruebas(baseUrl, serviceKey) {
+  if (baseUrl !== URL_API_COMPOSE || serviceKey !== CLAVE_COMPOSE) {
+    throw new Error('Ejecuta la siembra o limpieza dentro del contenedor api de Docker Compose.');
+  }
+  return new URL(TABLA_RECLAMOS_COMPOSE);
 }
 
-/**
- * Elimina todos los reclamos cuyos correos terminan en `@prueba.test`
- * (equivalente SQL: `DELETE FROM public.reclamos WHERE email LIKE '%@prueba.test'`).
- */
 export async function limpiarReclamosPrueba({ baseUrl, serviceKey, fetchFn = fetch }) {
-  const sbRest = crearClientePostgrest({ baseUrl, serviceKey, fetchFn });
-  const patron = encodeURIComponent(`*@${DOMINIO_PRUEBA}`);
-  const r = await sbRest(`/reclamos?email=like.${patron}`, {
+  const tabla = tablaDePruebas(baseUrl, serviceKey);
+  tabla.searchParams.set('email', `like.*@${DOMINIO_PRUEBA}`);
+  tabla.searchParams.set('and', `(descripcion.like.${PREFIJO_E2}*,descripcion.like.*${SUFIJO_E2})`);
+  const respuesta = await fetchFn(tabla, {
     method: 'DELETE',
     headers: { Prefer: 'return=minimal' },
+    redirect: 'error',
   });
-  if (!r.ok) {
-    throw new Error(`No se pudo limpiar reclamos de @${DOMINIO_PRUEBA} (${r.status}): ${await r.text()}`);
+  if (!respuesta.ok) {
+    throw new Error(`No se pudo limpiar la siembra E2 (${respuesta.status}): ${await respuesta.text()}`);
   }
 }
 
-/**
- * Siembra los reclamos en lotes por PostgREST (`resolution=merge-duplicates` sobre `id`).
- */
 export async function sembrarReclamos({
   baseUrl,
   serviceKey,
   cantidad = 1500,
   estudiantes = 200,
   desdeNumero = 1001,
-  tamanoLote = 250,
-  limpiarAntes = false,
   fetchFn = fetch,
 }) {
-  if (limpiarAntes) {
-    await limpiarReclamosPrueba({ baseUrl, serviceKey, fetchFn });
-  }
-
-  const sbRest = crearClientePostgrest({ baseUrl, serviceKey, fetchFn });
+  const tabla = tablaDePruebas(baseUrl, serviceKey);
   const filas = generarFilasReclamos({ cantidad, estudiantes, desdeNumero });
+  const respuesta = await fetchFn(tabla, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify(filas),
+    redirect: 'error',
+  });
 
-  for (let desde = 0; desde < filas.length; desde += tamanoLote) {
-    const lote = filas.slice(desde, desde + tamanoLote);
-    const r = await sbRest('/reclamos?on_conflict=id', {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify(lote),
-    });
-    if (!r.ok) {
-      throw new Error(`Falló la siembra en el lote ${desde}..${desde + lote.length - 1} (${r.status}): ${await r.text()}`);
-    }
+  if (respuesta.status === 409) {
+    throw new Error('Hay un ID de reclamo repetido. No se sembró ninguna fila. '
+      + 'Usa otro rango con --desde-numero o retira primero una siembra E2 anterior con --limpiar.');
+  }
+  if (!respuesta.ok) {
+    throw new Error(`No se pudo sembrar E2 (${respuesta.status}): ${await respuesta.text()}`);
   }
 
   return {
     sembrados: filas.length,
     estudiantesDistintos: Math.min(cantidad, estudiantes),
-    primerId: filas[0]?.id ?? null,
-    ultimoId: filas.at(-1)?.id ?? null,
-    patronLimpiezaSql: `DELETE FROM public.reclamos WHERE email LIKE '%@${DOMINIO_PRUEBA}';`,
+    primerId: filas[0].id,
+    ultimoId: filas.at(-1).id,
   };
 }
 
-function fallar(mensaje) {
-  console.error(mensaje);
-  process.exit(1);
-}
-
-const esEjecucionDirecta = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
-
-if (esEjecucionDirecta) {
+async function ejecutar() {
   const { values: opciones } = parseArgs({
     options: {
       cantidad: { type: 'string', default: '1500' },
       estudiantes: { type: 'string', default: '200' },
       'desde-numero': { type: 'string', default: '1001' },
-      lote: { type: 'string', default: '250' },
       limpiar: { type: 'boolean', default: false },
-      'sin-limpiar-antes': { type: 'boolean', default: false },
       seco: { type: 'boolean', default: false },
-      'permitir-remoto': { type: 'boolean', default: false },
     },
   });
 
   const cantidad = Number(opciones.cantidad);
   const estudiantes = Number(opciones.estudiantes);
   const desdeNumero = Number(opciones['desde-numero']);
-  const tamanoLote = Number(opciones.lote);
-
-  if (!Number.isInteger(cantidad) || cantidad < 1) {
-    fallar('--cantidad debe ser un entero mayor o igual que 1.');
+  for (const [opcion, valor] of [['cantidad', cantidad], ['estudiantes', estudiantes], ['desde-numero', desdeNumero]]) {
+    if (!Number.isSafeInteger(valor) || valor < 1) {
+      throw new Error(`--${opcion} debe ser un entero positivo.`);
+    }
   }
-  if (!Number.isInteger(estudiantes) || estudiantes < 1) {
-    fallar('--estudiantes debe ser un entero mayor o igual que 1.');
+  if (!Number.isSafeInteger(desdeNumero + cantidad - 1)) {
+    throw new Error('El rango de IDs es demasiado grande.');
   }
 
   if (opciones.seco) {
     const filas = generarFilasReclamos({ cantidad, estudiantes, desdeNumero });
-    console.log(`[Modo seco] Generadas ${filas.length} filas en memoria para ${Math.min(cantidad, estudiantes)} estudiantes (${filas[0].email} .. ${correoEstudiantePrueba(Math.min(cantidad, estudiantes), estudiantes)}).`);
+    console.log(`[Modo seco] Generadas ${filas.length} filas para ${Math.min(cantidad, estudiantes)} estudiantes.`);
     console.log(`Rango de IDs: ${filas[0].id} .. ${filas.at(-1).id}`);
-    console.log(`Consulta de limpieza SQL: DELETE FROM public.reclamos WHERE email LIKE '%@${DOMINIO_PRUEBA}';`);
-    process.exit(0);
+    return;
   }
 
-  const baseUrl = process.env.SUPABASE_URL || process.env.POSTGREST_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_KEY || '';
-
-  if (!baseUrl) {
-    fallar('Falta SUPABASE_URL (o POSTGREST_URL). Ejecuta contra el entorno de Docker Compose:\n'
-      + '  node --env-file=<.env de Compose> scripts/sembrar-reclamos.js');
-  }
-
-  if (/\.supabase\.co\b/i.test(baseUrl) && !opciones['permitir-remoto']) {
-    fallar(`SUPABASE_URL apunta a Supabase en la nube (${baseUrl}). E2 nunca debe correr contra producción.\n`
-      + 'Usa la URL del PostgREST de Docker Compose (por ejemplo http://localhost:3000).');
-  }
-
+  const entorno = {
+    baseUrl: process.env.SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SERVICE_KEY,
+  };
   if (opciones.limpiar) {
-    await limpiarReclamosPrueba({ baseUrl, serviceKey });
-    console.log(`Limpieza completada: eliminados los reclamos con email LIKE '%@${DOMINIO_PRUEBA}'.`);
-    process.exit(0);
+    await limpiarReclamosPrueba(entorno);
+    console.log('Limpieza completada: se retiraron los reclamos sembrados para E2.');
+    return;
   }
 
-  const resumen = await sembrarReclamos({
-    baseUrl,
-    serviceKey,
-    cantidad,
-    estudiantes,
-    desdeNumero,
-    tamanoLote,
-    limpiarAntes: !opciones['sin-limpiar-antes'],
-  });
+  const resumen = await sembrarReclamos({ ...entorno, cantidad, estudiantes, desdeNumero });
+  console.log(`Sembrados ${resumen.sembrados} reclamos (${resumen.primerId} .. ${resumen.ultimoId}) `
+    + `repartidos entre ${resumen.estudiantesDistintos} estudiantes (@${DOMINIO_PRUEBA}).`);
+}
 
-  console.log(`Sembrados ${resumen.sembrados} reclamos (${resumen.primerId} .. ${resumen.ultimoId}) repartidos entre ${resumen.estudiantesDistintos} estudiantes (@${DOMINIO_PRUEBA}).`);
-  console.log(`Para limpiar después de las pruebas: node --env-file=<.env de Compose> scripts/sembrar-reclamos.js --limpiar`);
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  ejecutar().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
 }

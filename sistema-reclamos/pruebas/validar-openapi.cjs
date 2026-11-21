@@ -133,20 +133,37 @@ function archivosJs(dir) {
 }
 const codigo = archivosJs(path.join(raiz, 'sistema-reclamos/backend'))
   .map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+// Un cuerpo de error es { error } en las rutas del panel y { codigo, error } en
+// POST /api/reclamos. Los ejemplos con `x-pendiente` llevan mensajes que el
+// código todavía no devuelve (su issue no entró): se cuentan, pero no se exigen.
 const mensajes = new Set();
-(function juntar(n) {
-  if (Array.isArray(n)) return n.forEach(juntar);
+const pendientes = new Set();
+const esCuerpoDeError = (n) => typeof n.error === 'string'
+  && Object.keys(n).every((k) => k === 'error' || k === 'codigo');
+(function juntar(n, pendiente) {
+  if (Array.isArray(n)) return n.forEach((x) => juntar(x, pendiente));
   if (n && typeof n === 'object') {
-    if (typeof n.error === 'string' && Object.keys(n).length === 1) mensajes.add(n.error);
-    Object.values(n).forEach(juntar);
+    const marca = pendiente || n['x-pendiente'];
+    if (esCuerpoDeError(n)) (marca ? pendientes : mensajes).add(n.error);
+    Object.values(n).forEach((x) => juntar(x, marca));
   }
-})(doc);
+})(doc, null);
+// Algunos mensajes se arman con una plantilla en el código; se buscan también así.
+const enElCodigo = (msg) => [
+  msg,
+  msg.replace(/"(matricular|desmatricular)"/g, '"${campo}"').replace(/: https:\/\/\S+$/, ': ${storedUrl}'),
+  msg.replace('de 5000 caracteres', 'de ${MAX_DESCRIPCION} caracteres'),
+].some((m) => codigo.includes(m));
+
 for (const msg of mensajes) {
-  const plantilla = msg.replace(/"(matricular|desmatricular)"/g, '"${campo}"').replace(/: https:\/\/\S+$/, ': ${storedUrl}');
-  if (!codigo.includes(msg) && !codigo.includes(plantilla)) fallo(`mensaje que no está en el código: ${msg}`);
+  if (!enElCodigo(msg)) fallo(`mensaje que no está en el código: ${msg}`);
 }
 
-console.log(`operaciones: ${operaciones.length} (en server.js: ${enCodigo.length}) | $ref: ${refs} | ejemplos validados: ${ejemplos} | mensajes de error comprobados: ${mensajes.size}`);
+for (const msg of pendientes) {
+  if (enElCodigo(msg)) fallo(`mensaje marcado x-pendiente que ya está en el código (quitar la marca): ${msg}`);
+}
+
+console.log(`operaciones: ${operaciones.length} (en server.js: ${enCodigo.length}) | $ref: ${refs} | ejemplos validados: ${ejemplos} | mensajes de error comprobados: ${mensajes.size} | pendientes de implementar: ${pendientes.size}`);
 if (problemas.length) {
   console.log(`\n${problemas.length} problemas:`);
   problemas.forEach((p) => console.log(` - ${p}`));

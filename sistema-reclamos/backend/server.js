@@ -926,7 +926,7 @@ app.patch('/api/admin/reclamos/:id', requireAdminAuth, async (req, res) => {
     }
     // En el registro va solo la especialidad, no el JSON entero: el historial
     // debe poder leerse.
-    const { datos_estudiante, ...paraElLog } = patch;
+    const { datos_estudiante: _datosEstudiante, ...paraElLog } = patch;
     logActividad({
       actorEmail: req.adminEmail, actorType: 'admin', accion: 'reclamo_actualizado',
       detalle: { caseId: req.params.id, ...paraElLog, ...(especialidad !== undefined ? { especialidad } : {}) },
@@ -1301,16 +1301,6 @@ function parseStorageRef(storedUrl) {
   return null;
 }
 
-async function downloadStorageFile(storedUrl) {
-  const ref = parseStorageRef(storedUrl);
-  if (!ref) throw new Error(`No se pudo interpretar la referencia de archivo: ${storedUrl}`);
-  const res = await fetch(`${process.env.SUPABASE_URL}/storage/v1/object/${encodeURIComponent(ref.bucket)}/${ref.path.split('/').map(encodeURIComponent).join('/')}`, {
-    headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
-  });
-  if (!res.ok) throw new Error(`Error descargando el archivo: ${storedUrl}`);
-  return await res.arrayBuffer();
-}
-
 async function deleteStorageFile(storedUrl) {
   const ref = parseStorageRef(storedUrl);
   if (!ref) throw new Error(`No se pudo interpretar la referencia de archivo: ${storedUrl}`);
@@ -1358,7 +1348,7 @@ app.get('/api/docs/signed-url', requireStudentAuth, async (req, res) => {
 
 app.post('/api/docs/save', requireStudentAuth, async (req, res) => {
   const email = req.studentEmail;
-  const { boleta_url, record_notas_url, record_matricula_url, codigo_estudiante, datos_parseados, force_reparse } = req.body;
+  const { boleta_url, record_notas_url, record_matricula_url, codigo_estudiante, datos_parseados } = req.body;
   try {
     // 1. Obtener registro existente en Supabase para no perder URLs previas si solo se subió un archivo
     const getRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/documentos_estudiante?email=eq.${encodeURIComponent(email)}&limit=1`, {

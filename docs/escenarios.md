@@ -139,18 +139,31 @@ La versión que revisó el Equipo 3 y la que quedó después de aplicar su crít
 
 ## Priorización
 
-Puntuamos cada escenario por su impacto en el estudiante (qué pasa si no se cumple) y por su dificultad técnica (cuánto cuesta cumplirlo). La prioridad sale del impacto; la dificultad nos dice cuánto esfuerzo reservar.
+Puntuamos cada escenario por su impacto en el estudiante (qué pasa si no se cumple) y por su dificultad técnica (cuánto cuesta cumplirlo). El orden sale de una regla de tres pasos, que se aplican uno después del otro:
+
+1. **Impacto.** Primero los de impacto alto.
+2. **A igual impacto, dificultad.** Primero el más difícil, porque es el que necesita empezar antes y el que más esfuerzo hay que reservarle.
+3. **A igual impacto y dificultad, defensa actual.** Primero el que hoy no tiene ninguna defensa funcionando en producción.
 
 | Prioridad | Escenario | Impacto | Dificultad | Decisión que lo atiende |
 |---|---|---|---|---|
 | 1 | E1 Disponibilidad | Alto | Alta | [ADR-0003](adr/0003-secuencia-para-numerar-reclamos.md): la secuencia de PostgreSQL numera los reclamos. |
 | 2 | E4 Modificabilidad | Alto | Media | [ADR-0001 y ADR-0002](adr/), vigilados por la regla `dominio-limpio`. |
-| 3 | E6 Auditabilidad | Alto | Baja | ADR-0002: el caso de uso registra autor y fecha en el historial; el autor sale del token. |
-| 4 | E3 Seguridad | Alto | Media | Controles existentes en `requireStudentAuth` y `requireAdminAuth`; la evidencia automatizada llega en la semana 10. |
-| 5 | E5 Confiabilidad | Medio | Baja | Cadena de proveedores de correo, anterior a este ciclo; se pone a prueba en la semana 11. |
-| 6 | E2 Rendimiento | Medio | Media | Se mide en la semana 12 antes de optimizar nada. |
+| 3 | E3 Seguridad | Alto | Media | Controles existentes en `requireStudentAuth` y `requireAdminAuth`; la evidencia automatizada llega en la semana 10. |
+| 4 | E6 Auditabilidad | Alto | Baja | ADR-0002: el caso de uso registra autor y fecha en el historial; el autor sale del token. |
+| 5 | E2 Rendimiento | Medio | Media | Se mide en la semana 12 antes de optimizar nada. |
+| 6 | E5 Confiabilidad | Medio | Baja | Cadena de proveedores de correo, anterior a este ciclo; se pone a prueba en la semana 11. |
 
-Esa prioridad guió las decisiones. Perder un reclamo en el cierre de matrícula puede dejar a un estudiante sin sus cursos, así que E1 va primero y es el único escenario que justificó poner lógica en la base de datos: en el ADR-0003 aceptamos depender de una función de PostgreSQL a cambio de una numeración atómica. E4 va segundo porque es el que más frena al equipo: cualquier cambio de reglas pasaba por un archivo de 2 351 líneas y no se podía probar sin credenciales. Atenderlo motivó el ADR-0001 y el ADR-0002, y por él aceptamos más archivos y una composición manual. E6 casi no cuesta, porque los registros ya existían, y la rodaja lo refuerza al tomar el autor del token. E3 tiene impacto alto, pero sus controles ya funcionan en producción; lo que falta es la prueba automatizada. E5 y E2 se medirán antes de cambiar nada.
+Cómo se aplica la regla:
+
+- **El impacto** separa los cuatro escenarios de impacto alto (E1, E4, E3 y E6) de los dos de impacto medio (E2 y E5).
+- **Entre los de impacto alto, la dificultad** pone primero a E1 (alta), después a E4 y E3 (media) y al final a E6 (baja).
+- **E4 y E3 empatan** en impacto y en dificultad, y decide la defensa actual. Los controles de E3 ya funcionan en producción: `requireStudentAuth` y `requireAdminAuth` rechazan a quien no corresponde, y lo que falta es la prueba automatizada. E4 no tiene ninguna defensa fuera de la rodaja: cualquier otro cambio de reglas pasa por un archivo de 2 351 líneas y no se puede probar sin credenciales. Por eso E4 va antes.
+- **Entre los de impacto medio, la dificultad** pone a E2 (media) antes que E5 (baja).
+
+Hasta la Entrega 1, el orden era E1, E4, E6, E3, E5 y E2. Estaba justificado escenario por escenario, pero no salía del criterio que declarábamos, y así lo observó el docente. Con la regla, E3 pasa antes que E6 y E2 antes que E5.
+
+Esa prioridad guió las decisiones. Perder un reclamo en el cierre de matrícula puede dejar a un estudiante sin sus cursos, así que E1 va primero y es el único escenario que justificó poner lógica en la base de datos: en el ADR-0003 aceptamos depender de una función de PostgreSQL a cambio de una numeración atómica. E4 motivó el ADR-0001 y el ADR-0002, y por él aceptamos más archivos y una composición manual. E3 tiene impacto alto, pero sus controles ya funcionan en producción; lo que falta es la prueba automatizada. E6 casi no cuesta, porque los registros ya existían, y la rodaja lo refuerza al tomar el autor del token. E2 y E5 se medirán antes de cambiar nada.
 
 La crítica del Equipo 3 no cambió el orden, pero sí el estado de dos escenarios: E4 y E6 dejaron de figurar como «ya se cumple» y pasan a «por medir», porque el simulacro de E4 no se había hecho y la pérdida de registros de E6 no se había puesto a prueba.
 

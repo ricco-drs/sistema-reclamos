@@ -201,3 +201,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Los correos institucionales y las equivalencias verificadas en el historial. Se comprobó que las 13 combinaciones de nombre y correo quedan agrupadas en seis identidades, correspondientes al equipo y al docente.
 - **Qué se descartó y por qué:** Reescribir commits para cambiar su autor. Git puede agrupar las contribuciones con `.mailmap` y conservar los commits publicados.
 - **Registra:** Lenin Castro
+
+### Entrada del 20 de noviembre, conexión del bus y del correo con timeout en server.js
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Conectar en `server.js` el registro de reclamos con el evento `ReclamoRegistrado` (#27), sus consumidores de correo y M2 y el enviador de correo con timeout (#34); preparar la transición entre el front anterior y el nuevo (#46), que pidió Lenin; escribir las pruebas de esa transición y `pruebas/probar-registro-con-bus.mjs`, que levanta el servidor real contra servicios falsos; y corregir los tres errores de ESLint que `server.js` ya tenía en `develop` (dos variables sin usar y una función que nadie llamaba), sin cambiar su comportamiento.
+- **Qué se aceptó:** Reemplazar la ruta anterior de `POST /api/reclamos` por el caso de uso, después de compararlas y ver que hacen las mismas comprobaciones con los mismos mensajes; quitar de `server.js` su copia de `emailTemplate` y de las funciones de envío; avisar al arrancar si falta `M2_URL` o si `EMAIL_TIMEOUT_MS` no es un número; darle a M2 hasta 60 s, porque al abrir su URL se vio que Render tarda más de 25 s en despertarlo; y, para la transición, la opción que la IA llamó B: el front nuevo manda `avisos: "api"`, la API lo confirma en la respuesta, y para el front anterior se usa un segundo caso de uso que registra sin publicar el evento. Se comprobó con `npm test` (65 pruebas), `npm run arch:check`, `validar-openapi.cjs` y la prueba de punta a punta (15 de 15), con la salida en `docs/evidencias/lab10-bus-conectado.txt`.
+- **Qué se descartó y por qué:** La opción A de la IA para la transición, con la bandera solo en la petición: si Cloudflare publicaba el front nuevo antes que Railway la API nueva, esos reclamos se quedaban sin correo. También su recomendación de no conectar M2 porque no responde: el #51 incluye M2, y retirarlo es una decisión del equipo, no de este PR. Y su propuesta de que los cambios del front entraran como un commit de Roy en esta rama: van en el PR de Roy (#46).
+- **Registra:** Ricco Rashuaman

@@ -91,7 +91,7 @@ Content-Type: application/json, sin Authorization
 { id, codigoEstudiante, email, nombre, motivoReclamo, descripcion }
 ```
 
-`motivoReclamo` es el texto de la categoría. No hay contrato escrito de M2; esto es lo que hace hoy `useReclamos.ts`. A diferencia de la aplicación, que solo deja un `console.warn`, el adaptador falla con error y corta a los 10 segundos, para que el bus lo registre.
+`motivoReclamo` es el texto de la categoría. No hay contrato escrito de M2; esto es lo que hace hoy `useReclamos.ts`. A diferencia de la aplicación, que solo deja un `console.warn`, el adaptador falla con error para que el bus lo registre. Corta a los 10 segundos por defecto, pero `server.js` le da 60, porque M2 está en Render, que lo duerme cuando no tiene tráfico, y despertarlo tarda más de 25 segundos. El 20/11/2026 M2 no respondía: mientras siga así, cada reclamo deja un error en el registro, sin afectar al estudiante.
 
 Hay dos diferencias con lo que manda hoy la aplicación:
 
@@ -109,9 +109,9 @@ Hay dos diferencias con lo que manda hoy la aplicación:
 
 Los puertos están descritos en `backend/dominio/puertosReclamos.js`. El dominio no conoce HTTP: sus errores llevan un `motivo`, y la traducción a 400, 403 o 503 vive en `presentacion/registrarReclamoHandler.js`.
 
-## Conexión al arranque compartido (pendiente, `server.js`)
+## Conexión al arranque compartido (`server.js`)
 
-Esto lo hace quien modifica el arranque del backend. El punto de enganche es este:
+Está conectado en `server.js` desde el #51, con los dos consumidores. El enganche es este; en el código, el repositorio se llama `repositorioReclamos`, el cliente de M2 espera hasta 60 segundos y hay un segundo caso de uso para la transición, que se explica más abajo:
 
 ```js
 const bus = crearBusEnProceso({ alFallar: (ev, quien, err) => console.error(`${quien} falló en ${ev.eventoId}:`, err.message) });
@@ -132,13 +132,22 @@ const registrarReclamo = crearRegistrarReclamo({
 app.post('/api/reclamos', requireStudentAuth, crearRegistrarReclamoHandler(registrarReclamo));
 ```
 
-`componerConfirmacion({ id, nombre, categoria, email })` ya está extraída de `/api/reclamos/confirmar` en `backend/presentacion/componerConfirmacion.js` (la plantilla HTML y `primerNombre`). `email` es opcional: solo sirve para el saludo cuando `nombre` no trae el formato «APELLIDOS, NOMBRES». Al conectar el bus, `server.js` la importa (`import { componerConfirmacion } from './presentacion/componerConfirmacion.js'`), y la ruta `/api/reclamos/confirmar` puede usarla mientras exista. `emailTemplate`, `escaparHtml` y las tres URL de imagen están en `backend/presentacion/plantillaCorreo.js`: `server.js` puede importarlas y borrar su copia, que la usan también el código de verificación y la respuesta del Tercio.
+`componerConfirmacion({ id, nombre, categoria, email })` ya está extraída de `/api/reclamos/confirmar` en `backend/presentacion/componerConfirmacion.js` (la plantilla HTML y `primerNombre`). `email` es opcional: solo sirve para el saludo cuando `nombre` no trae el formato «APELLIDOS, NOMBRES». `server.js` la importa, y la ruta `/api/reclamos/confirmar` también la usa mientras exista, así que las dos mandan el mismo correo. `emailTemplate`, `escaparHtml` y las tres URL de imagen están en `backend/presentacion/plantillaCorreo.js`, y `server.js` ya no tiene su propia copia: el código de verificación y la respuesta del Tercio usan la misma plantilla.
 
-**Cuidado al activarlo.** Al conectar el bus hay que cambiar tres cosas en el mismo cambio:
+**Transición entre el front anterior y el nuevo.** El front anterior envía él mismo el correo (`/api/reclamos/confirmar`) y el expediente a M2, y el nuevo (#46) se los deja a la API. La API (Railway) y el front (Cloudflare) se despliegan por separado, y un estudiante puede seguir con la página anterior abierta, así que durante un tiempo conviven los dos. Para que cada reclamo siga un solo camino:
 
-1. **Quitar las dos llamadas de `useReclamos.ts`** (`/api/reclamos/confirmar` y el `fetch` a M2). Mientras sigan, el estudiante recibe dos correos y M2 dos expedientes. Hasta entonces, `/api/reclamos/confirmar` se mantiene.
-2. **Cambiar el aviso de `ReclamosPanel.tsx`** (líneas 500 a 502). Sin la llamada a `/confirmar`, `avisoCorreo` ya no se activa y la pantalla diría siempre «Te enviamos la confirmación a tu correo», aunque el envío falle. El texto debe decir que la confirmación llegará a su correo, sin asegurarlo.
-3. **Definir `M2_URL`** en Railway. Si está vacía y el código usa el cliente real, cada reclamo falla al enviar a M2; si usa el cliente en memoria, no llega ningún expediente. En Compose se deja vacía a propósito.
+1. **El front nuevo manda `"avisos": "api"`** en el cuerpo de `POST /api/reclamos`. Con ese campo, la API registra el reclamo, publica `ReclamoRegistrado` y responde con `"avisos": "api"`.
+2. **Sin ese campo** (front anterior), la API registra el reclamo con un segundo caso de uso que no publica el evento, y el front envía el correo y el expediente como siempre.
+3. **Si el front nuevo no recibe `"avisos": "api"`** en la respuesta, está hablando con una API anterior, y envía él mismo el correo y el expediente.
+
+| | Front anterior | Front nuevo |
+|---|---|---|
+| **API anterior** | Envía el front | Envía el front (no recibió `avisos`) |
+| **API nueva** | Envía el front (no pidió `avisos`) | Envía la API |
+
+En los cuatro casos sale un correo y un expediente por reclamo, sin importar qué se despliega primero. El campo es opcional y la API anterior lo ignora, así que el cambio es compatible. Cuando ya no quede el front anterior, se quitan el caso de uso sin avisos, `/api/reclamos/confirmar` y el envío de respaldo del front.
+
+`M2_URL` va definida en Railway. En Compose se deja vacía a propósito: el expediente queda en memoria y el servidor lo avisa al arrancar.
 
 ## Limitaciones conocidas
 

@@ -52,7 +52,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
     agregarBoletaGuardada, subiendoBoleta,
     procesandoPdfs,
     camposManual, setCamposManual,
-    enviandoFormal,
+    enviandoFormal, avisoCorreo,
     handleUsarDocsGuardados,
     reclamoEnviado,
     reclamosExistentes, loadingConsulta,
@@ -497,7 +497,9 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
           <p className="text-xs text-claude-muted mb-1">ID de tu caso</p>
           <p className="text-2xl font-bold text-claude-text tracking-wide">{reclamoEnviado?.id}</p>
           <p className="text-xs text-claude-muted mt-2">
-            Guarda este ID. La confirmación llegará a tu correo; si no la recibes, tu reclamo igual quedó registrado.
+            {avisoCorreo
+              ? 'Guarda este ID. Tu reclamo quedó registrado, aunque el correo de confirmación no pudo enviarse.'
+              : 'Guarda este ID. La confirmación llegará a tu correo.'}
           </p>
         </div>
         <div className="w-full flex flex-col gap-3">

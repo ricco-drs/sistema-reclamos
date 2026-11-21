@@ -529,6 +529,9 @@ const dependenciasDelRegistro = {
   politica: crearPoliticaDeRecepcion({ tefiDurmiendoActivo, despedidaActivaPara, puedeEnviarReclamo }),
   catalogoCursos: CATALOGO_CURSOS,
   esEvidenciaPropia,
+  // Las referencias de `documentos` (ficha, avance, boleta) tienen que estar en la carpeta del propio estudiante,
+  // la misma comprobación que hace /api/docs/signed-url.
+  esDocumentoPropio: (ref, email) => rutaDentroDe(ref, `${sanitizeEmail(email)}/`),
   logActividad,
   registrarError: (mensaje, err) => console.error(mensaje, err?.message ?? ''),
 };

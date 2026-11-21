@@ -152,7 +152,12 @@ async function registrar(cuerpo, { sesion = true, frontNuevo = true } = {}) {
     headers: sesion ? conSesion : { 'Content-Type': 'application/json' },
     body: JSON.stringify(frontNuevo ? { ...cuerpo, avisos: 'api' } : cuerpo),
   });
-  return { status: r.status, cuerpo: await r.json() };
+  return {
+    status: r.status,
+    cuerpo: await r.json(),
+    location: r.headers.get('location'),
+    reintentarDespues: r.headers.get('retry-after'),
+  };
 }
 const reclamo = (descripcion) => ({
   nombre: 'PUERTA RAMOS, ANA LUCIA',
@@ -178,20 +183,38 @@ try {
   comprobar('Sin sesión', '401', r.status, r.status === 401);
 
   r = await registrar({ descripcion: 'sin categoría' });
-  comprobar('Sin categoría', '400, sin avisos en la respuesta', `${r.status} ${JSON.stringify(r.cuerpo)}`,
-    r.status === 400 && !('avisos' in r.cuerpo));
+  comprobar('Sin categoría', '400 DATOS_INCOMPLETOS, sin avisos en la respuesta', `${r.status} ${JSON.stringify(r.cuerpo)}`,
+    r.status === 400 && r.cuerpo.codigo === 'DATOS_INCOMPLETOS' && !('avisos' in r.cuerpo));
+
+  r = await registrar({ ...reclamo('descripción larga'), descripcion: 'a'.repeat(5001) });
+  comprobar('Descripción de 5 001 caracteres', '400 DESCRIPCION_DEMASIADO_LARGA', `${r.status} ${r.cuerpo.codigo}`,
+    r.status === 400 && r.cuerpo.codigo === 'DESCRIPCION_DEMASIADO_LARGA');
+
+  r = await registrar({ ...reclamo('código UNI malo'), codigo_estudiante: '2024A' });
+  comprobar('Código UNI con mal formato', '400 CODIGO_UNI_INVALIDO', `${r.status} ${r.cuerpo.codigo}`,
+    r.status === 400 && r.cuerpo.codigo === 'CODIGO_UNI_INVALIDO');
 
   r = await registrar({ ...reclamo('prueba ajena'), evidencias: [{ ref: 'otra-persona_uni_pe/evidencias/x.pdf' }] });
-  comprobar('Prueba de otro estudiante', '403', `${r.status} «${r.cuerpo.error}»`, r.status === 403);
+  comprobar('Prueba de otro estudiante', '403 PRUEBA_AJENA', `${r.status} ${r.cuerpo.codigo} «${r.cuerpo.error}»`,
+    r.status === 403 && r.cuerpo.codigo === 'PRUEBA_AJENA');
+
+  r = await registrar({ ...reclamo('documento ajeno'), documentos: { ficha: `${urlFalso}/storage/v1/object/Documentos%20Tefiis/otra-persona_uni_pe/ficha.pdf` } });
+  comprobar('Documento de otro estudiante', '403 DOCUMENTO_AJENO', `${r.status} ${r.cuerpo.codigo}`,
+    r.status === 403 && r.cuerpo.codigo === 'DOCUMENTO_AJENO');
 
   // ── Front nuevo: la API envía el correo y el expediente ──
   const TEXTO = 'Se me cruzan dos cursos en el horario.';
-  r = await registrar(reclamo(TEXTO));
+  // Con un documento propio: la comprobación de propiedad también tiene que aceptar lo que es del estudiante.
+  const docPropio = `${urlFalso}/storage/v1/object/Documentos%20Tefiis/estudiante-001_at_prueba_test/ficha.pdf`;
+  r = await registrar({ ...reclamo(TEXTO), documentos: { ficha: docPropio } });
   await dejarTerminarConsumidores();
   const id = r.cuerpo.id;
   const guardado = estado.reclamos.find((x) => x.id === id);
-  comprobar('Front nuevo: registro', '200 con número y avisos: "api"', `${r.status} ${JSON.stringify(r.cuerpo)}`,
-    r.status === 200 && /^REC-\d{4}-\d{4}$/.test(id) && r.cuerpo.avisos === 'api');
+  comprobar('Front nuevo: registro', '201 con número, avisos: "api" y Location', `${r.status} ${JSON.stringify(r.cuerpo)}; ${r.location}`,
+    r.status === 201 && /^REC-\d{4}-\d{4}$/.test(id) && r.cuerpo.avisos === 'api' && r.location === `/api/reclamos/mine/${id}`);
+  comprobar('  cursos_descartados en el 201', 'XX999 por NO_EXISTE_EN_CATALOGO', JSON.stringify(r.cuerpo.cursos_descartados),
+    JSON.stringify(r.cuerpo.cursos_descartados) === JSON.stringify([{ lista: 'cursos_retirar', codigo: 'XX999', seccion: 'Z', motivo: 'NO_EXISTE_EN_CATALOGO' }]));
+  comprobar('  el documento propio se guarda', docPropio, guardado?.documentos?.ficha, guardado?.documentos?.ficha === docPropio);
   comprobar('  un correo de la API', `Reclamo registrado: ${id} — TEFIIS → ${ESTUDIANTE}`,
     `${contar()}; ${estado.correos[0]?.asunto} → ${estado.correos[0]?.para}`,
     estado.correos.length === 1 && estado.correos[0].asunto === `Reclamo registrado: ${id} — TEFIIS`
@@ -205,20 +228,21 @@ try {
     guardado && !('avisos' in guardado));
   comprobar('  actividad registrada', 'reclamo_creado', estado.actividad.join(', '), estado.actividad.includes('reclamo_creado'));
 
-  r = await registrar(reclamo(TEXTO));
+  r = await registrar({ ...reclamo(TEXTO), documentos: { ficha: docPropio } });
   await dejarTerminarConsumidores();
-  comprobar('Front nuevo: reintento del mismo texto', 'duplicado, sin envíos nuevos',
-    `${r.status} ${JSON.stringify(r.cuerpo)}; ${contar()}`,
-    r.cuerpo.duplicado === true && r.cuerpo.id === id && r.cuerpo.avisos === 'api'
+  comprobar('Front nuevo: reintento del mismo texto', '200 con Location, duplicado, sin cursos_descartados y sin envíos nuevos',
+    `${r.status} ${JSON.stringify(r.cuerpo)}; ${r.location}; ${contar()}`,
+    r.status === 200 && r.location === `/api/reclamos/mine/${id}` && r.cuerpo.duplicado === true && r.cuerpo.id === id
+      && r.cuerpo.avisos === 'api' && !('cursos_descartados' in r.cuerpo)
       && estado.correos.length === 1 && estado.expedientes.length === 1);
 
   // ── Front anterior: la API no envía nada; el front pide el correo a /confirmar ──
   r = await registrar(reclamo('Reclamo desde la página anterior.'), { frontNuevo: false });
   await dejarTerminarConsumidores();
   const idAnterior = r.cuerpo.id;
-  comprobar('Front anterior: registro', '200 sin avisos, y la API no envía nada',
+  comprobar('Front anterior: registro', '201 sin avisos, y la API no envía nada',
     `${r.status} ${JSON.stringify(r.cuerpo)}; ${contar()}`,
-    r.status === 200 && !('avisos' in r.cuerpo) && estado.correos.length === 1 && estado.expedientes.length === 1);
+    r.status === 201 && !('avisos' in r.cuerpo) && estado.correos.length === 1 && estado.expedientes.length === 1);
   const rc = await fetch(`${base}/api/reclamos/confirmar`, {
     method: 'POST', headers: conSesion, body: JSON.stringify({ caseId: idAnterior }),
   });
@@ -231,9 +255,9 @@ try {
   const antes = { correos: estado.correos.length, expedientes: estado.expedientes.length };
   r = await registrar(reclamo('Otro reclamo, con el correo caído.'));
   await dejarTerminarConsumidores();
-  comprobar('Correo caído', '200, sin correo, con el expediente y el error registrado',
+  comprobar('Correo caído', '201, sin correo, con el expediente y el error registrado',
     `${r.status} ${r.cuerpo.id}; ${contar()}; error registrado=${errorRegistrado('correo', r.cuerpo.id)}`,
-    r.status === 200 && estado.correos.length === antes.correos && estado.expedientes.length === antes.expedientes + 1
+    r.status === 201 && estado.correos.length === antes.correos && estado.expedientes.length === antes.expedientes + 1
       && errorRegistrado('correo', r.cuerpo.id));
   estado.correoCaido = false;
 
@@ -241,16 +265,17 @@ try {
   const antes2 = { correos: estado.correos.length, expedientes: estado.expedientes.length };
   r = await registrar(reclamo('Otro reclamo, con M2 caído.'));
   await dejarTerminarConsumidores();
-  comprobar('M2 caído', '200, con el correo, sin expediente y el error registrado',
+  comprobar('M2 caído', '201, con el correo, sin expediente y el error registrado',
     `${r.status} ${r.cuerpo.id}; ${contar()}; error registrado=${errorRegistrado('m2', r.cuerpo.id)}`,
-    r.status === 200 && estado.correos.length === antes2.correos + 1 && estado.expedientes.length === antes2.expedientes
+    r.status === 201 && estado.correos.length === antes2.correos + 1 && estado.expedientes.length === antes2.expedientes
       && errorRegistrado('m2', r.cuerpo.id));
   estado.m2Caido = false;
 
   estado.tefiDurmiendo = true;
   await espera(10_500); // los interruptores se leen con una caché de 10 s
   r = await registrar(reclamo('Con Tefi durmiendo.'));
-  comprobar('Tefi durmiendo', '503', `${r.status} «${r.cuerpo.error}»`, r.status === 503);
+  comprobar('Tefi durmiendo', '503 SISTEMA_EN_PAUSA, sin Retry-After', `${r.status} ${r.cuerpo.codigo}; Retry-After=${r.reintentarDespues}`,
+    r.status === 503 && r.cuerpo.codigo === 'SISTEMA_EN_PAUSA' && r.reintentarDespues === null);
 } catch (err) {
   comprobar('La prueba terminó', 'sin excepciones', err.message, false);
 } finally {

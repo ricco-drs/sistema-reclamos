@@ -18,8 +18,9 @@
 
 /**
  * @typedef {Object} PoliticaDeRecepcion
- * @property {(email: string) => Promise<string|null>} motivoDeRechazo
- *   Mensaje si hoy no se reciben reclamos de ese correo (Tefi durmiendo, ciclo cerrado, ventana cerrada), o null.
+ * @property {(email: string) => Promise<{codigo: 'SISTEMA_EN_PAUSA'|'CICLO_CERRADO'|'VENTANA_CERRADA', mensaje: string}|null>} motivoDeRechazo
+ *   El rechazo, con su código estable y su mensaje, si hoy no se reciben reclamos de ese correo
+ *   (Tefi durmiendo, ciclo cerrado, ventana cerrada), o null.
  */
 
 /**

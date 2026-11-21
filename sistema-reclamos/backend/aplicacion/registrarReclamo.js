@@ -1,6 +1,7 @@
 import {
-  ErrorDeReclamo, MOTIVO_ENTRADA_INVALIDA, MOTIVO_NO_PERMITIDO, MOTIVO_NO_DISPONIBLE,
-  MAX_EVIDENCIAS, sanearCursos, armarDocumentos, idDeReclamo, numeroSiguienteDe,
+  ErrorDeReclamo, MOTIVO_ENTRADA_INVALIDA, MOTIVO_NO_PERMITIDO, MOTIVO_NO_DISPONIBLE, MOTIVO_POR_RECHAZO,
+  CODIGO, MAX_EVIDENCIAS, MAX_DESCRIPCION, FORMATO_CODIGO_UNI,
+  clasificarCursos, referenciasDeDocumentos, armarDocumentos, idDeReclamo, numeroSiguienteDe,
 } from '../dominio/reclamo.js';
 import { crearReclamoRegistrado } from '../dominio/eventos.js';
 
@@ -11,18 +12,22 @@ const MAX_INTENTOS_ID = 10;
  * Caso de uso: registrar un reclamo del estudiante y avisar que quedó registrado.
  * No conoce Express, PostgREST ni los proveedores de correo.
  *
+ * Orden de las comprobaciones: primero la política de recepción (pausa, ciclo, ventana) y
+ * después los campos. La sesión (401) la comprueba la ruta antes de llegar aquí.
+ *
  * @param {Object} dep
  * @param {import('../dominio/puertosReclamos.js').RepositorioReclamos} dep.reclamos
  * @param {import('../dominio/puertosReclamos.js').PublicadorEventos} dep.publicador
  * @param {import('../dominio/puertosReclamos.js').PoliticaDeRecepcion} dep.politica
  * @param {Map<string, {nombre: string, secciones: string[]}>} dep.catalogoCursos
  * @param {(ref: string, email: string) => boolean} dep.esEvidenciaPropia
+ * @param {(ref: string, email: string) => boolean} [dep.esDocumentoPropio] Si falta, ninguna referencia de `documentos` se acepta.
  * @param {(entrada: object) => void} [dep.logActividad]
  * @param {() => Date} [dep.reloj]
  * @param {(mensaje: string, err?: unknown) => void} [dep.registrarError]
  */
 export function crearRegistrarReclamo({
-  reclamos, publicador, politica, catalogoCursos, esEvidenciaPropia,
+  reclamos, publicador, politica, catalogoCursos, esEvidenciaPropia, esDocumentoPropio = () => false,
   logActividad = () => {}, reloj = () => new Date(), registrarError = () => {},
 }) {
   async function numerar(anio) {
@@ -47,29 +52,60 @@ export function crearRegistrarReclamo({
     catch (err) { registrarError(`No se pudo publicar ${evento.eventoId}`, err); }
   }
 
-  return async function registrarReclamo({ email, entrada }) {
-    const rechazo = await politica.motivoDeRechazo(email);
-    if (rechazo) throw new ErrorDeReclamo(rechazo, MOTIVO_NO_DISPONIBLE);
-
-    const { nombre, codigo_estudiante, categoria, descripcion, datos_estudiante, documentos,
-      evidencias, cursos_retirar, cursos_matricular } = entrada ?? {};
+  /** Comprueba los campos del cuerpo, en este orden. Lanza al primer problema. */
+  function validarEntrada(email, entrada) {
+    const { codigo_estudiante, categoria, descripcion, documentos, evidencias } = entrada ?? {};
     if (!categoria || !descripcion) {
-      throw new ErrorDeReclamo('Categoría y descripción son requeridas.', MOTIVO_ENTRADA_INVALIDA);
+      throw new ErrorDeReclamo('Categoría y descripción son requeridas.', MOTIVO_ENTRADA_INVALIDA, CODIGO.DATOS_INCOMPLETOS);
+    }
+    if (String(descripcion).length > MAX_DESCRIPCION) {
+      throw new ErrorDeReclamo(
+        `La descripción no puede pasar de ${MAX_DESCRIPCION} caracteres.`, MOTIVO_ENTRADA_INVALIDA, CODIGO.DESCRIPCION_DEMASIADO_LARGA,
+      );
+    }
+    if (codigo_estudiante && !FORMATO_CODIGO_UNI.test(String(codigo_estudiante).trim().toUpperCase())) {
+      throw new ErrorDeReclamo(
+        'El código de estudiante no tiene el formato de la UNI (por ejemplo 20240001A).', MOTIVO_ENTRADA_INVALIDA, CODIGO.CODIGO_UNI_INVALIDO,
+      );
     }
 
     // Las referencias las manda el navegador: se revalidan aquí para que un
     // reclamo no apunte a archivos de otro estudiante.
     const listaEvidencias = Array.isArray(evidencias) ? evidencias : [];
     if (listaEvidencias.length > MAX_EVIDENCIAS) {
-      throw new ErrorDeReclamo('Solo puedes adjuntar un archivo PDF como prueba.', MOTIVO_ENTRADA_INVALIDA);
+      throw new ErrorDeReclamo('Solo puedes adjuntar un archivo PDF como prueba.', MOTIVO_ENTRADA_INVALIDA, CODIGO.DEMASIADAS_PRUEBAS);
     }
     const evidenciasValidas = listaEvidencias.filter((e) => esEvidenciaPropia(e?.ref, email));
     if (evidenciasValidas.length !== listaEvidencias.length) {
-      throw new ErrorDeReclamo('Alguno de los archivos adjuntos no te pertenece.', MOTIVO_NO_PERMITIDO);
+      throw new ErrorDeReclamo('Alguno de los archivos adjuntos no te pertenece.', MOTIVO_NO_PERMITIDO, CODIGO.PRUEBA_AJENA);
+    }
+    if (!referenciasDeDocumentos(documentos).every((ref) => esDocumentoPropio(ref, email))) {
+      throw new ErrorDeReclamo('Alguno de los documentos indicados no te pertenece.', MOTIVO_NO_PERMITIDO, CODIGO.DOCUMENTO_AJENO);
+    }
+    return evidenciasValidas;
+  }
+
+  /**
+   * @returns {Promise<{id: string, duplicado?: true,
+   *   cursosDescartados?: {lista: string, codigo: string, seccion: string, motivo: string}[]}>}
+   *   `cursosDescartados` solo viene cuando se crea el reclamo; un reintento no guarda nada nuevo.
+   */
+  return async function registrarReclamo({ email, entrada }) {
+    const rechazo = await politica.motivoDeRechazo(email);
+    if (rechazo) {
+      throw new ErrorDeReclamo(rechazo.mensaje, MOTIVO_POR_RECHAZO[rechazo.codigo] ?? MOTIVO_NO_DISPONIBLE, rechazo.codigo);
     }
 
-    const cursosRetirar = sanearCursos(cursos_retirar, catalogoCursos);
-    const cursosMatricular = sanearCursos(cursos_matricular, catalogoCursos);
+    const evidenciasValidas = validarEntrada(email, entrada);
+    const { nombre, codigo_estudiante, categoria, descripcion, datos_estudiante, documentos,
+      cursos_retirar, cursos_matricular } = entrada;
+
+    const codigoUni = codigo_estudiante ? String(codigo_estudiante).trim().toUpperCase() : null;
+    const retirar = clasificarCursos(cursos_retirar, catalogoCursos, 'cursos_retirar');
+    const matricular = clasificarCursos(cursos_matricular, catalogoCursos, 'cursos_matricular');
+    const cursosRetirar = retirar.cursos;
+    const cursosMatricular = matricular.cursos;
+    const cursosDescartados = [...retirar.descartados, ...matricular.descartados];
     const documentosConEvidencias = armarDocumentos(documentos, evidenciasValidas);
 
     // Un reintento del mismo reclamo devuelve el que ya existe. Si la comprobación
@@ -93,7 +129,7 @@ export function crearRegistrarReclamo({
         id: candidato,
         email,
         nombre: nombre || null,
-        codigo_estudiante: codigo_estudiante || null,
+        codigo_estudiante: codigoUni,
         categoria,
         descripcion,
         datos_estudiante: {
@@ -105,7 +141,7 @@ export function crearRegistrarReclamo({
         estado: 'PENDIENTE',
         // Columnas heredadas del esquema anterior: se mantienen espejadas.
         nombres: nombre || null,
-        codigo: codigo_estudiante || null,
+        codigo: codigoUni,
         urls: documentosConEvidencias,
         datos_academicos: datos_estudiante || null,
       });
@@ -120,6 +156,7 @@ export function crearRegistrarReclamo({
       throw new ErrorDeReclamo(
         'El sistema está recibiendo muchos reclamos a la vez. Intenta de nuevo en unos segundos.',
         MOTIVO_NO_DISPONIBLE,
+        CODIGO.SIN_NUMERO_DISPONIBLE,
       );
     }
 
@@ -130,10 +167,10 @@ export function crearRegistrarReclamo({
 
     // El reclamo ya está guardado: que un consumidor falle no lo deshace.
     await publicarSinFallar(crearReclamoRegistrado({
-      id, email, nombre: nombre || null, codigoEstudiante: codigo_estudiante || null, categoria,
+      id, email, nombre: nombre || null, codigoEstudiante: codigoUni, categoria,
       cursosRetirar, cursosMatricular, tieneEvidencia: evidenciasValidas.length > 0,
     }, reloj().toISOString()));
 
-    return { id };
+    return { id, cursosDescartados };
   };
 }

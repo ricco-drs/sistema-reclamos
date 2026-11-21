@@ -188,6 +188,7 @@ test('Resiliencia por eventos (ReclamoRegistrado en proceso): fallas o bloqueo e
     const email = correoPrueba(i);
     const res = {
       codigo: 200,
+      set() { return this; },
       status(n) { this.codigo = n; return this; },
       json(b) { this.body = b; return this; },
     };
@@ -201,7 +202,7 @@ test('Resiliencia por eventos (ReclamoRegistrado en proceso): fallas o bloqueo e
         cursos_matricular: [{ codigo: 'SW708', seccion: 'U' }],
       },
     }, res);
-    assert.equal(res.codigo, 200);
+    assert.equal(res.codigo, 201);
     assert.equal(res.body.success, true);
   }
 

@@ -164,6 +164,7 @@ async function correrExperimentoRegistroEventos() {
     const email = correoEstudiante(i);
     const res = {
       codigo: 200,
+      set() { return this; },
       status(n) { this.codigo = n; return this; },
       json(b) { this.body = b; return this; },
     };
@@ -177,7 +178,8 @@ async function correrExperimentoRegistroEventos() {
         cursos_matricular: [{ codigo: 'SW708', seccion: 'U' }],
       },
     }, res);
-    if (res.codigo === 200 && res.body?.success) respuestas200Despues++;
+    // Registrar un reclamo responde 201 (Created) desde el contrato de #61; el nombre de la métrica se conserva.
+    if (res.codigo === 201 && res.body?.success) respuestas200Despues++;
   }
   const tiempoRespuestaEstudianteMs = Math.round(performance.now() - t0Despues);
   await bus.vaciar();
@@ -218,12 +220,12 @@ async function correrExperimentoRegistroEventos() {
   const t0Caido = performance.now();
   let respuestas200ConM2Caido = 0;
   for (let i = 1; i <= TOTAL; i++) {
-    const res = { codigo: 200, status(n) { this.codigo = n; return this; }, json(b) { this.body = b; return this; } };
+    const res = { codigo: 200, set() { return this; }, status(n) { this.codigo = n; return this; }, json(b) { this.body = b; return this; } };
     await handlerM2Caido({
       studentEmail: correoEstudiante(i),
       body: { categoria: 'Matrícula', descripcion: `Reclamo con M2 caído ${i}` },
     }, res);
-    if (res.codigo === 200) respuestas200ConM2Caido++;
+    if (res.codigo === 201) respuestas200ConM2Caido++;
   }
   const tiempoRespuestaConM2CaidoMs = Math.round(performance.now() - t0Caido);
   await busM2Caido.vaciar();

@@ -201,3 +201,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Los correos institucionales y las equivalencias verificadas en el historial. Se comprobó que las 13 combinaciones de nombre y correo quedan agrupadas en seis identidades, correspondientes al equipo y al docente.
 - **Qué se descartó y por qué:** Reescribir commits para cambiar su autor. Git puede agrupar las contribuciones con `.mailmap` y conservar los commits publicados.
 - **Registra:** Lenin Castro
+
+### Entrada del 20 de noviembre, conexión del bus y del correo con timeout en server.js
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Conectar en `server.js` el registro de reclamos con el evento `ReclamoRegistrado` (#27), su consumidor de correo y el enviador de correo con timeout (#34), y escribir `pruebas/probar-registro-con-bus.mjs`, que levanta el servidor real contra servicios falsos para comprobar que un registro produce un solo correo y que no se envía nada a M2.
+- **Qué se aceptó:** Reemplazar la ruta anterior de `POST /api/reclamos` por el caso de uso, después de compararlas y ver que hacen las mismas comprobaciones con los mismos mensajes; que `/api/reclamos/confirmar` use `componerConfirmacion` mientras exista; quitar de `server.js` su copia de `emailTemplate` y de las funciones de envío; avisar al arrancar si `EMAIL_TIMEOUT_MS` no es un número; y no suscribir el consumidor de M2, porque al revisarlo se vio que nada en TEFIIS lee de M2 (el panel lee de la API, que lee de Supabase) y que M2 no responde. Se comprobó con `npm test` (58 pruebas), `npm run arch:check`, `validar-openapi.cjs` y la prueba de punta a punta (13 de 13), con la salida en `docs/evidencias/lab10-bus-conectado.txt`.
+- **Qué se descartó y por qué:** Su propuesta de definir `M2_URL` en Railway y darle a M2 60 segundos para que Render lo despierte: M2 no se usa y no responde, así que no tiene sentido mandarle los expedientes. También su propuesta de que los cambios del front entraran como un commit de Roy en esta rama: se quedaron en el PR de Roy (#46), que se integra justo después de este, para que cada uno suba su parte.
+- **Registra:** Ricco Rashuaman

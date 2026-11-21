@@ -1,0 +1,40 @@
+# Evidencia: bus de ReclamoRegistrado y correo con timeout conectados en server.js (#51)
+# Rama feat/51-conectar-bus. Comandos, desde sistema-reclamos/: npm test; npm run arch:check; node pruebas/validar-openapi.cjs; node pruebas/probar-registro-con-bus.mjs
+# El consumidor de M2 no se suscribe: nada en TEFIIS lee de M2 y al 20/11/2026 no responde.
+
+$ npm test
+# tests 58
+# suites 0
+# pass 58
+# fail 0
+
+$ npm run arch:check
+✔ no dependency violations found (49 modules, 80 dependencies cruised)
+
+$ node pruebas/validar-openapi.cjs
+operaciones: 19 (en server.js: 19) | $ref: 125 | ejemplos validados: 192 | mensajes de error comprobados: 34
+Sin problemas.
+
+$ node pruebas/probar-registro-con-bus.mjs
+# server.js real contra PostgREST y Brevo falsos en localhost, sin .env (no toca servicios reales).
+=== Resultados ===
+OK  Sin sesión: esperado 401 | obtenido 401
+OK  Sin categoría: esperado 400 | obtenido 400 «Categoría y descripción son requeridas.»
+OK  Prueba de otro estudiante: esperado 403 | obtenido 403 «Alguno de los archivos adjuntos no te pertenece.»
+OK  Registro válido: esperado 200 con número de caso | obtenido 200 {"success":true,"id":"REC-2026-0042"}
+OK    correos de confirmación: esperado 1 | obtenido 1
+OK    asunto y destinatario: esperado Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test | obtenido Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test
+OK    llamadas a M2: esperado 0 | obtenido 0
+OK    cursos fuera del catálogo descartados: esperado 1 curso | obtenido 1
+OK    actividad registrada: esperado reclamo_creado | obtenido reclamo_creado
+OK  Reintento del mismo texto: esperado duplicado y sin correo nuevo | obtenido 200 {"success":true,"id":"REC-2026-0042","duplicado":true}; correos=1
+OK  Ruta anterior /api/reclamos/confirmar: esperado 200 y el mismo correo | obtenido 200; Reclamo registrado: REC-2026-0042 — TEFIIS
+OK  Correo caído: esperado 200 igual, sin correo y con el error en el registro | obtenido 200 REC-2026-0043; correos=1; error registrado=true
+OK  Tefi durmiendo: esperado 503 | obtenido 503 «Tefi está durmiendo y no se pueden enviar reclamos por ahora. Vuelve a intentarlo cuando despierte.»
+
+13 de 13 correctos.
+
+=== Avisos y errores del servidor ===
+EMAIL_TIMEOUT_MS="abc" no es un número válido; se usan 3000 ms.
+[EMAIL] Brevo falló, probando el siguiente proveedor: Brevo caído a propósito
+[EVENTOS] correo falló en REC-2026-0043:ReclamoRegistrado: Brevo caído a propósito

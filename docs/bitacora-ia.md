@@ -201,3 +201,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Los correos institucionales y las equivalencias verificadas en el historial. Se comprobó que las 13 combinaciones de nombre y correo quedan agrupadas en seis identidades, correspondientes al equipo y al docente.
 - **Qué se descartó y por qué:** Reescribir commits para cambiar su autor. Git puede agrupar las contribuciones con `.mailmap` y conservar los commits publicados.
 - **Registra:** Lenin Castro
+
+### Entrada del 21 de noviembre, Lab10: contrato acordado y acta de ambigüedades
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Comparar la versión de `POST /api/reclamos` acordada con el equipo consumidor contra el código y contra el primer contrato (#35); pasarla a `docs/api/openapi.yaml`, junto con el campo `avisos` del #58; redactar `docs/api/acta-ambiguedades.md` y el mensaje con el que se le pidió al consumidor su lista de observaciones; y ampliar el validador para que entienda los errores con `codigo` y los ejemplos marcados `x-pendiente`.
+- **Qué parte del contrato salió de la IA:** la redacción en `openapi.yaml` de la versión acordada y de la resolución de los cinco huecos, el esquema `ErrorDeReclamo` (separado del `Error` de las rutas del panel), el orden de las comprobaciones verificado contra el código (el JSON inválido se rechaza antes que la sesión) y la redacción del acta. La versión acordada la trabajaron Ricco y el consumidor.
+- **Qué corrigió el equipo:** Christopher decidió cómo se resuelve cada hueco que levantó el consumidor: aclarar el reenvío, mantener la comparación solo por descripción, fijar el orden de las comprobaciones, un máximo de 5 000 caracteres y `Location` en el 200. También decidió qué se implementa (#61) y qué se documenta. El consumidor corrigió dos errores del resumen que le mandamos: que los 409 no se reintentan y que el 200 no desapareció, sino que ahora es el reenvío. Al comparar con la versión acordada, salió que los ejemplos del primer contrato usaban una categoría que no existe («Cruce de horarios») y cursos con secciones que no están en el catálogo; se cambiaron por «Matrícula» y cursos reales. El validador detectó un error de sintaxis YAML en dos descripciones, que se corrigió antes de subir.
+- **Registra:** Christopher Albino

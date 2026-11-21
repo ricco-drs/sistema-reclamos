@@ -1,10 +1,13 @@
-Lab10 · Validación del contrato docs/api/openapi.yaml
-Fecha: 2026-11-20 14:41 · Rama: docs/31-openapi (desde develop 16f979e) · Node v22.16.0
+Lab10 · Validación del contrato docs/api/openapi.yaml (versión 2.0.0)
+Fecha: 2026-11-21 00:27 · Rama: docs/31-contrato-acordado · Node v22.16.0
 
 1. Contrato real
 
+   Los ejemplos con x-pendiente tienen mensajes que el código todavía no devuelve
+   (#61 y #40): se cuentan aparte y no se exigen hasta que su issue entre.
+
 $ node pruebas/validar-openapi.cjs
-operaciones: 19 (en server.js: 19) | $ref: 125 | ejemplos validados: 192 | mensajes de error comprobados: 34
+operaciones: 19 (en server.js: 19) | $ref: 131 | ejemplos validados: 197 | mensajes de error comprobados: 34 | pendientes de implementar: 4
 Sin problemas.
 
 2. Control: una copia con cuatro errores puestos a propósito
@@ -12,11 +15,11 @@ Sin problemas.
    y la ruta /api/admin/activity renombrada). El validador tiene que fallar en los cuatro.
 
 $ node pruebas/validar-openapi.cjs openapi-roto.yaml
-operaciones: 19 (en server.js: 19) | $ref: 125 | ejemplos validados: 192 | mensajes de error comprobados: 34
+operaciones: 19 (en server.js: 19) | $ref: 131 | ejemplos validados: 197 | mensajes de error comprobados: 34 | pendientes de implementar: 4
 
 6 problemas:
  - $ref rota en $.paths./api/admin/conversaciones/{email}.get.responses.200.content.application/json.schema.properties.hilos.items: #/components/schemas/Hilos
- - ejemplo inválido en POST /api/reclamos 200 application/json examples.nuevo: data.id should be string
+ - ejemplo inválido en POST /api/reclamos 201 application/json examples.sinDescartes: data.id should be string
  - esquema que no compila en GET /api/admin/conversaciones/{email} 200 application/json: can't resolve reference doc#/components/schemas/Hilos from id #
  - rutas del código que no están en el contrato: GET /api/admin/activity
  - rutas del contrato que no están en el código: GET /api/admin/actividad

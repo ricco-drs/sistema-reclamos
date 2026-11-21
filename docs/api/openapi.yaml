@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: API de TEFIIS
-  version: 1.0.0
+  version: 2.0.0
   description: |
     Contrato HTTP de la API de TEFIIS (`sistema-reclamos/backend/server.js`).
 
@@ -10,9 +10,24 @@ info:
     `ReclamoRegistrado` descrito en [eventos.md](eventos.md). Quedan fuera las
     demás rutas del estudiante, las rutas públicas y `POST /api/rag/upload`.
 
-    **Cómo se escribió.** A partir del comportamiento actual del código, no de
-    cómo debería comportarse. Donde el código hace algo discutible, el contrato
-    lo dice en la descripción de la operación en vez de esconderlo.
+    **Cómo se escribió.** Las rutas de `/api/admin/*` describen el
+    comportamiento actual del código; donde el código hace algo discutible, la
+    operación lo dice en vez de esconderlo. `POST /api/reclamos` describe la
+    versión acordada con el equipo consumidor ([acta](acta-ambiguedades.md)),
+    que todavía se está implementando (#61 y #40). Los ejemplos marcados con
+    `x-pendiente` tienen mensajes que el código aún no devuelve; el validador
+    (`sistema-reclamos/pruebas/validar-openapi.cjs`) los cuenta aparte, y la
+    marca se quita cuando su issue entra.
+
+    **Versionado.** La versión sigue el formato `MAYOR.MENOR.PARCHE`:
+    - **Mayor:** se quita o renombra un campo, un campo opcional pasa a ser
+      obligatorio, cambia el tipo de un campo o un código de respuesta cambia de
+      significado. Quien ya usa la API tiene que enterarse antes del cambio.
+    - **Menor:** se agrega un campo opcional, un código de error o una ruta.
+    - **Parche:** solo cambian descripciones o ejemplos.
+
+    La 2.0.0 es la versión acordada de `POST /api/reclamos`: crear pasa de 200
+    a 201, y la ventana o el ciclo cerrado pasan de 503 a 409.
 
     **Autenticación.**
     - `sesionEstudiante`: JWT que firma la propia API al verificar el código de
@@ -24,11 +39,13 @@ info:
       solo pueden usar `GET`. Seis interruptores y el historial de actividad
       son solo del administrador principal, cuyo correo está fijo en `server.js`.
 
-    **Errores.** Todo error responde `{ "error": "<mensaje>" }`. Los mensajes
-    son para mostrarlos a una persona, no para que el cliente los compare.
+    **Errores.** En las rutas del panel, todo error responde
+    `{ "error": "<mensaje>" }`, y el mensaje es para mostrarlo a una persona, no
+    para que el cliente lo compare. `POST /api/reclamos` agrega un `codigo`
+    estable (`ErrorDeReclamo`), que es lo que el cliente compara.
     Tres casos generales que valen para todas las rutas:
     - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde hoy **500**
-      `Error interno del servidor.`, no 400 ni 413. Se corrige en el issue #40.
+      `Error interno del servidor.`, no 400. Se corrige en el issue #40.
     - Si `ALLOWED_ORIGINS` está definida, una petición desde un origen que no
       está en la lista responde **403** `Origen no permitido por CORS.`
     - Cuando falla Supabase, el 500 puede traer en `error` el texto crudo que
@@ -61,28 +78,54 @@ paths:
       operationId: registrarReclamo
       summary: Registra un reclamo del estudiante
       description: |
-        Guarda el reclamo con el número `REC-AAAA-NNNN`, que sale de la
-        secuencia de PostgreSQL (ADR-0003).
+        Crea un reclamo a nombre del estudiante de la sesión, con el número
+        `REC-AAAA-NNNN`, que sale de la secuencia de PostgreSQL (ADR-0003) y no
+        se repite. El correo sale siempre del token, nunca del cuerpo.
 
-        - **Avisos (transición).** Con `avisos: "api"` en el cuerpo, la API
-          publica el evento `ReclamoRegistrado` ([eventos.md](eventos.md)), que
-          envía el correo de confirmación y el expediente a M2, y lo confirma con
-          `avisos: "api"` en la respuesta. Sin el campo, registra el reclamo sin
-          publicar el evento, y el correo y el expediente los envía el front,
-          como hace el front anterior. Si el front pidió `avisos` y la respuesta
-          no lo trae, está hablando con una API anterior y los envía él mismo.
-          El campo se quita cuando ya no quede el front anterior.
-        - **Reintentos.** Si el mismo estudiante ya mandó un reclamo con la misma
-          descripción en los últimos 10 minutos, se devuelve ese número con
-          `duplicado: true`, no se crea otro y no se publica el evento.
-        - **Cursos.** `cursos_retirar` y `cursos_matricular` no dan error al
-          pasar de 30: se cortan en 30 y se descartan sin avisar los cursos o
-          secciones que no están en el catálogo. El nombre del curso sale del
-          catálogo, no del cliente.
-        - **Pruebas.** Se acepta una sola, y su `ref` tiene que estar en la
-          carpeta del estudiante de la sesión.
-        - **Orden de las comprobaciones.** Primero si hoy se reciben reclamos
-          (503), después los campos (400) y por último las pruebas (400, 403).
+        Es la versión acordada con el equipo consumidor
+        ([acta](acta-ambiguedades.md)). La implementa el issue #61, y el 400 del
+        cuerpo inválido, el #40. Hasta entonces, la API responde 200
+        `{ success, id, duplicado? }` y sus errores no traen `codigo`.
+
+        **Orden de las comprobaciones.** Se responde el primer error que aparezca:
+        1. Un cuerpo que no es JSON válido o que pasa de 1 MB (400
+           `CUERPO_INVALIDO`). Se rechaza antes de mirar la sesión, porque Express
+           lee el cuerpo antes de llegar a la ruta.
+        2. La sesión (401).
+        3. Que la plataforma no esté en pausa (503 `SISTEMA_EN_PAUSA`).
+        4. Que el ciclo de matrícula no esté cerrado (409 `CICLO_CERRADO`).
+        5. Que la ventana de reclamos esté abierta (409 `VENTANA_CERRADA`).
+        6. Los datos: categoría y descripción, el largo de la descripción y el
+           código UNI (400).
+        7. Los adjuntos: cuántas pruebas (400), y que las pruebas y los documentos
+           sean del estudiante (403).
+
+        **Cursos.** Cada curso tiene que existir en el catálogo de la FIIS y la
+        sección tiene que pertenecerle. El nombre lo pone el servidor, desde el
+        catálogo. Los que no cumplen, o los que pasan de 30 en una lista, no
+        impiden crear el reclamo: se descartan y se informan en
+        `cursos_descartados`, con su motivo.
+
+        **Reenvío.** Si el mismo estudiante envía otro reclamo con la misma
+        descripción dentro de los 10 minutos siguientes, no se crea uno nuevo: se
+        responde 200 con el reclamo que ya existía. Se compara solo la
+        descripción, porque un estudiante puede mandar dos reclamos distintos
+        seguidos y esos sí tienen que crearse. Un reenvío no guarda nada del
+        segundo envío (ni cursos ni pruebas), y por eso su respuesta no trae
+        `cursos_descartados`: no se evaluó nada. La protección no está
+        garantizada si los dos envíos llegan al mismo tiempo (escenario E1).
+
+        **Evento.** Solo con 201 se publica `ReclamoRegistrado`
+        ([eventos.md](eventos.md)), que envía el correo de confirmación y el
+        expediente a M2. Un reenvío (200) no lo publica.
+
+        **Avisos (transición, #58).** Mientras convivan el front anterior y el
+        nuevo, el evento se publica solo si el cuerpo trae `avisos: "api"`, y la
+        respuesta lo confirma con el mismo campo. Sin él, el reclamo se registra
+        sin publicar el evento y el front envía el correo y el expediente. Si el
+        front lo pidió y la respuesta no lo trae, está hablando con una API
+        anterior y los envía él mismo. El campo se quita cuando ya no quede el
+        front anterior.
       security:
         - sesionEstudiante: []
       requestBody:
@@ -92,100 +135,185 @@ paths:
             schema:
               $ref: '#/components/schemas/NuevoReclamo'
             examples:
-              conCursosYPrueba:
-                summary: Reclamo con un curso a retirar y una prueba adjunta
+              reclamoCompleto:
+                summary: Con un curso a retirar, uno a matricular y una prueba
                 value:
                   nombre: PEREZ, ANA
                   codigo_estudiante: 20240001A
                   categoria: Matrícula
-                  descripcion: Me matricularon en dos cursos que se cruzan el lunes de 8 a 10.
+                  descripcion: No alcancé vacante en Física I. Pido retirarme de Economía General, sección U, y matricularme en Física I, sección B, que todavía tiene cupos.
                   datos_estudiante:
                     especialidad: Ingeniería de Software
-                    ciclo: 5
+                    telefono: '987654321'
+                    turno: '3'
+                    matriculado: true
                   documentos:
-                    ficha: https://example.supabase.co/storage/v1/object/documentos/ana_perez_at_uni_pe/ficha.pdf
-                    avance: https://example.supabase.co/storage/v1/object/documentos/ana_perez_at_uni_pe/avance.pdf
+                    ficha: https://example.supabase.co/storage/v1/object/Documentos%20Tefiis/ana_perez_at_uni_pe/ficha.pdf
+                    avance: https://example.supabase.co/storage/v1/object/Documentos%20Tefiis/ana_perez_at_uni_pe/avance.pdf
                   evidencias:
-                    - ref: https://example.supabase.co/storage/v1/object/evidencias/ana_perez_at_uni_pe/horario.pdf
-                      nombre: horario.pdf
+                    - ref: https://example.supabase.co/storage/v1/object/Documentos%20Tefiis/ana_perez_at_uni_pe/evidencias/constancia.pdf
+                      nombre: constancia-de-vacantes.pdf
                       tipo: application/pdf
-                      bytes: 182044
+                      bytes: 245760
                   cursos_retirar:
-                    - codigo: SW708
+                    - codigo: BEG01
                       seccion: U
-                  cursos_matricular: []
+                  cursos_matricular:
+                    - codigo: BFI01
+                      seccion: B
                   avisos: api
+              reclamoMinimo:
+                summary: Solo los campos obligatorios
+                value:
+                  categoria: Matrícula
+                  descripcion: Mi boleta no muestra Física I, sección B, aunque me matriculé.
       responses:
-        '200':
-          description: Reclamo registrado, o el que ya existía si es un reintento.
+        '201':
+          description: Reclamo creado. Se publica `ReclamoRegistrado`.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReclamoCreado'
               examples:
-                nuevo:
-                  summary: Reclamo nuevo, pedido con avisos (la API envía el correo y el expediente)
+                sinDescartes:
+                  summary: Todos los cursos eran válidos (pedido con avisos)
                   value:
-                    success: true
-                    id: REC-2026-0042
+                    id: REC-2026-0412
+                    estado: PENDIENTE
+                    creado_en: '2026-11-21T15:42:10Z'
+                    cursos_descartados: []
                     avisos: api
-                nuevoSinAvisos:
-                  summary: Reclamo nuevo, pedido sin avisos (los envía el front)
+                conUnCursoDescartado:
+                  summary: Una sección no pertenecía al curso (pedido sin avisos)
                   value:
-                    success: true
-                    id: REC-2026-0042
-                reintento:
-                  summary: Reintento dentro de 10 minutos
-                  value:
-                    success: true
-                    id: REC-2026-0042
-                    duplicado: true
-        '400':
-          description: Faltan campos obligatorios o hay más de una prueba.
+                    id: REC-2026-0413
+                    estado: PENDIENTE
+                    creado_en: '2026-11-21T15:44:02Z'
+                    cursos_descartados:
+                      - lista: matricular
+                        codigo: BFI01
+                        seccion: Q
+                        motivo: SECCION_NO_PERTENECE
+        '200':
+          description: Reenvío dentro de los 10 minutos. Se devuelve el reclamo que ya existía; no se crea otro, no se guarda nada del segundo envío y no se publica el evento.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ReclamoExistente'
+              example:
+                id: REC-2026-0412
+                creado_en: '2026-11-21T15:42:10Z'
+        '400':
+          description: El cuerpo no se puede procesar o le faltan datos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
               examples:
-                faltanCampos:
+                cuerpoInvalido:
+                  x-pendiente: '#40'
                   value:
+                    codigo: CUERPO_INVALIDO
+                    error: El cuerpo de la petición no es JSON válido o pasa de 1 MB.
+                datosIncompletos:
+                  value:
+                    codigo: DATOS_INCOMPLETOS
                     error: Categoría y descripción son requeridas.
-                masDeUnaPrueba:
+                descripcionDemasiadoLarga:
+                  x-pendiente: '#61'
                   value:
+                    codigo: DESCRIPCION_DEMASIADO_LARGA
+                    error: La descripción no puede pasar de 5000 caracteres.
+                codigoUniInvalido:
+                  x-pendiente: '#61'
+                  value:
+                    codigo: CODIGO_UNI_INVALIDO
+                    error: El código de estudiante no tiene el formato de la UNI (por ejemplo 20240001A).
+                demasiadasPruebas:
+                  value:
+                    codigo: DEMASIADAS_PRUEBAS
                     error: Solo puedes adjuntar un archivo PDF como prueba.
         '401':
-          $ref: '#/components/responses/EstudianteNoAutenticado'
-        '403':
-          description: Una prueba no pertenece al estudiante de la sesión.
+          description: Falta el token de sesión o ya no es válido. El estudiante tiene que volver a verificar su correo.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Alguno de los archivos adjuntos no te pertenece.
-        '500':
-          $ref: '#/components/responses/ErrorInterno'
-        '503':
-          description: |
-            Hoy no se reciben reclamos de este estudiante, o no se pudo asignar
-            un número tras 10 choques de id seguidos. El cliente puede reintentar
-            más tarde.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorDeReclamo'
               examples:
-                tefiDurmiendo:
+                sinSesion:
                   value:
-                    error: Tefi está durmiendo y no se pueden enviar reclamos por ahora. Vuelve a intentarlo cuando despierte.
+                    codigo: SESION_REQUERIDA
+                    error: Sesión requerida. Verifica tu correo primero.
+                sesionVencida:
+                  value:
+                    codigo: SESION_INVALIDA
+                    error: Sesión inválida o expirada. Verifica tu correo de nuevo.
+        '403':
+          description: Una prueba o un documento no está en la carpeta del estudiante de la sesión.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              examples:
+                pruebaAjena:
+                  value:
+                    codigo: PRUEBA_AJENA
+                    error: Alguno de los archivos adjuntos no te pertenece.
+                documentoAjeno:
+                  x-pendiente: '#61'
+                  value:
+                    codigo: DOCUMENTO_AJENO
+                    error: Alguno de los documentos indicados no te pertenece.
+        '409':
+          description: El estado del proceso no permite recibir reclamos. No sirve reintentar hasta que el Tercio vuelva a abrir.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              examples:
                 cicloCerrado:
                   value:
+                    codigo: CICLO_CERRADO
                     error: El proceso de matrícula ha terminado. Nos vemos el siguiente ciclo.
                 ventanaCerrada:
                   value:
+                    codigo: VENTANA_CERRADA
                     error: La ventana de reclamos está cerrada en este momento. Vuelve a intentarlo cuando El Tercio la habilite.
-                sinNumero:
+        '500':
+          description: Falla no prevista del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              example:
+                codigo: ERROR_INTERNO
+                error: Error interno del servidor.
+        '503':
+          description: |
+            La plataforma no puede atender por ahora. Con `SIN_NUMERO_DISPONIBLE`
+            se puede reintentar después de los segundos que indica `Retry-After`.
+            Con `SISTEMA_EN_PAUSA`, la pausa dura hasta que el Tercio la desactive.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              examples:
+                sistemaEnPausa:
                   value:
+                    codigo: SISTEMA_EN_PAUSA
+                    error: Tefi está durmiendo y no se pueden enviar reclamos por ahora. Vuelve a intentarlo cuando despierte.
+                sinNumeroDisponible:
+                  value:
+                    codigo: SIN_NUMERO_DISPONIBLE
                     error: El sistema está recibiendo muchos reclamos a la vez. Intenta de nuevo en unos segundos.
 
   /api/admin/reclamos:
@@ -1043,6 +1171,19 @@ components:
       bearerFormat: Firebase ID token
       description: ID token de Firebase de una cuenta incluida en ADMIN_EMAILS.
 
+  headers:
+    Location:
+      description: Ruta para consultar el reclamo.
+      schema:
+        type: string
+      example: /api/reclamos/mine/REC-2026-0412
+    RetryAfter:
+      description: Segundos que conviene esperar antes de reintentar. Hoy siempre es 5. Solo acompaña a SIN_NUMERO_DISPONIBLE.
+      schema:
+        type: integer
+        minimum: 1
+      example: 5
+
   parameters:
     IdReclamo:
       name: id
@@ -1252,70 +1393,151 @@ components:
         categoria:
           type: string
           minLength: 1
-          description: El rótulo de la categoría que eligió el estudiante (texto, no un código).
+          description: El rótulo de la categoría. Hoy la aplicación siempre envía «Matrícula».
         descripcion:
           type: string
           minLength: 1
-          description: Texto libre del estudiante. Es lo que se compara para detectar reintentos.
+          maxLength: 5000
+          description: El reclamo con las palabras del estudiante. Con más de 5 000 caracteres se responde 400 `DESCRIPCION_DEMASIADO_LARGA`. Es lo que se compara para reconocer un reenvío.
         nombre:
           type: string
           nullable: true
+          description: Nombre completo, en el formato «APELLIDOS, NOMBRES». Se usa para saludar al estudiante en los correos.
         codigo_estudiante:
           type: string
           nullable: true
-          description: Código UNI que declara el estudiante. El servidor no valida su formato.
+          pattern: ^\d{7,8}[A-Z]$
+          description: Código UNI. Si viene, tiene que tener 7 u 8 dígitos y una letra mayúscula al final; si no, se responde 400 `CODIGO_UNI_INVALIDO`.
         datos_estudiante:
           type: object
           additionalProperties: true
-          description: Datos extraídos del SIGA. Se guardan tal cual, y el servidor les agrega cursosRetirar y cursosMatricular ya saneados.
+          description: Datos que declara el estudiante. Se guardan tal como llegan, y el servidor les agrega cursosRetirar y cursosMatricular ya saneados.
         documentos:
           type: object
-          additionalProperties: true
-          description: Referencias a la ficha, el avance y la boleta que el estudiante subió antes.
+          description: Referencias a los documentos del SIGA que devolvió `POST /api/docs/upload`. Cada una tiene que estar en la carpeta del estudiante de la sesión; si no, se responde 403 `DOCUMENTO_AJENO`. Una clave `evidencias` dentro de `documentos` se ignora. Las pruebas solo valen por el campo `evidencias`, que se revalida.
+          properties:
+            ficha:
+              type: string
+              description: Ficha académica.
+            avance:
+              type: string
+              description: Avance curricular.
+            boleta:
+              type: string
+              description: Boleta de matrícula. Es opcional.
         evidencias:
           type: array
           maxItems: 1
+          description: La prueba del reclamo. Se admite una sola; con más, se responde 400 `DEMASIADAS_PRUEBAS`.
           items:
             $ref: '#/components/schemas/Evidencia'
         cursos_retirar:
           type: array
-          description: Se corta en 30 y se descarta sin avisar lo que no está en el catálogo.
+          description: Cursos de los que el estudiante pide retirarse. Lo que no pasa el catálogo, o pasa de 30, se informa en `cursos_descartados`.
           items:
             $ref: '#/components/schemas/Curso'
         cursos_matricular:
           type: array
-          description: Se corta en 30 y se descarta sin avisar lo que no está en el catálogo.
+          description: Cursos en los que el estudiante pide matricularse. Lo que no pasa el catálogo, o pasa de 30, se informa en `cursos_descartados`.
           items:
             $ref: '#/components/schemas/Curso'
         avisos:
           type: string
           enum: [api]
           description: |
-            Opcional y temporal. Con "api", la API publica ReclamoRegistrado, que
-            envía el correo de confirmación y el expediente a M2. Sin el campo,
-            los envía el front. Cualquier otro valor se trata como si no viniera.
+            Opcional y temporal (#58). Con "api", la API publica ReclamoRegistrado,
+            que envía el correo de confirmación y el expediente a M2. Sin el
+            campo, los envía el front. Cualquier otro valor se trata como si no viniera.
 
     ReclamoCreado:
       type: object
-      required: [success, id]
+      required: [id, estado, creado_en, cursos_descartados]
       properties:
-        success:
-          type: boolean
-          enum: [true]
         id:
           type: string
           pattern: ^REC-\d{4}-\d{4,}$
-        duplicado:
-          type: boolean
-          enum: [true]
-          description: Solo viene cuando es un reintento y el reclamo ya existía.
+          description: Número del reclamo, con el año y un correlativo que no se repite.
+        estado:
+          type: string
+          enum: [PENDIENTE]
+          description: Todo reclamo nuevo empieza en PENDIENTE.
+        creado_en:
+          type: string
+          format: date-time
+        cursos_descartados:
+          type: array
+          description: Cursos del pedido que no se guardaron. Vacía si todos eran válidos.
+          items:
+            $ref: '#/components/schemas/CursoDescartado'
         avisos:
           type: string
           enum: [api]
           description: |
             Solo viene si la petición traía `avisos: "api"`. Confirma que la API
-            se encarga del correo y del expediente. En un reintento también
-            viene, aunque no se publique nada: el evento corresponde al envío original.
+            se encarga del correo y del expediente.
+
+    ReclamoExistente:
+      type: object
+      description: El reclamo que ya existía. No trae el estado, que el estudiante consulta en `GET /api/reclamos/mine/{id}`, ni `cursos_descartados`, porque del segundo envío no se evaluó nada.
+      required: [id, creado_en]
+      properties:
+        id:
+          type: string
+          pattern: ^REC-\d{4}-\d{4,}$
+        creado_en:
+          type: string
+          format: date-time
+        avisos:
+          type: string
+          enum: [api]
+          description: |
+            Solo viene si la petición traía `avisos: "api"`. No se publica nada:
+            el evento corresponde al envío original.
+
+    CursoDescartado:
+      type: object
+      required: [lista, codigo, seccion, motivo]
+      properties:
+        lista:
+          type: string
+          enum: [retirar, matricular]
+          description: De qué lista del pedido venía el curso.
+        codigo:
+          type: string
+        seccion:
+          type: string
+        motivo:
+          type: string
+          enum: [NO_EXISTE_EN_CATALOGO, SECCION_NO_PERTENECE, EXCEDE_LIMITE]
+          description: |
+            - `NO_EXISTE_EN_CATALOGO`: el código no está en el catálogo de la FIIS.
+            - `SECCION_NO_PERTENECE`: el curso existe, pero no tiene esa sección.
+            - `EXCEDE_LIMITE`: la lista ya tenía 30 cursos.
+
+    ErrorDeReclamo:
+      type: object
+      description: Error de `POST /api/reclamos`. El cliente decide qué hacer con `codigo`, que no cambia entre versiones menores; `error` es el mensaje para el estudiante y puede cambiar.
+      required: [codigo, error]
+      properties:
+        codigo:
+          type: string
+          enum:
+            - CUERPO_INVALIDO
+            - DATOS_INCOMPLETOS
+            - DESCRIPCION_DEMASIADO_LARGA
+            - CODIGO_UNI_INVALIDO
+            - DEMASIADAS_PRUEBAS
+            - SESION_REQUERIDA
+            - SESION_INVALIDA
+            - PRUEBA_AJENA
+            - DOCUMENTO_AJENO
+            - CICLO_CERRADO
+            - VENTANA_CERRADA
+            - SISTEMA_EN_PAUSA
+            - SIN_NUMERO_DISPONIBLE
+            - ERROR_INTERNO
+        error:
+          type: string
 
     Reclamo:
       type: object

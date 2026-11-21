@@ -1,9 +1,11 @@
 // Prueba de punta a punta del registro de reclamos con el bus conectado (#51).
 //
-// Levanta el server.js real contra servicios falsos en localhost (PostgREST y Brevo)
-// y comprueba que un registro produce un solo correo de confirmación, que no se
-// envía nada a M2, que un reintento no repite el evento, que una caída del correo
-// no afecta al reclamo, y que los rechazos responden 400, 401, 403 y 503.
+// Levanta el server.js real contra servicios falsos en localhost (PostgREST, Brevo
+// y M2) y comprueba que cada reclamo produce un solo correo de confirmación y un
+// solo expediente, venga del front nuevo (que manda `avisos: "api"` y deja los envíos
+// a la API) o del anterior (que los hace él mismo); que un reintento no repite los
+// envíos; que la caída del correo o de M2 no afecta al reclamo ni al otro envío; y que
+// los rechazos responden 400, 401, 403 y 503.
 //
 // Uso, desde sistema-reclamos/:
 //   node pruebas/probar-registro-con-bus.mjs
@@ -38,8 +40,8 @@ fs.copyFileSync(path.join(RAIZ, 'src', 'data', 'cursos_secciones.json'), path.jo
 
 // ── Servicios falsos ──
 const estado = {
-  reclamos: [], secuencia: 41, correos: [], llamadasAM2: 0, actividad: [],
-  correoCaido: false, tefiDurmiendo: false, noSimuladas: [],
+  reclamos: [], secuencia: 41, correos: [], expedientes: [], actividad: [],
+  correoCaido: false, m2Caido: false, tefiDurmiendo: false, noSimuladas: [],
 };
 const leerCuerpo = (req) => new Promise((listo) => {
   let datos = '';
@@ -87,9 +89,9 @@ const falso = http.createServer(async (req, res) => {
     estado.correos.push({ para: correo.to[0].email, asunto: correo.subject });
     return responder(res, 201, { messageId: 'falso' });
   }
-  // M2 no se usa: si alguna vez el servidor lo llamara, la prueba lo detecta.
-  if (ruta.includes('/m2')) {
-    estado.llamadasAM2++;
+  if (ruta === '/m2') {
+    if (estado.m2Caido) return responder(res, 500, { error: 'M2 caído a propósito' });
+    estado.expedientes.push(JSON.parse(cuerpo));
     return responder(res, 201, {});
   }
   estado.noSimuladas.push(`${req.method} ${req.url}`);
@@ -116,6 +118,7 @@ const entorno = {
   FROM_EMAIL: 'tefiis@prueba.test',
   BREVO_API_KEY: 'falsa',
   BREVO_API_URL: `${urlFalso}/brevo`,
+  M2_URL: `${urlFalso}/m2`,
   EMAIL_TIMEOUT_MS: 'abc', // a propósito: el servidor tiene que avisar y usar 3000
 };
 const registro = [];
@@ -137,15 +140,17 @@ const ahora = Math.floor(Date.now() / 1000);
 const ESTUDIANTE = 'estudiante-001@prueba.test';
 const sinFirma = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ email: ESTUDIANTE, iat: ahora, exp: ahora + 3600 })}`;
 const token = `${sinFirma}.${crypto.createHmac('sha256', SECRETO).update(sinFirma).digest('base64url')}`;
+const conSesion = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
 const catalogo = JSON.parse(fs.readFileSync(path.join(RAIZ, 'src', 'data', 'cursos_secciones.json'), 'utf8'));
 const cursoReal = { codigo: catalogo[0].codigo, seccion: catalogo[0].secciones[0] };
 
-async function registrar(cuerpo, { conSesion = true } = {}) {
+// El front nuevo manda `avisos: "api"`; el anterior no.
+async function registrar(cuerpo, { sesion = true, frontNuevo = true } = {}) {
   const r = await fetch(`${base}/api/reclamos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(conSesion ? { Authorization: `Bearer ${token}` } : {}) },
-    body: JSON.stringify(cuerpo),
+    headers: sesion ? conSesion : { 'Content-Type': 'application/json' },
+    body: JSON.stringify(frontNuevo ? { ...cuerpo, avisos: 'api' } : cuerpo),
   });
   return { status: r.status, cuerpo: await r.json() };
 }
@@ -162,59 +167,85 @@ const resultados = [];
 const comprobar = (caso, esperado, obtenido, ok) => resultados.push({ caso, esperado, obtenido, ok: Boolean(ok) });
 // Los consumidores corren después de responder: se les da un momento.
 const dejarTerminarConsumidores = () => espera(800);
+const contar = () => `correos=${estado.correos.length}, expedientes=${estado.expedientes.length}`;
+const errorRegistrado = (consumidor, id) => registro.some((l) => l.includes(`[EVENTOS] ${consumidor} falló en ${id}`));
 
 try {
   if (!arriba) throw new Error('server.js no arrancó');
 
-  let r = await registrar(reclamo('sin sesión'), { conSesion: false });
+  // ── Rechazos ──
+  let r = await registrar(reclamo('sin sesión'), { sesion: false });
   comprobar('Sin sesión', '401', r.status, r.status === 401);
 
   r = await registrar({ descripcion: 'sin categoría' });
-  comprobar('Sin categoría', '400', `${r.status} «${r.cuerpo.error}»`, r.status === 400);
+  comprobar('Sin categoría', '400, sin avisos en la respuesta', `${r.status} ${JSON.stringify(r.cuerpo)}`,
+    r.status === 400 && !('avisos' in r.cuerpo));
 
   r = await registrar({ ...reclamo('prueba ajena'), evidencias: [{ ref: 'otra-persona_uni_pe/evidencias/x.pdf' }] });
   comprobar('Prueba de otro estudiante', '403', `${r.status} «${r.cuerpo.error}»`, r.status === 403);
 
+  // ── Front nuevo: la API envía el correo y el expediente ──
   const TEXTO = 'Se me cruzan dos cursos en el horario.';
   r = await registrar(reclamo(TEXTO));
   await dejarTerminarConsumidores();
   const id = r.cuerpo.id;
   const guardado = estado.reclamos.find((x) => x.id === id);
-  comprobar('Registro válido', '200 con número de caso', `${r.status} ${JSON.stringify(r.cuerpo)}`,
-    r.status === 200 && /^REC-\d{4}-\d{4}$/.test(id));
-  comprobar('  correos de confirmación', '1', estado.correos.length, estado.correos.length === 1);
-  comprobar('  asunto y destinatario', `Reclamo registrado: ${id} — TEFIIS → ${ESTUDIANTE}`,
-    `${estado.correos[0]?.asunto} → ${estado.correos[0]?.para}`,
-    estado.correos[0]?.asunto === `Reclamo registrado: ${id} — TEFIIS` && estado.correos[0]?.para === ESTUDIANTE);
-  comprobar('  llamadas a M2', '0', estado.llamadasAM2, estado.llamadasAM2 === 0);
+  comprobar('Front nuevo: registro', '200 con número y avisos: "api"', `${r.status} ${JSON.stringify(r.cuerpo)}`,
+    r.status === 200 && /^REC-\d{4}-\d{4}$/.test(id) && r.cuerpo.avisos === 'api');
+  comprobar('  un correo de la API', `Reclamo registrado: ${id} — TEFIIS → ${ESTUDIANTE}`,
+    `${contar()}; ${estado.correos[0]?.asunto} → ${estado.correos[0]?.para}`,
+    estado.correos.length === 1 && estado.correos[0].asunto === `Reclamo registrado: ${id} — TEFIIS`
+      && estado.correos[0].para === ESTUDIANTE);
+  comprobar('  un expediente en M2, con la descripción', `1, «${TEXTO}»`,
+    `${estado.expedientes.length}, «${estado.expedientes[0]?.descripcion}»`,
+    estado.expedientes.length === 1 && estado.expedientes[0].id === id && estado.expedientes[0].descripcion === TEXTO);
   comprobar('  cursos fuera del catálogo descartados', '1 curso', guardado?.datos_estudiante?.cursosRetirar?.length,
     guardado?.datos_estudiante?.cursosRetirar?.length === 1);
+  comprobar('  el campo avisos no se guarda', 'no está en la fila', 'avisos' in (guardado ?? {}) ? 'está' : 'no está',
+    guardado && !('avisos' in guardado));
   comprobar('  actividad registrada', 'reclamo_creado', estado.actividad.join(', '), estado.actividad.includes('reclamo_creado'));
 
   r = await registrar(reclamo(TEXTO));
   await dejarTerminarConsumidores();
-  comprobar('Reintento del mismo texto', 'duplicado y sin correo nuevo',
-    `${r.status} ${JSON.stringify(r.cuerpo)}; correos=${estado.correos.length}`,
-    r.cuerpo.duplicado === true && r.cuerpo.id === id && estado.correos.length === 1);
+  comprobar('Front nuevo: reintento del mismo texto', 'duplicado, sin envíos nuevos',
+    `${r.status} ${JSON.stringify(r.cuerpo)}; ${contar()}`,
+    r.cuerpo.duplicado === true && r.cuerpo.id === id && r.cuerpo.avisos === 'api'
+      && estado.correos.length === 1 && estado.expedientes.length === 1);
 
-  // La ruta anterior sigue mientras la aplicación de estudiantes la llame (#46).
+  // ── Front anterior: la API no envía nada; el front pide el correo a /confirmar ──
+  r = await registrar(reclamo('Reclamo desde la página anterior.'), { frontNuevo: false });
+  await dejarTerminarConsumidores();
+  const idAnterior = r.cuerpo.id;
+  comprobar('Front anterior: registro', '200 sin avisos, y la API no envía nada',
+    `${r.status} ${JSON.stringify(r.cuerpo)}; ${contar()}`,
+    r.status === 200 && !('avisos' in r.cuerpo) && estado.correos.length === 1 && estado.expedientes.length === 1);
   const rc = await fetch(`${base}/api/reclamos/confirmar`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ caseId: id }),
+    method: 'POST', headers: conSesion, body: JSON.stringify({ caseId: idAnterior }),
   });
-  comprobar('Ruta anterior /api/reclamos/confirmar', '200 y el mismo correo', `${rc.status}; ${estado.correos[1]?.asunto}`,
-    rc.status === 200 && estado.correos.length === 2 && estado.correos[1].asunto === estado.correos[0].asunto);
-  estado.correos.pop();
+  comprobar('  su correo sale por /api/reclamos/confirmar', `un solo correo de ${idAnterior}`,
+    `${rc.status}; ${estado.correos.filter((c) => c.asunto.includes(idAnterior)).length} correo(s)`,
+    rc.status === 200 && estado.correos.filter((c) => c.asunto.includes(idAnterior)).length === 1);
 
+  // ── Caídas: cada consumidor falla por su cuenta ──
   estado.correoCaido = true;
+  const antes = { correos: estado.correos.length, expedientes: estado.expedientes.length };
   r = await registrar(reclamo('Otro reclamo, con el correo caído.'));
   await dejarTerminarConsumidores();
-  const fallaRegistrada = registro.some((l) => l.includes(`[EVENTOS] correo falló en ${r.cuerpo.id}`));
-  comprobar('Correo caído', '200 igual, sin correo y con el error en el registro',
-    `${r.status} ${r.cuerpo.id}; correos=${estado.correos.length}; error registrado=${fallaRegistrada}`,
-    r.status === 200 && estado.correos.length === 1 && fallaRegistrada);
+  comprobar('Correo caído', '200, sin correo, con el expediente y el error registrado',
+    `${r.status} ${r.cuerpo.id}; ${contar()}; error registrado=${errorRegistrado('correo', r.cuerpo.id)}`,
+    r.status === 200 && estado.correos.length === antes.correos && estado.expedientes.length === antes.expedientes + 1
+      && errorRegistrado('correo', r.cuerpo.id));
   estado.correoCaido = false;
+
+  estado.m2Caido = true;
+  const antes2 = { correos: estado.correos.length, expedientes: estado.expedientes.length };
+  r = await registrar(reclamo('Otro reclamo, con M2 caído.'));
+  await dejarTerminarConsumidores();
+  comprobar('M2 caído', '200, con el correo, sin expediente y el error registrado',
+    `${r.status} ${r.cuerpo.id}; ${contar()}; error registrado=${errorRegistrado('m2', r.cuerpo.id)}`,
+    r.status === 200 && estado.correos.length === antes2.correos + 1 && estado.expedientes.length === antes2.expedientes
+      && errorRegistrado('m2', r.cuerpo.id));
+  estado.m2Caido = false;
 
   estado.tefiDurmiendo = true;
   await espera(10_500); // los interruptores se leen con una caché de 10 s
@@ -233,6 +264,6 @@ console.log('=== Resultados ===');
 for (const x of resultados) console.log(`${x.ok ? 'OK ' : 'MAL'} ${x.caso}: esperado ${x.esperado} | obtenido ${x.obtenido}`);
 console.log(`\n${resultados.filter((x) => x.ok).length} de ${resultados.length} correctos.`);
 console.log('\n=== Avisos y errores del servidor ===');
-for (const linea of registro.filter((l) => /\[EVENTOS\]|EMAIL_TIMEOUT_MS|\[EMAIL\]/.test(l))) console.log(linea);
+for (const linea of registro.filter((l) => /\[EVENTOS\]|EMAIL_TIMEOUT_MS|M2_URL|\[EMAIL\]/.test(l))) console.log(linea);
 if (estado.noSimuladas.length) console.log('\nRutas que el falso no simula:', estado.noSimuladas);
 process.exit(resultados.every((x) => x.ok) ? 0 : 1);

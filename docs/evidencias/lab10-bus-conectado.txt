@@ -1,40 +1,51 @@
-# Evidencia: bus de ReclamoRegistrado y correo con timeout conectados en server.js (#51)
+# Evidencia: bus de ReclamoRegistrado, correo con timeout y M2 conectados en server.js, con la transición entre el front anterior y el nuevo (#51)
 # Rama feat/51-conectar-bus. Comandos, desde sistema-reclamos/: npm test; npm run arch:check; node pruebas/validar-openapi.cjs; node pruebas/probar-registro-con-bus.mjs
-# El consumidor de M2 no se suscribe: nada en TEFIIS lee de M2 y al 20/11/2026 no responde.
 
 $ npm test
-# tests 58
+# tests 65
 # suites 0
-# pass 58
+# pass 65
 # fail 0
 
+$ node --test backend/tests/transicionAvisos.test.js
+ok 1 - front anterior (sin avisos): registra el reclamo, no publica el evento y no confirma
+ok 2 - front nuevo (avisos: "api"): publica un solo evento y lo confirma en la respuesta
+ok 3 - el campo avisos no se guarda en el reclamo
+ok 4 - reintento del front nuevo: devuelve el mismo reclamo, lo confirma y no publica otra vez
+ok 5 - un error no confirma avisos, aunque el front los haya pedido
+ok 6 - otro valor en avisos se trata como el front anterior
+ok 7 - sin transición (cuando ya no quede el front anterior): todo publica y solo se confirma si se pidió
+
 $ npm run arch:check
-✔ no dependency violations found (49 modules, 80 dependencies cruised)
+✔ no dependency violations found (50 modules, 88 dependencies cruised)
 
 $ node pruebas/validar-openapi.cjs
 operaciones: 19 (en server.js: 19) | $ref: 125 | ejemplos validados: 192 | mensajes de error comprobados: 34
 Sin problemas.
 
 $ node pruebas/probar-registro-con-bus.mjs
-# server.js real contra PostgREST y Brevo falsos en localhost, sin .env (no toca servicios reales).
+# server.js real contra PostgREST, Brevo y M2 falsos en localhost, sin .env (no toca servicios reales).
 === Resultados ===
 OK  Sin sesión: esperado 401 | obtenido 401
-OK  Sin categoría: esperado 400 | obtenido 400 «Categoría y descripción son requeridas.»
+OK  Sin categoría: esperado 400, sin avisos en la respuesta | obtenido 400 {"error":"Categoría y descripción son requeridas."}
 OK  Prueba de otro estudiante: esperado 403 | obtenido 403 «Alguno de los archivos adjuntos no te pertenece.»
-OK  Registro válido: esperado 200 con número de caso | obtenido 200 {"success":true,"id":"REC-2026-0042"}
-OK    correos de confirmación: esperado 1 | obtenido 1
-OK    asunto y destinatario: esperado Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test | obtenido Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test
-OK    llamadas a M2: esperado 0 | obtenido 0
+OK  Front nuevo: registro: esperado 200 con número y avisos: "api" | obtenido 200 {"success":true,"id":"REC-2026-0042","avisos":"api"}
+OK    un correo de la API: esperado Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test | obtenido correos=1, expedientes=1; Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test
+OK    un expediente en M2, con la descripción: esperado 1, «Se me cruzan dos cursos en el horario.» | obtenido 1, «Se me cruzan dos cursos en el horario.»
 OK    cursos fuera del catálogo descartados: esperado 1 curso | obtenido 1
+OK    el campo avisos no se guarda: esperado no está en la fila | obtenido no está
 OK    actividad registrada: esperado reclamo_creado | obtenido reclamo_creado
-OK  Reintento del mismo texto: esperado duplicado y sin correo nuevo | obtenido 200 {"success":true,"id":"REC-2026-0042","duplicado":true}; correos=1
-OK  Ruta anterior /api/reclamos/confirmar: esperado 200 y el mismo correo | obtenido 200; Reclamo registrado: REC-2026-0042 — TEFIIS
-OK  Correo caído: esperado 200 igual, sin correo y con el error en el registro | obtenido 200 REC-2026-0043; correos=1; error registrado=true
+OK  Front nuevo: reintento del mismo texto: esperado duplicado, sin envíos nuevos | obtenido 200 {"success":true,"id":"REC-2026-0042","duplicado":true,"avisos":"api"}; correos=1, expedientes=1
+OK  Front anterior: registro: esperado 200 sin avisos, y la API no envía nada | obtenido 200 {"success":true,"id":"REC-2026-0043"}; correos=1, expedientes=1
+OK    su correo sale por /api/reclamos/confirmar: esperado un solo correo de REC-2026-0043 | obtenido 200; 1 correo(s)
+OK  Correo caído: esperado 200, sin correo, con el expediente y el error registrado | obtenido 200 REC-2026-0044; correos=2, expedientes=2; error registrado=true
+OK  M2 caído: esperado 200, con el correo, sin expediente y el error registrado | obtenido 200 REC-2026-0045; correos=3, expedientes=2; error registrado=true
 OK  Tefi durmiendo: esperado 503 | obtenido 503 «Tefi está durmiendo y no se pueden enviar reclamos por ahora. Vuelve a intentarlo cuando despierte.»
 
-13 de 13 correctos.
+15 de 15 correctos.
 
 === Avisos y errores del servidor ===
 EMAIL_TIMEOUT_MS="abc" no es un número válido; se usan 3000 ms.
 [EMAIL] Brevo falló, probando el siguiente proveedor: Brevo caído a propósito
-[EVENTOS] correo falló en REC-2026-0043:ReclamoRegistrado: Brevo caído a propósito
+[EVENTOS] correo falló en REC-2026-0044:ReclamoRegistrado: Brevo caído a propósito
+[EVENTOS] m2 falló en REC-2026-0045:ReclamoRegistrado: M2 respondió 500 al registrar REC-2026-0045

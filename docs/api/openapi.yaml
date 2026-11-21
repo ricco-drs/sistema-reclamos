@@ -14,8 +14,9 @@ info:
     comportamiento actual del código; donde el código hace algo discutible, la
     operación lo dice en vez de esconderlo. `POST /api/reclamos` describe la
     versión acordada con el equipo consumidor ([acta](acta-ambiguedades.md)),
-    que todavía se está implementando (#61). Los ejemplos marcados con
-    `x-pendiente` tienen mensajes que el código aún no devuelve; el validador
+    y que implementó el #61. Los ejemplos marcados con
+    `x-pendiente` tienen mensajes que el código aún no devuelve (hoy no hay
+    ninguno); el validador
     (`sistema-reclamos/pruebas/validar-openapi.cjs`) los cuenta aparte, y la
     marca se quita cuando su issue entra.
 
@@ -84,9 +85,10 @@ paths:
         se repite. El correo sale siempre del token, nunca del cuerpo.
 
         Es la versión acordada con el equipo consumidor
-        ([acta](acta-ambiguedades.md)). El 400 del cuerpo inválido ya funciona
-        (#40); el resto lo implementa el issue #61. Hasta entonces, la API responde 200
-        `{ success, id, duplicado? }` y sus errores no traen `codigo`.
+        ([acta](acta-ambiguedades.md)). La implementaron el #40 (el 400 del cuerpo
+        inválido) y el #62 (todo lo demás). La respuesta trae además `success` y
+        `duplicado`, que no son parte del contrato: se mantienen porque el front
+        anterior los lee.
 
         **Orden de las comprobaciones.** Se responde el primer error que aparezca:
         1. Un cuerpo que no es JSON válido o que pasa de 1 MB (400
@@ -226,12 +228,10 @@ paths:
                     codigo: DATOS_INCOMPLETOS
                     error: Categoría y descripción son requeridas.
                 descripcionDemasiadoLarga:
-                  x-pendiente: '#61'
                   value:
                     codigo: DESCRIPCION_DEMASIADO_LARGA
                     error: La descripción no puede pasar de 5000 caracteres.
                 codigoUniInvalido:
-                  x-pendiente: '#61'
                   value:
                     codigo: CODIGO_UNI_INVALIDO
                     error: El código de estudiante no tiene el formato de la UNI (por ejemplo 20240001A).
@@ -266,7 +266,6 @@ paths:
                     codigo: PRUEBA_AJENA
                     error: Alguno de los archivos adjuntos no te pertenece.
                 documentoAjeno:
-                  x-pendiente: '#61'
                   value:
                     codigo: DOCUMENTO_AJENO
                     error: Alguno de los documentos indicados no te pertenece.

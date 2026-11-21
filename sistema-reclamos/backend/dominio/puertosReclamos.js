@@ -5,8 +5,8 @@
 
 /**
  * @typedef {Object} RepositorioReclamos
- * @property {(email: string, descripcion: string, desdeIso: string) => Promise<string|null>} buscarDuplicado
- *   Id de un reclamo reciente del mismo correo con la misma descripción, o null.
+ * @property {(email: string, descripcion: string, desdeIso: string) => Promise<{id: string, creadoEn: string}|null>} buscarDuplicado
+ *   Id y fecha de creación de un reclamo reciente del mismo correo con la misma descripción, o null.
  * @property {() => Promise<number|null>} siguienteNumero
  *   Siguiente valor de la secuencia, o null si la secuencia no responde.
  * @property {(anio: number) => Promise<string|null>} ultimoIdDelAnio
@@ -18,8 +18,9 @@
 
 /**
  * @typedef {Object} PoliticaDeRecepcion
- * @property {(email: string) => Promise<string|null>} motivoDeRechazo
- *   Mensaje si hoy no se reciben reclamos de ese correo (Tefi durmiendo, ciclo cerrado, ventana cerrada), o null.
+ * @property {(email: string) => Promise<{codigo: 'SISTEMA_EN_PAUSA'|'CICLO_CERRADO'|'VENTANA_CERRADA', mensaje: string}|null>} motivoDeRechazo
+ *   El rechazo, con su código estable y su mensaje, si hoy no se reciben reclamos de ese correo
+ *   (Tefi durmiendo, ciclo cerrado, ventana cerrada), o null.
  */
 
 /**

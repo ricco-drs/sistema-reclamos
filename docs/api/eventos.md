@@ -26,20 +26,35 @@ infraestructura/busEnProceso.js
 
 ## Endpoint
 
-`POST /api/reclamos` conserva su ruta, su cuerpo y su respuesta. Solo se movió su lógica fuera de `server.js`.
+`POST /api/reclamos` conserva su ruta y su cuerpo. Desde el contrato acordado con el equipo consumidor (#61), la respuesta usa códigos HTTP precisos y todo error trae un `codigo` estable además del mensaje: `{ error, codigo }`.
 
-| Código | Cuándo |
-|---|---|
-| 200 | Reclamo registrado: `{ success: true, id }`. Si es un reintento del mismo texto en 10 minutos: `{ success: true, id, duplicado: true }`. |
-| 400 | Falta `categoria` o `descripcion`, o hay más de una prueba. |
-| 401 | Sin sesión o sesión vencida. Lo responde `requireStudentAuth`, antes del manejador. |
-| 403 | Una prueba (`evidencias`) no pertenece al estudiante. |
-| 500 | Falla real de la base al insertar, o una excepción. |
-| 503 | Tefi durmiendo, ciclo cerrado, ventana cerrada, o 10 choques de id seguidos. |
+| Código | `codigo` | Cuándo |
+|---|---|---|
+| 201 | | Reclamo creado: `{ success: true, id, estado: "PENDIENTE", creado_en, cursos_descartados }`, con la cabecera `Location: /api/reclamos/mine/{id}`. `creado_en` es la fecha que se guarda en la fila. |
+| 200 | | Reenvío del mismo texto en 10 minutos: `{ success: true, id, duplicado: true, creado_en }`, con `Location`. `creado_en` es el del reclamo que ya existía. No guarda nada del segundo envío, así que no trae `estado` ni `cursos_descartados`. |
+| 400 | `DATOS_INCOMPLETOS` | Falta `categoria` o `descripcion`. |
+| 400 | `DESCRIPCION_DEMASIADO_LARGA` | La descripción pasa de 5 000 caracteres. |
+| 400 | `CODIGO_UNI_INVALIDO` | `codigo_estudiante` no cumple `^\d{7,8}[A-Z]$` (se acepta en minúsculas y con espacios en los bordes; se guarda normalizado). |
+| 400 | `DEMASIADAS_PRUEBAS` | Hay más de una evidencia. |
+| 401 | `SESION_REQUERIDA` | Sin token. Lo responde `requireStudentAuth`, antes del manejador. |
+| 401 | `SESION_INVALIDA` | Token vencido o falsificado. Igual que el anterior: el `codigo` lo agrega `requireStudentAuth`, y vale para todas las rutas del estudiante. |
+| 403 | `PRUEBA_AJENA` | Una evidencia no pertenece al estudiante. |
+| 403 | `DOCUMENTO_AJENO` | Una referencia de `documentos` (ficha, avance, boleta) no está en la carpeta del estudiante. |
+| 409 | `CICLO_CERRADO` | El proceso de matrícula terminó. |
+| 409 | `VENTANA_CERRADA` | La ventana de reclamos está cerrada. |
+| 500 | `ERROR_INTERNO` | Falla real de la base al insertar, o una excepción. |
+| 503 | `SISTEMA_EN_PAUSA` | Tefi está durmiendo. Sin `Retry-After`: no se sabe cuándo despierta. |
+| 503 | `SIN_NUMERO_DISPONIBLE` | 10 choques de id seguidos. Con `Retry-After: 5`. |
 
-Dos detalles que el contrato debe reflejar tal como son:
+(`CUERPO_INVALIDO`, para un JSON malformado, lo agrega el #40.)
 
-- **Cursos.** `cursos_retirar` y `cursos_matricular` no devuelven 400 al pasarse de 30: se cortan en 30 y se descartan sin avisar los cursos o secciones que no están en el catálogo. El nombre del curso sale del catálogo, no del cliente.
+**Orden de las comprobaciones:** sesión (401), pausa (503), ciclo y ventana (409) y después los campos, en este orden: categoría y descripción, largo de la descripción, código UNI, número de pruebas, prueba ajena y documento ajeno. Se responde el primer problema.
+
+Detalles que el contrato debe reflejar tal como son:
+
+- **Cursos.** `cursos_retirar` y `cursos_matricular` no devuelven 400 al pasarse de 30: se cortan en 30. Lo descartado se informa en `cursos_descartados` del 201, con `lista` (`retirar` o `matricular`, los nombres acordados con el equipo consumidor), `codigo`, `seccion` y `motivo`: `NO_EXISTE_EN_CATALOGO`, `SECCION_NO_PERTENECE` o `EXCEDE_LIMITE`. El nombre del curso sale del catálogo, no del cliente.
+- **Reenvío.** Se reconoce solo por la descripción (misma descripción del mismo estudiante en los últimos 10 minutos), porque un estudiante puede mandar dos reclamos distintos seguidos.
+- **Evidencias dentro de `documentos`.** Una clave `evidencias` que el cliente ponga dentro de `documentos` se ignora: solo valen las que llegan por el campo `evidencias`, que se revalidan.
 - **Numeración.** El número `REC-AAAA-NNNN` sale de la secuencia de PostgreSQL (ADR-0003). Si la secuencia no responde, se numera con el método anterior (último id del año más uno).
 
 ## El evento
@@ -107,7 +122,7 @@ Hay dos diferencias con lo que manda hoy la aplicación:
 | `ClienteM2` | `clienteM2.js` → `crearClienteM2Http` | `clienteM2.js` → `crearClienteM2Memoria` |
 | `PoliticaDeRecepcion` | `politicaDeRecepcion.js` (envuelve las tres comprobaciones de `server.js`) | una función que devuelve `null` o un mensaje |
 
-Los puertos están descritos en `backend/dominio/puertosReclamos.js`. El dominio no conoce HTTP: sus errores llevan un `motivo`, y la traducción a 400, 403 o 503 vive en `presentacion/registrarReclamoHandler.js`.
+Los puertos están descritos en `backend/dominio/puertosReclamos.js`. El dominio no conoce HTTP: sus errores llevan un `motivo`, y la traducción a 400, 403, 409 o 503 (con su `codigo`) vive en `presentacion/registrarReclamoHandler.js`.
 
 ## Conexión al arranque compartido (`server.js`)
 
@@ -161,7 +176,7 @@ En los cuatro casos sale un correo y un expediente por reclamo, sin importar qu�
 
 - el registro y el evento publicado, sin descripción;
 - reintentos, cursos fuera de catálogo, choques de id y secuencia caída;
-- los errores 400, 403, 500 y 503, y que un fallo al publicar no deshace el reclamo;
+- los errores 400, 403, 409, 500 y 503 con su `codigo`, y que un fallo al publicar no deshace el reclamo;
 - el bus: aislamiento entre consumidores y que `publicar` no espera;
 - el flujo completo en memoria: un POST produce el correo y el expediente de M2;
 - los adaptadores de PostgREST y de M2.

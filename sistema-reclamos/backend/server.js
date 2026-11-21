@@ -139,13 +139,13 @@ if (!process.env.JWT_SECRET) {
 function requireStudentAuth(req, res, next) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token) return res.status(401).json({ error: 'Sesión requerida. Verifica tu correo primero.' });
+  if (!token) return res.status(401).json({ error: 'Sesión requerida. Verifica tu correo primero.', codigo: 'SESION_REQUERIDA' });
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.studentEmail = payload.email;
     next();
   } catch {
-    return res.status(401).json({ error: 'Sesión inválida o expirada. Verifica tu correo de nuevo.' });
+    return res.status(401).json({ error: 'Sesión inválida o expirada. Verifica tu correo de nuevo.', codigo: 'SESION_INVALIDA' });
   }
 }
 
@@ -530,6 +530,9 @@ const dependenciasDelRegistro = {
   politica: crearPoliticaDeRecepcion({ tefiDurmiendoActivo, despedidaActivaPara, puedeEnviarReclamo }),
   catalogoCursos: CATALOGO_CURSOS,
   esEvidenciaPropia,
+  // Las referencias de `documentos` (ficha, avance, boleta) tienen que estar en la carpeta del propio estudiante,
+  // la misma comprobación que hace /api/docs/signed-url.
+  esDocumentoPropio: (ref, email) => rutaDentroDe(ref, `${sanitizeEmail(email)}/`),
   logActividad,
   registrarError: (mensaje, err) => console.error(mensaje, err?.message ?? ''),
 };

@@ -11,6 +11,7 @@ import { crearPublicadorMemoria } from '../infraestructura/publicadorMemoria.js'
 
 const EMAIL = 'ana.perez@uni.pe';
 const AHORA = new Date('2026-11-21T15:04:05.000Z');
+const CREADO_EN = AHORA.toISOString();
 
 // Lo mismo que arma server.js: un repositorio y dos casos de uso que solo cambian en el publicador.
 function armar({ conTransicion = true } = {}) {
@@ -32,7 +33,12 @@ function armar({ conTransicion = true } = {}) {
 }
 
 function respuesta() {
-  return { codigo: 200, status(n) { this.codigo = n; return this; }, json(body) { this.body = body; return this; } };
+  return {
+    codigo: 200,
+    set() { return this; },
+    status(n) { this.codigo = n; return this; },
+    json(body) { this.body = body; return this; },
+  };
 }
 
 const cuerpo = (extra = {}) => ({ categoria: 'Cruce de horarios', descripcion: 'Me cruzan dos cursos', ...extra });
@@ -46,7 +52,8 @@ async function enviar(handler, body) {
 test('front anterior (sin avisos): registra el reclamo, no publica el evento y no confirma', async () => {
   const { reclamos, publicador, handler } = armar();
   const res = await enviar(handler, cuerpo());
-  assert.deepEqual(res.body, { success: true, id: 'REC-2026-0001' });
+  assert.equal(res.codigo, 201);
+  assert.deepEqual(res.body, { success: true, id: 'REC-2026-0001', estado: 'PENDIENTE', creado_en: CREADO_EN, cursos_descartados: [] });
   assert.equal(reclamos.filas.length, 1);
   assert.equal(publicador.publicados.length, 0);
 });
@@ -54,7 +61,8 @@ test('front anterior (sin avisos): registra el reclamo, no publica el evento y n
 test('front nuevo (avisos: "api"): publica un solo evento y lo confirma en la respuesta', async () => {
   const { reclamos, publicador, handler } = armar();
   const res = await enviar(handler, cuerpo({ avisos: AVISOS_POR_API }));
-  assert.deepEqual(res.body, { success: true, id: 'REC-2026-0001', avisos: 'api' });
+  assert.equal(res.codigo, 201);
+  assert.deepEqual(res.body, { success: true, id: 'REC-2026-0001', estado: 'PENDIENTE', creado_en: CREADO_EN, cursos_descartados: [], avisos: 'api' });
   assert.equal(reclamos.filas.length, 1);
   assert.equal(publicador.publicados.length, 1);
   assert.equal(publicador.publicados[0].reclamo.id, 'REC-2026-0001');
@@ -70,7 +78,8 @@ test('reintento del front nuevo: devuelve el mismo reclamo, lo confirma y no pub
   const { publicador, handler } = armar();
   await enviar(handler, cuerpo({ avisos: AVISOS_POR_API }));
   const res = await enviar(handler, cuerpo({ avisos: AVISOS_POR_API }));
-  assert.deepEqual(res.body, { success: true, id: 'REC-2026-0001', duplicado: true, avisos: 'api' });
+  assert.equal(res.codigo, 200);
+  assert.deepEqual(res.body, { success: true, id: 'REC-2026-0001', duplicado: true, creado_en: CREADO_EN, avisos: 'api' });
   assert.equal(publicador.publicados.length, 1);
 });
 
@@ -78,22 +87,22 @@ test('un error no confirma avisos, aunque el front los haya pedido', async () =>
   const { publicador, handler } = armar();
   const res = await enviar(handler, { descripcion: 'sin categoría', avisos: AVISOS_POR_API });
   assert.equal(res.codigo, 400);
-  assert.deepEqual(res.body, { error: 'Categoría y descripción son requeridas.' });
+  assert.deepEqual(res.body, { error: 'Categoría y descripción son requeridas.', codigo: 'DATOS_INCOMPLETOS' });
   assert.equal(publicador.publicados.length, 0);
 });
 
 test('otro valor en avisos se trata como el front anterior', async () => {
   const { publicador, handler } = armar();
   const res = await enviar(handler, cuerpo({ avisos: 'front' }));
-  assert.deepEqual(res.body, { success: true, id: 'REC-2026-0001' });
+  assert.deepEqual(res.body, { success: true, id: 'REC-2026-0001', estado: 'PENDIENTE', creado_en: CREADO_EN, cursos_descartados: [] });
   assert.equal(publicador.publicados.length, 0);
 });
 
 test('sin transición (cuando ya no quede el front anterior): todo publica y solo se confirma si se pidió', async () => {
   const { publicador, handler } = armar({ conTransicion: false });
   const a = await enviar(handler, cuerpo({ descripcion: 'primero' }));
-  assert.deepEqual(a.body, { success: true, id: 'REC-2026-0001' });
+  assert.deepEqual(a.body, { success: true, id: 'REC-2026-0001', estado: 'PENDIENTE', creado_en: CREADO_EN, cursos_descartados: [] });
   const b = await enviar(handler, cuerpo({ descripcion: 'segundo', avisos: AVISOS_POR_API }));
-  assert.deepEqual(b.body, { success: true, id: 'REC-2026-0002', avisos: 'api' });
+  assert.deepEqual(b.body, { success: true, id: 'REC-2026-0002', estado: 'PENDIENTE', creado_en: CREADO_EN, cursos_descartados: [], avisos: 'api' });
   assert.equal(publicador.publicados.length, 2);
 });

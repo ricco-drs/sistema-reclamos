@@ -6,10 +6,11 @@
 export function crearRepositorioReclamosSupabase(sbRest) {
   return {
     async buscarDuplicado(email, descripcion, desdeIso) {
-      const r = await sbRest(`/reclamos?select=id,descripcion&email=eq.${encodeURIComponent(email)}&created_at=gte.${encodeURIComponent(desdeIso)}&order=created_at.desc&limit=10`);
+      const r = await sbRest(`/reclamos?select=id,descripcion,created_at&email=eq.${encodeURIComponent(email)}&created_at=gte.${encodeURIComponent(desdeIso)}&order=created_at.desc&limit=10`);
       if (!r.ok) return null;
       const filas = await r.json();
-      return filas.find((f) => String(f.descripcion || '').trim() === descripcion)?.id ?? null;
+      const igual = filas.find((f) => String(f.descripcion || '').trim() === descripcion);
+      return igual ? { id: igual.id, creadoEn: igual.created_at } : null;
     },
 
     async siguienteNumero() {

@@ -64,7 +64,7 @@ const normalizar = (valor) => String(valor || '').trim().toUpperCase();
  *
  * @param {unknown} lista lo que mandó el cliente
  * @param {Map<string, {nombre: string, secciones: string[]}>} catalogo
- * @param {string} nombreLista cómo se llama la lista en la petición (`cursos_retirar` o `cursos_matricular`)
+ * @param {'retirar'|'matricular'} nombreLista de cuál de las dos listas viene el curso, como se informa en `cursos_descartados`
  * @returns {{cursos: {codigo: string, nombre: string, seccion: string}[],
  *   descartados: {lista: string, codigo: string, seccion: string, motivo: string}[]}}
  */

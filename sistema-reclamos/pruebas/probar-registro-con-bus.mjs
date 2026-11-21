@@ -213,7 +213,7 @@ try {
   comprobar('Front nuevo: registro', '201 con número, avisos: "api" y Location', `${r.status} ${JSON.stringify(r.cuerpo)}; ${r.location}`,
     r.status === 201 && /^REC-\d{4}-\d{4}$/.test(id) && r.cuerpo.avisos === 'api' && r.location === `/api/reclamos/mine/${id}`);
   comprobar('  cursos_descartados en el 201', 'XX999 por NO_EXISTE_EN_CATALOGO', JSON.stringify(r.cuerpo.cursos_descartados),
-    JSON.stringify(r.cuerpo.cursos_descartados) === JSON.stringify([{ lista: 'cursos_retirar', codigo: 'XX999', seccion: 'Z', motivo: 'NO_EXISTE_EN_CATALOGO' }]));
+    JSON.stringify(r.cuerpo.cursos_descartados) === JSON.stringify([{ lista: 'retirar', codigo: 'XX999', seccion: 'Z', motivo: 'NO_EXISTE_EN_CATALOGO' }]));
   comprobar('  el documento propio se guarda', docPropio, guardado?.documentos?.ficha, guardado?.documentos?.ficha === docPropio);
   comprobar('  un correo de la API', `Reclamo registrado: ${id} — TEFIIS → ${ESTUDIANTE}`,
     `${contar()}; ${estado.correos[0]?.asunto} → ${estado.correos[0]?.para}`,

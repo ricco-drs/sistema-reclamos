@@ -51,7 +51,7 @@ infraestructura/busEnProceso.js
 
 Detalles que el contrato debe reflejar tal como son:
 
-- **Cursos.** `cursos_retirar` y `cursos_matricular` no devuelven 400 al pasarse de 30: se cortan en 30. Lo descartado se informa en `cursos_descartados` del 201, con `lista` (`cursos_retirar` o `cursos_matricular`), `codigo`, `seccion` y `motivo`: `NO_EXISTE_EN_CATALOGO`, `SECCION_NO_PERTENECE` o `EXCEDE_LIMITE`. El nombre del curso sale del catálogo, no del cliente.
+- **Cursos.** `cursos_retirar` y `cursos_matricular` no devuelven 400 al pasarse de 30: se cortan en 30. Lo descartado se informa en `cursos_descartados` del 201, con `lista` (`retirar` o `matricular`, los nombres acordados con el equipo consumidor), `codigo`, `seccion` y `motivo`: `NO_EXISTE_EN_CATALOGO`, `SECCION_NO_PERTENECE` o `EXCEDE_LIMITE`. El nombre del curso sale del catálogo, no del cliente.
 - **Reenvío.** Se reconoce solo por la descripción (misma descripción del mismo estudiante en los últimos 10 minutos), porque un estudiante puede mandar dos reclamos distintos seguidos.
 - **Evidencias dentro de `documentos`.** Una clave `evidencias` que el cliente ponga dentro de `documentos` se ignora: solo valen las que llegan por el campo `evidencias`, que se revalidan.
 - **Numeración.** El número `REC-AAAA-NNNN` sale de la secuencia de PostgreSQL (ADR-0003). Si la secuencia no responde, se numera con el método anterior (último id del año más uno).

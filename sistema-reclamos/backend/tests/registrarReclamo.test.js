@@ -134,8 +134,8 @@ test('los cursos: corta en 30 y descarta los que no están en el catálogo, y di
   assert.deepEqual(reclamos.filas[0].datos_estudiante.cursosMatricular, [{ codigo: 'SI101', nombre: 'Algoritmos', seccion: 'A' }]);
   // De cursos_retirar pasan del límite los 10 de más y XX999 (11); de cursos_matricular, una sección que no es del curso.
   assert.equal(r.cursosDescartados.length, 12);
-  assert.equal(r.cursosDescartados.filter((d) => d.lista === 'cursos_retirar' && d.motivo === 'EXCEDE_LIMITE').length, 11);
-  assert.deepEqual(r.cursosDescartados.at(-1), { lista: 'cursos_matricular', codigo: 'SW708', seccion: 'Z', motivo: 'SECCION_NO_PERTENECE' });
+  assert.equal(r.cursosDescartados.filter((d) => d.lista === 'retirar' && d.motivo === 'EXCEDE_LIMITE').length, 11);
+  assert.deepEqual(r.cursosDescartados.at(-1), { lista: 'matricular', codigo: 'SW708', seccion: 'Z', motivo: 'SECCION_NO_PERTENECE' });
 });
 
 test('los cursos descartados traen lista, código, sección y motivo', async () => {
@@ -148,9 +148,9 @@ test('los cursos descartados traen lista, código, sección y motivo', async () 
     }),
   });
   assert.deepEqual(r.cursosDescartados, [
-    { lista: 'cursos_retirar', codigo: 'XX999', seccion: 'U', motivo: 'NO_EXISTE_EN_CATALOGO' },
-    { lista: 'cursos_retirar', codigo: 'SW708', seccion: 'Z', motivo: 'SECCION_NO_PERTENECE' },
-    { lista: 'cursos_matricular', codigo: '', seccion: '', motivo: 'NO_EXISTE_EN_CATALOGO' },
+    { lista: 'retirar', codigo: 'XX999', seccion: 'U', motivo: 'NO_EXISTE_EN_CATALOGO' },
+    { lista: 'retirar', codigo: 'SW708', seccion: 'Z', motivo: 'SECCION_NO_PERTENECE' },
+    { lista: 'matricular', codigo: '', seccion: '', motivo: 'NO_EXISTE_EN_CATALOGO' },
   ]);
 });
 
@@ -314,7 +314,7 @@ test('HTTP: 201 con Location y cursos_descartados al crear; 200 con Location y d
   assert.equal(a.cabeceras.Location, '/api/reclamos/mine/REC-2026-0001');
   assert.deepEqual(a.body, {
     success: true, id: 'REC-2026-0001',
-    cursos_descartados: [{ lista: 'cursos_retirar', codigo: 'XX999', seccion: 'U', motivo: 'NO_EXISTE_EN_CATALOGO' }],
+    cursos_descartados: [{ lista: 'retirar', codigo: 'XX999', seccion: 'U', motivo: 'NO_EXISTE_EN_CATALOGO' }],
   });
   const b = respuesta(); await handler({ studentEmail: EMAIL, body: entrada() }, b);
   assert.equal(b.codigo, 200);

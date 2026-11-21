@@ -101,8 +101,8 @@ export function crearRegistrarReclamo({
       cursos_retirar, cursos_matricular } = entrada;
 
     const codigoUni = codigo_estudiante ? String(codigo_estudiante).trim().toUpperCase() : null;
-    const retirar = clasificarCursos(cursos_retirar, catalogoCursos, 'cursos_retirar');
-    const matricular = clasificarCursos(cursos_matricular, catalogoCursos, 'cursos_matricular');
+    const retirar = clasificarCursos(cursos_retirar, catalogoCursos, 'retirar');
+    const matricular = clasificarCursos(cursos_matricular, catalogoCursos, 'matricular');
     const cursosRetirar = retirar.cursos;
     const cursosMatricular = matricular.cursos;
     const cursosDescartados = [...retirar.descartados, ...matricular.descartados];

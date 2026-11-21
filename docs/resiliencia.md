@@ -44,7 +44,7 @@ Al combinarse con el flujo por eventos de [docs/api/eventos.md](api/eventos.md) 
 
 ## 3. Alcance de la medición: cuál de los dos caminos se midió hoy
 
-> **Estado actual en `develop`:** Los módulos del flujo por eventos (#27) y `crearEnviadorCorreo` (#34) no modifican `backend/server.js`. Por tanto, hasta que quien integra el arranque compartido los conecte en `server.js` (y quite las llamadas de `useReclamos.ts`), el servidor levantado sigue usando el `sendEmail` original sin timeout, `POST /api/reclamos/confirmar` y el `fetch` del frontend a M2. **Actualización:** desde el #51, `server.js` usa `crearEnviadorCorreo` para todos los correos y el bus de `ReclamoRegistrado` para el registro; el frontend deja de llamar a `/confirmar` y a M2 con el #46.
+> **Estado actual en `develop`:** Los módulos del flujo por eventos (#27) y `crearEnviadorCorreo` (#34) no modifican `backend/server.js`. Por tanto, hasta que quien integra el arranque compartido los conecte en `server.js` (y quite las llamadas de `useReclamos.ts`), el servidor levantado sigue usando el `sendEmail` original sin timeout, `POST /api/reclamos/confirmar` y el `fetch` del frontend a M2. **Actualización:** desde el #51, `server.js` usa `crearEnviadorCorreo` para todos los correos y el bus de `ReclamoRegistrado` para el registro; con el #46, el frontend nuevo le deja el correo y el expediente a M2 a la API (durante la transición conviven los dos caminos; ver `docs/api/eventos.md`).
 
 En [pruebas/experimento-resiliencia.js](../sistema-reclamos/pruebas/experimento-resiliencia.js) se midieron de forma explícita dos partes con `100` destinatarios (`estudiante-001@prueba.test` .. `estudiante-100@prueba.test`):
 

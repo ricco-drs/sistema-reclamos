@@ -3,8 +3,10 @@ import { crearRepositorioCursosSupabase } from './infraestructura/repositorioCur
 import { crearGuardarCursosHandler } from './presentacion/guardarCursosHandler.js';
 import { crearRegistrarReclamo } from './aplicacion/registrarReclamo.js';
 import { crearNotificadorDeReclamo } from './aplicacion/consumidores/notificarReclamoRegistrado.js';
+import { crearEnviadorDeExpediente } from './aplicacion/consumidores/enviarExpedienteAM2.js';
 import { RECLAMO_REGISTRADO } from './dominio/eventos.js';
 import { crearBusEnProceso } from './infraestructura/busEnProceso.js';
+import { crearClienteM2Http, crearClienteM2Memoria } from './infraestructura/clienteM2.js';
 import { crearEnviadorCorreo } from './infraestructura/enviadorCorreo.js';
 import { crearPoliticaDeRecepcion } from './infraestructura/politicaDeRecepcion.js';
 import { crearRepositorioReclamosSupabase } from './infraestructura/repositorioReclamosSupabase.js';
@@ -410,8 +412,9 @@ app.post('/api/reclamos/confirmar', requireStudentAuth, limiteEnvioCodigo, async
 
   // La misma plantilla que manda el consumidor de ReclamoRegistrado
   // (presentacion/componerConfirmacion.js): escapa lo que escribió el estudiante
-  // y saluda por su primer nombre. Esta ruta queda solo mientras la aplicación
-  // de estudiantes la siga llamando; deja de hacerlo con el #46.
+  // y saluda por su primer nombre. Esta ruta queda durante la transición (ver
+  // POST /api/reclamos): la llama el front anterior, y el nuevo solo cuando habla
+  // con una API que todavía no envía el correo.
   const { subject, html } = componerConfirmacion({
     id: reclamo.id, nombre: reclamo.nombre, categoria: reclamo.categoria, email: reclamo.email,
   });
@@ -482,28 +485,45 @@ function logActividad({ actorEmail, actorType, accion, detalle }) {
 // ── Registro de reclamos y evento ReclamoRegistrado (Lab10, #27; docs/api/eventos.md) ──
 // La ruta solo traduce HTTP: las reglas del registro (ventana, pruebas propias,
 // cursos del catálogo, duplicados y numeración) están en aplicacion/registrarReclamo.js.
-// Cuando el reclamo queda guardado se publica ReclamoRegistrado, y su consumidor
-// envía el correo de confirmación. El bus no lo espera: si el correo falla, el
-// estudiante igual recibe su número y el error queda en el registro del servidor.
+// Cuando el reclamo queda guardado se publica ReclamoRegistrado, y sus dos
+// consumidores envían el correo de confirmación y el expediente a M2. El bus no los
+// espera: si uno falla, el estudiante igual recibe su número y el error queda en el
+// registro del servidor.
 const bus = crearBusEnProceso({
   alFallar: (evento, consumidor, err) =>
     console.error(`[EVENTOS] ${consumidor} falló en ${evento.eventoId}:`, err?.message ?? err),
 });
 const repositorioReclamos = crearRepositorioReclamosSupabase(sbRest);
 
+// M2 recibe el expediente de cada reclamo, igual que cuando lo enviaba el front.
+// Sin M2_URL (desarrollo y Compose) el expediente queda en memoria y no se llama al
+// M2 real, para que las pruebas no le manden expedientes falsos. En Railway tiene
+// que estar definida, o los expedientes dejan de llegar a M2.
+if (!process.env.M2_URL) {
+  console.warn('M2_URL no está definida: los expedientes se guardan en memoria y no llegan a M2.');
+}
+// M2 está en Render, que lo duerme cuando no tiene tráfico, y despertarlo tarda más
+// de 25 s. El cliente corta a los 10 s por defecto y no reintenta, así que se
+// perdería el expediente del primer reclamo después de cada pausa. Como el bus no
+// hace esperar al estudiante, darle 60 s no demora su respuesta.
+const ESPERA_M2_MS = 60_000;
+const clienteM2 = process.env.M2_URL
+  ? crearClienteM2Http({ url: process.env.M2_URL, timeoutMs: ESPERA_M2_MS })
+  : crearClienteM2Memoria();
+
 bus.suscribir(
   RECLAMO_REGISTRADO,
   crearNotificadorDeReclamo({ componerCorreo: componerConfirmacion, enviarCorreo: sendEmail }),
   'correo',
 );
-// El consumidor que envía el expediente a M2 (aplicacion/consumidores/enviarExpedienteAM2.js)
-// no se suscribe: nada en TEFIIS lee de M2 (el panel lee de esta API, que lee de
-// Supabase) y al 20/11/2026 M2 no responde. Si el equipo decide volver a usarlo,
-// basta suscribir crearEnviadorDeExpediente con crearClienteM2Http, como en docs/api/eventos.md.
+bus.suscribir(
+  RECLAMO_REGISTRADO,
+  crearEnviadorDeExpediente({ reclamos: repositorioReclamos, m2: clienteM2 }),
+  'm2',
+);
 
-const registrarReclamo = crearRegistrarReclamo({
+const dependenciasDelRegistro = {
   reclamos: repositorioReclamos,
-  publicador: bus,
   // Se comprueba en el servidor y no solo en la interfaz: ocultar el botón no
   // impide llamar al endpoint, así que el cierre tiene que valer aquí.
   politica: crearPoliticaDeRecepcion({ tefiDurmiendoActivo, despedidaActivaPara, puedeEnviarReclamo }),
@@ -511,11 +531,22 @@ const registrarReclamo = crearRegistrarReclamo({
   esEvidenciaPropia,
   logActividad,
   registrarError: (mensaje, err) => console.error(mensaje, err?.message ?? ''),
-});
+};
+const registrarReclamo = crearRegistrarReclamo({ ...dependenciasDelRegistro, publicador: bus });
+
+// Transición (#46). El front anterior envía él mismo el correo (/api/reclamos/confirmar)
+// y el expediente a M2; el nuevo manda `avisos: "api"` y se los deja a la API. Para las
+// peticiones del anterior se registra sin publicar el evento, así cada reclamo manda un
+// solo correo y un solo expediente, sin importar qué se despliega primero ni si el
+// estudiante tiene abierta la página anterior. Se quita, junto con /api/reclamos/confirmar,
+// cuando ya no quede el front anterior.
+const sinPublicar = { publicar: async () => {} };
+const registrarReclamoSinAvisos = crearRegistrarReclamo({ ...dependenciasDelRegistro, publicador: sinPublicar });
+const manejarRegistro = crearRegistrarReclamoHandler(registrarReclamo, { sinAvisos: registrarReclamoSinAvisos });
 
 // Estudiante: crear un reclamo nuevo. El email SIEMPRE sale de la sesión
 // verificada (req.studentEmail), nunca de lo que mande el cliente en el body.
-app.post('/api/reclamos', requireStudentAuth, crearRegistrarReclamoHandler(registrarReclamo));
+app.post('/api/reclamos', requireStudentAuth, manejarRegistro);
 
 // Estudiante: ver solo sus propios reclamos (filtrado por el email de su sesión, no por query param)
 app.get('/api/reclamos/mine', requireStudentAuth, async (req, res) => {

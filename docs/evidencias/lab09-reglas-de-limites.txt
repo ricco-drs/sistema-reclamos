@@ -1,0 +1,107 @@
+# Evidencia: backend partido en módulos (workspaces de npm) y reglas de límites del build (Lab09, #50, primera parte)
+# Rama build/50-modulos-en-workspaces, sobre develop 67163. Node v22.17.0, npm 10.9.2. Comandos desde sistema-reclamos/.
+
+## 1. El build declara los módulos (package.json, "workspaces")
+
+$ npm ls --workspaces --depth=0
+interfaz-tefiis@0.0.0 (sistema-reclamos/)
++-- @tefiis/compartido@0.0.0 -> ./backend/compartido
+| `-- express@5.2.1
++-- @tefiis/notificaciones@0.0.0 -> ./backend/modulos/notificaciones
+| `-- @tefiis/compartido@0.0.0 deduped -> ./backend/compartido
+`-- @tefiis/reclamos@0.0.0 -> ./backend/modulos/reclamos
+  +-- @tefiis/compartido@0.0.0 deduped -> ./backend/compartido
+  `-- express@5.2.1 deduped
+
+$ node -e "import('@tefiis/reclamos/dominio/reclamo.js')"   # entrar a una parte interna del paquete
+ERR_PACKAGE_PATH_NOT_EXPORTED
+
+## 2. Pruebas: todas juntas y cada módulo por separado
+
+$ npm test
+# tests 91
+# pass 91
+# fail 0
+
+$ npm run test:modulos   # npm test en cada workspace, sin los demás
+[@tefiis/compartido]  npm test -w @tefiis/compartido
+# tests 6
+# pass 6
+# fail 0
+[@tefiis/notificaciones]  npm test -w @tefiis/notificaciones
+# tests 10
+# pass 10
+# fail 0
+[@tefiis/reclamos]  npm test -w @tefiis/reclamos
+# tests 65
+# pass 65
+# fail 0
+
+## 3. Reglas en rojo: un import prohibido por cada regla nueva o ampliada
+# Archivos temporales que se crearon a propósito y se borraron después:
+#   modulos/notificaciones/aplicacion/_prohibido1.js     import ... from '../../reclamos/dominio/eventos.js'
+#   compartido/_prohibido2.js                           import ... from '@tefiis/reclamos'
+#   modulos/reclamos/infraestructura/_prohibido3.js     import '../../../server.js'
+#   _prohibido4.js (en backend/)                        import ... from './modulos/reclamos/dominio/reclamo.js'
+#   modulos/notificaciones/presentacion/_prohibido5.js  import ... from '../../../compartido/correo/plantillaCorreo.js'
+#   modulos/notificaciones/infraestructura/_prohibido6.js  import jwt from 'jsonwebtoken'   (no está en su package.json)
+#   modulos/reclamos/dominio/_prohibido7.js             import ... from '@tefiis/compartido'
+
+$ npm run arch:check
+
+  error paquetes-declarados: backend/modulos/notificaciones/infraestructura/_prohibido6.js → node_modules/jsonwebtoken/index.js
+  error modulo-no-importa-otro-modulo: backend/modulos/notificaciones/aplicacion/_prohibido1.js → backend/modulos/reclamos/dominio/eventos.js
+  error modulo-no-importa-el-arranque: backend/modulos/reclamos/infraestructura/_prohibido3.js → backend/server.js
+  error entrada-publica-de-los-modulos: backend/_prohibido4.js → backend/modulos/reclamos/dominio/reclamo.js
+  error entrada-publica-de-compartido: backend/modulos/notificaciones/presentacion/_prohibido5.js → backend/compartido/correo/plantillaCorreo.js
+  error dominio-limpio: backend/modulos/reclamos/dominio/_prohibido7.js → backend/compartido/index.js
+  error compartido-no-importa-modulos: backend/compartido/_prohibido2.js → backend/modulos/reclamos/index.js
+
+x 7 dependency violations (7 errors, 0 warnings). 68 modules, 114 dependencies cruised.
+
+(código de salida 7: el CI queda en rojo)
+
+## 4. En verde al quitarlos
+
+$ npm run arch:check
+✔ no dependency violations found (61 modules, 107 dependencies cruised)
+
+## 5. Contrato OpenAPI contra las rutas de server.js y de los módulos
+
+$ node pruebas/validar-openapi.cjs
+operaciones: 19 (en el código: 19) | $ref: 131 | ejemplos validados: 197 | mensajes de error comprobados: 38 | pendientes de implementar: 0
+Sin problemas.
+
+## 6. server.js real, armado con los módulos, contra PostgREST, Brevo y M2 falsos (sin .env)
+
+$ node pruebas/probar-registro-con-bus.mjs
+=== Resultados ===
+OK  Sin sesión: esperado 401 SESION_REQUERIDA | obtenido 401 SESION_REQUERIDA
+OK  Token falsificado: esperado 401 SESION_INVALIDA | obtenido 401 SESION_INVALIDA
+OK  Sin categoría: esperado 400 DATOS_INCOMPLETOS, sin avisos en la respuesta | obtenido 400 {"error":"Categoría y descripción son requeridas.","codigo":"DATOS_INCOMPLETOS"}
+OK  Descripción de 5 001 caracteres: esperado 400 DESCRIPCION_DEMASIADO_LARGA | obtenido 400 DESCRIPCION_DEMASIADO_LARGA
+OK  Código UNI con mal formato: esperado 400 CODIGO_UNI_INVALIDO | obtenido 400 CODIGO_UNI_INVALIDO
+OK  Prueba de otro estudiante: esperado 403 PRUEBA_AJENA | obtenido 403 PRUEBA_AJENA «Alguno de los archivos adjuntos no te pertenece.»
+OK  Documento de otro estudiante: esperado 403 DOCUMENTO_AJENO | obtenido 403 DOCUMENTO_AJENO
+OK  Front nuevo: registro: esperado 201 con número, avisos: "api" y Location | obtenido 201 {"success":true,"id":"REC-2026-0042","estado":"PENDIENTE","creado_en":"…","cursos_descartados":[{"lista":"retirar","codigo":"XX999","seccion":"Z","motivo":"NO_EXISTE_EN_CATALOGO"}],"avisos":"api"}; /api/reclamos/mine/REC-2026-0042
+OK    estado y creado_en en el 201: esperado PENDIENTE y una fecha ISO | obtenido PENDIENTE …
+OK    cursos_descartados en el 201: esperado XX999 por NO_EXISTE_EN_CATALOGO | obtenido [{"lista":"retirar","codigo":"XX999","seccion":"Z","motivo":"NO_EXISTE_EN_CATALOGO"}]
+OK    el documento propio se guarda: esperado http://127.0.0.1:…/storage/v1/object/Documentos%20Tefiis/estudiante-001_at_prueba_test/ficha.pdf | obtenido http://127.0.0.1:…/storage/v1/object/Documentos%20Tefiis/estudiante-001_at_prueba_test/ficha.pdf
+OK    un correo de la API: esperado Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test | obtenido correos=1, expedientes=1; Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test
+OK    un expediente en M2, con la descripción: esperado 1, «Se me cruzan dos cursos en el horario.» | obtenido 1, «Se me cruzan dos cursos en el horario.»
+OK    cursos fuera del catálogo descartados: esperado 1 curso | obtenido 1
+OK    el campo avisos no se guarda: esperado no está en la fila | obtenido no está
+OK    actividad registrada: esperado reclamo_creado | obtenido reclamo_creado
+OK  Front nuevo: reintento del mismo texto: esperado 200 con Location, duplicado, el creado_en original, sin estado ni cursos_descartados y sin envíos nuevos | obtenido 200 {"success":true,"id":"REC-2026-0042","duplicado":true,"creado_en":"…","avisos":"api"}; /api/reclamos/mine/REC-2026-0042; correos=1, expedientes=1
+OK  Front anterior: registro: esperado 201 sin avisos, y la API no envía nada | obtenido 201 {"success":true,"id":"REC-2026-0043","estado":"PENDIENTE","creado_en":"…","cursos_descartados":[{"lista":"retirar","codigo":"XX999","seccion":"Z","motivo":"NO_EXISTE_EN_CATALOGO"}]}; correos=1, expedientes=1
+OK    su correo sale por /api/reclamos/confirmar: esperado un solo correo de REC-2026-0043 | obtenido 200; 1 correo(s)
+OK  Correo caído: esperado 201, sin correo, con el expediente y el error registrado | obtenido 201 REC-2026-0044; correos=2, expedientes=2; error registrado=true
+OK  M2 caído: esperado 201, con el correo, sin expediente y el error registrado | obtenido 201 REC-2026-0045; correos=3, expedientes=2; error registrado=true
+OK  Tefi durmiendo: esperado 503 SISTEMA_EN_PAUSA, sin Retry-After | obtenido 503 SISTEMA_EN_PAUSA; Retry-After=null
+
+22 de 22 correctos.
+
+## 7. Desde un clon limpio (copia sin node_modules, sin .env y sin .git)
+# npm ci --> added 609 packages; node_modules/@tefiis/{compartido,notificaciones,reclamos} enlazados
+# npm test --> 91 pass, 0 fail | npm run arch:check --> sin violaciones | npm run build --> ok
+# validar-openapi --> Sin problemas | probar-registro-con-bus --> 22 de 22 correctos

@@ -113,21 +113,22 @@ Ejecuta estos comandos desde `sistema-reclamos/`:
 | `npm run build` | Genera la aplicación estática en `dist/`. |
 | `npm run preview` | Sirve localmente una compilación ya generada. |
 | `npm run lint` | Ejecuta ESLint. |
-| `npm test` | Ejecuta las pruebas del backend con `node:test`. |
-| `npm run arch:check` | Comprueba las dependencias del dominio con dependency-cruiser. |
+| `npm test` | Ejecuta todas las pruebas del backend con `node:test`: las de cada módulo y las que los cruzan. |
+| `npm run test:modulos` | Prueba cada módulo por separado. Para uno solo: `npm test -w @tefiis/reclamos`. |
+| `npm run arch:check` | Comprueba con dependency-cruiser las capas dentro de cada módulo y los límites entre módulos. |
 | `npm run seed-rag` | Reconstruye el store a partir de PDF locales; no es un paso de arranque. |
 
 ## Estructura del proyecto
 
 ```text
 backend/
-  server.js              API Express: rutas, autenticación, correo, Tefi y composición de la rodaja
+  server.js              API Express: arranque que conecta los módulos y las rutas que aún no se movieron
   promptTefi.js          Instrucciones de sistema de Tefi
-  presentacion/          Rodaja «registrar cursos resueltos»: adaptador HTTP
-  aplicacion/            Caso de uso
-  dominio/               Reglas y puerto de persistencia
-  infraestructura/       Adaptadores de Supabase y en memoria
-  tests/                 Pruebas con node:test
+  modulos/               Módulos de negocio; cada uno es un workspace de npm con sus capas (docs/particiones.md)
+    reclamos/            Registro de reclamos, evento ReclamoRegistrado y cursos resueltos
+    notificaciones/      Consumidores de ReclamoRegistrado: correo de confirmación y expediente a M2
+  compartido/            Piezas técnicas sin reglas de negocio: correo, bus de eventos y respuestas HTTP
+  tests/                 Pruebas que cruzan módulos (node:test)
 src/                     Aplicación de estudiantes (React 19, TypeScript, Vite)
   features/chat/         Conversación con Tefi
   features/admin/        Registro y seguimiento de reclamos del estudiante (el nombre de la carpeta es heredado)
@@ -136,7 +137,7 @@ src/                     Aplicación de estudiantes (React 19, TypeScript, Vite)
 sql/                     Scripts de base de datos
 scripts/                 Indexación de Tefi y utilidades de datos
 laboratorio/             Laboratorio 4-5: costo del cambio (Java)
-.dependency-cruiser.cjs  Regla de arquitectura dominio-limpio
+.dependency-cruiser.cjs  Reglas de capas y de límites entre módulos
 ```
 
 ## Verificación
@@ -147,7 +148,7 @@ npm run arch:check
 npm run build
 ```
 
-Las pruebas de cursos resueltos utilizan dobles de repositorio y no requieren red ni credenciales. La regla `dominio-limpio` comprueba que `backend/dominio/` no importe infraestructura ni presentación. Estas comprobaciones no reemplazan las pruebas de integración con los servicios reales.
+Las pruebas usan dobles de repositorio y no requieren red ni credenciales. Las reglas de `.dependency-cruiser.cjs` comprueban las capas dentro de cada módulo y que ningún módulo importe a otro ([particiones](../docs/particiones.md#cómo-quedó-en-el-build)). Los módulos son workspaces de npm: `npm ci` los enlaza en `node_modules/@tefiis/`, y `server.js` los importa por ese nombre. Estas comprobaciones no reemplazan las pruebas de integración con los servicios reales.
 
 El [CI](../.github/workflows/ci.yml) ejecuta `npm ci`, `npm test` y `npm run arch:check` en cada push y pull request. La compilación de la aplicación y ESLint se ejecutan por separado; para cambios de interfaz, verifica también `npm run lint` y el flujo afectado.
 

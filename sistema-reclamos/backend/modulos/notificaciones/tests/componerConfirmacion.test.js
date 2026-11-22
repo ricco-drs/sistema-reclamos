@@ -1,8 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { componerConfirmacion } from '../presentacion/componerConfirmacion.js';
-import { crearNotificadorDeReclamo } from '../aplicacion/consumidores/notificarReclamoRegistrado.js';
-import { crearReclamoRegistrado } from '../dominio/eventos.js';
+import { crearNotificadorDeReclamo } from '../aplicacion/notificarReclamoRegistrado.js';
 
 const base = { id: 'REC-2026-0042', categoria: 'Matrícula' };
 
@@ -45,10 +44,11 @@ test('el consumidor de ReclamoRegistrado envía este mismo correo al email del r
     componerCorreo: componerConfirmacion,
     enviarCorreo: async (correo) => { enviados.push(correo); },
   });
-  const evento = crearReclamoRegistrado({
-    id: 'REC-2026-0042', email: 'estudiante@uni.pe', nombre: 'PUERTA RAMOS, ANA', codigoEstudiante: '20240001A',
-    categoria: 'Matrícula', cursosRetirar: [], cursosMatricular: [], tieneEvidencia: false,
-  }, '2026-11-20T10:00:00.000Z');
+  // Solo los cuatro campos que el consumidor lee del evento (dominio/puertos.js). Que el
+  // evento de reclamos los traiga lo prueba backend/tests/flujoReclamoRegistrado.test.js.
+  const evento = {
+    reclamo: { id: 'REC-2026-0042', email: 'estudiante@uni.pe', nombre: 'PUERTA RAMOS, ANA', categoria: 'Matrícula' },
+  };
 
   await notificar(evento);
 

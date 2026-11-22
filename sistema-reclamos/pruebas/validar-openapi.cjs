@@ -5,7 +5,8 @@
 //
 // Comprueba que el YAML se lea, que toda $ref resuelva, que cada operación
 // tenga operationId único y sus parámetros de ruta, que cada ejemplo cumpla
-// su esquema, que las rutas coincidan con las de server.js y que cada mensaje
+// su esquema, que las rutas coincidan con las del código (server.js y las rutas
+// de cada módulo) y que cada mensaje
 // de error de los ejemplos exista tal cual en el código.
 const fs = require('fs');
 const path = require('path');
@@ -110,9 +111,17 @@ for (const [ruta, item] of Object.entries(doc.paths)) {
 for (const [n, r] of Object.entries(doc.components.responses)) probarMedios(r.content, `components.responses.${n}`);
 for (const [n, p] of Object.entries(doc.components.parameters)) if ('example' in p) probar(p.schema, p.example, `components.parameters.${n}`);
 
-// 5. Rutas del contrato contra server.js
-const servidor = fs.readFileSync(path.join(raiz, 'sistema-reclamos/backend/server.js'), 'utf8');
-const enCodigo = [...servidor.matchAll(/app\.(get|post|put|patch|delete)\('(\/api\/[^']+)'/g)]
+// 5. Rutas del contrato contra el código: las que siguen en server.js (`app.get(...)`)
+// y las que ya registra cada módulo en su presentacion/rutas.js (`rutas.post(...)`, #50).
+const modulos = path.join(raiz, 'sistema-reclamos/backend/modulos');
+const archivosDeRutas = [
+  path.join(raiz, 'sistema-reclamos/backend/server.js'),
+  ...fs.readdirSync(modulos)
+    .map((m) => path.join(modulos, m, 'presentacion/rutas.js'))
+    .filter((f) => fs.existsSync(f)),
+];
+const servidor = archivosDeRutas.map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+const enCodigo = [...servidor.matchAll(/(?:app|rutas)\.(get|post|put|patch|delete)\('(\/api\/[^']+)'/g)]
   .filter(([, , r]) => r.startsWith('/api/admin/') || r === '/api/reclamos')
   .filter(([m, , r]) => r !== '/api/reclamos' || m.includes('post'))
   .map(([, m, r]) => `${m.toUpperCase()} ${r.replace(/:(\w+)/g, '{$1}')}`);
@@ -163,7 +172,7 @@ for (const msg of pendientes) {
   if (enElCodigo(msg)) fallo(`mensaje marcado x-pendiente que ya está en el código (quitar la marca): ${msg}`);
 }
 
-console.log(`operaciones: ${operaciones.length} (en server.js: ${enCodigo.length}) | $ref: ${refs} | ejemplos validados: ${ejemplos} | mensajes de error comprobados: ${mensajes.size} | pendientes de implementar: ${pendientes.size}`);
+console.log(`operaciones: ${operaciones.length} (en el código: ${enCodigo.length}) | $ref: ${refs} | ejemplos validados: ${ejemplos} | mensajes de error comprobados: ${mensajes.size} | pendientes de implementar: ${pendientes.size}`);
 if (problemas.length) {
   console.log(`\n${problemas.length} problemas:`);
   problemas.forEach((p) => console.log(` - ${p}`));

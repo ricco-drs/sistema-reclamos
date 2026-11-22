@@ -14,17 +14,14 @@
 //   node pruebas/experimento-resiliencia.js
 
 import { performance } from 'node:perf_hooks';
-import { crearEnviadorCorreo } from '../backend/infraestructura/enviadorCorreo.js';
+import { crearEnviadorCorreo, crearPublicadorMemoria, crearBusEnProceso } from '@tefiis/compartido';
+import {
+  crearRegistrarReclamo, crearRegistrarReclamoHandler, crearRepositorioReclamosMemoria, RECLAMO_REGISTRADO,
+} from '@tefiis/reclamos';
+import {
+  crearNotificadorDeReclamo, crearEnviadorDeExpediente, crearClienteM2Http, crearClienteM2Memoria,
+} from '@tefiis/notificaciones';
 import { crearProveedorCorreoSimulado } from './proveedorCorreoSimulado.js';
-import { crearRegistrarReclamo } from '../backend/aplicacion/registrarReclamo.js';
-import { crearNotificadorDeReclamo } from '../backend/aplicacion/consumidores/notificarReclamoRegistrado.js';
-import { crearEnviadorDeExpediente } from '../backend/aplicacion/consumidores/enviarExpedienteAM2.js';
-import { crearRegistrarReclamoHandler } from '../backend/presentacion/registrarReclamoHandler.js';
-import { crearRepositorioReclamosMemoria } from '../backend/infraestructura/repositorioReclamosMemoria.js';
-import { crearPublicadorMemoria } from '../backend/infraestructura/publicadorMemoria.js';
-import { crearBusEnProceso } from '../backend/infraestructura/busEnProceso.js';
-import { crearClienteM2Http, crearClienteM2Memoria } from '../backend/infraestructura/clienteM2.js';
-import { RECLAMO_REGISTRADO } from '../backend/dominio/eventos.js';
 
 const TOTAL = 100;
 const correoEstudiante = (n) => `estudiante-${String(n).padStart(3, '0')}@prueba.test`;
@@ -140,7 +137,7 @@ async function correrExperimentoRegistroEventos() {
   }), 'correo');
 
   bus.suscribir(RECLAMO_REGISTRADO, crearEnviadorDeExpediente({
-    reclamos,
+    fuente: reclamos,
     m2: m2Memoria,
   }), 'm2');
 
@@ -202,7 +199,7 @@ async function correrExperimentoRegistroEventos() {
     }),
   }), 'correo');
   busM2Caido.suscribir(RECLAMO_REGISTRADO, crearEnviadorDeExpediente({
-    reclamos: reclamosM2Caido,
+    fuente: reclamosM2Caido,
     m2: crearClienteM2Http({
       url: 'http://m2.simulado.local/api/v1/m2/expedientes',
       fetchFn: async () => ({ ok: false, status: 502 }),

@@ -48,10 +48,10 @@ De las 40 reglas, solo 4 tienen prueba, todas de la rodaja de cursos resueltos. 
 
 | # | Regla | Dónde está | Prueba |
 |---|---|---|---|
-| RN-26 | Cada lista tiene hasta 40 cursos, y cada curso lleva código y sección, guardados en mayúsculas. | `backend/dominio/cursosResueltos.js`: `cursosValidos()` | *dominio: normaliza código y sección y limita nombre*; *dominio: rechaza listas incorrectas, exceso y cursos incompletos*; *caso de uso: entrada inválida nunca consulta ni guarda* |
-| RN-27 | El historial guarda las últimas 50 decisiones, con autor y fecha. | `backend/dominio/cursosResueltos.js`: `prepararCursosResueltos()` | *dominio: conserva 49 entradas previas y añade autor y fecha sin mutar* |
-| RN-28 | El autor de la decisión es el administrador que inició sesión, diga lo que diga la petición. | `backend/presentacion/guardarCursosHandler.js`: `crearGuardarCursosHandler()` | *HTTP: comunica resultado y registra auditoría con identidad autenticada* |
-| RN-29 | No se registran cursos de un reclamo que no existe (404). | `backend/aplicacion/guardarCursosResueltos.js`: `crearGuardarCursosResueltos()` | *caso de uso: inexistencia y desaparición al guardar producen 404* |
+| RN-26 | Cada lista tiene hasta 40 cursos, y cada curso lleva código y sección, guardados en mayúsculas. | `backend/modulos/reclamos/dominio/cursosResueltos.js`: `cursosValidos()` | *dominio: normaliza código y sección y limita nombre*; *dominio: rechaza listas incorrectas, exceso y cursos incompletos*; *caso de uso: entrada inválida nunca consulta ni guarda* |
+| RN-27 | El historial guarda las últimas 50 decisiones, con autor y fecha. | `backend/modulos/reclamos/dominio/cursosResueltos.js`: `prepararCursosResueltos()` | *dominio: conserva 49 entradas previas y añade autor y fecha sin mutar* |
+| RN-28 | El autor de la decisión es el administrador que inició sesión, diga lo que diga la petición. | `backend/modulos/reclamos/presentacion/guardarCursosHandler.js`: `crearGuardarCursosHandler()` | *HTTP: comunica resultado y registra auditoría con identidad autenticada* |
+| RN-29 | No se registran cursos de un reclamo que no existe (404). | `backend/modulos/reclamos/aplicacion/guardarCursosResueltos.js`: `crearGuardarCursosResueltos()` | *caso de uso: inexistencia y desaparición al guardar producen 404* |
 
 ## Documentos y pruebas
 

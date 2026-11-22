@@ -1,14 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { crearPublicadorMemoria } from '@tefiis/compartido';
 import { crearRegistrarReclamo } from '../aplicacion/registrarReclamo.js';
-import { crearNotificadorDeReclamo } from '../aplicacion/consumidores/notificarReclamoRegistrado.js';
-import { crearEnviadorDeExpediente } from '../aplicacion/consumidores/enviarExpedienteAM2.js';
 import { crearRegistrarReclamoHandler, statusDeErrorDeReclamo } from '../presentacion/registrarReclamoHandler.js';
 import { crearRepositorioReclamosMemoria } from '../infraestructura/repositorioReclamosMemoria.js';
 import { crearRepositorioReclamosSupabase } from '../infraestructura/repositorioReclamosSupabase.js';
-import { crearPublicadorMemoria } from '../infraestructura/publicadorMemoria.js';
-import { crearBusEnProceso } from '../infraestructura/busEnProceso.js';
-import { crearClienteM2Http, crearClienteM2Memoria } from '../infraestructura/clienteM2.js';
 import { crearPoliticaDeRecepcion } from '../infraestructura/politicaDeRecepcion.js';
 import {
   ErrorDeReclamo, MOTIVO_NO_DISPONIBLE, MOTIVO_ENTRADA_INVALIDA, MOTIVO_NO_PERMITIDO, MOTIVO_CERRADO, CODIGO,
@@ -394,7 +390,9 @@ test('HTTP: la política cerrada responde 503 en pausa y 409 en ciclo y ventana,
   }
 });
 
-// ---------- eventos y consumidores ----------
+// ---------- evento ----------
+// El bus está en compartido (compartido/tests/busEnProceso.test.js), los consumidores en
+// notificaciones, y el flujo completo, que cruza los dos módulos, en backend/tests.
 
 test('evento: es inmutable y su id sirve para descartar repetidos', () => {
   const e = crearReclamoRegistrado({ id: 'REC-2026-0009', email: EMAIL, categoria: 'x', cursosRetirar: [], cursosMatricular: [] }, 'f');
@@ -403,71 +401,15 @@ test('evento: es inmutable y su id sirve para descartar repetidos', () => {
   assert.throws(() => { 'use strict'; e.tipo = 'otro'; }, TypeError);
 });
 
-test('bus: cada consumidor recibe el evento y la falla de uno no afecta a los demás', async () => {
-  const fallas = [];
-  const bus = crearBusEnProceso({ alFallar: (ev, nombre, err) => fallas.push([ev.eventoId, nombre, err.message]) });
-  const recibidos = [];
-  bus.suscribir(RECLAMO_REGISTRADO, async () => { throw new Error('correo caído'); }, 'correo');
-  bus.suscribir(RECLAMO_REGISTRADO, async (ev) => { recibidos.push(ev.eventoId); }, 'm2');
-  await bus.publicar(crearReclamoRegistrado({ id: 'R1', email: EMAIL, categoria: 'x', cursosRetirar: [], cursosMatricular: [] }, 'f'));
-  await bus.vaciar();
-  assert.deepEqual(recibidos, ['R1:ReclamoRegistrado']);
-  assert.deepEqual(fallas, [['R1:ReclamoRegistrado', 'correo', 'correo caído']]);
-});
-
-test('bus: publicar no espera a un consumidor lento', async () => {
-  const bus = crearBusEnProceso();
-  let terminó = false;
-  bus.suscribir(RECLAMO_REGISTRADO, () => new Promise((ok) => setTimeout(() => { terminó = true; ok(); }, 30)));
-  await bus.publicar(crearReclamoRegistrado({ id: 'R2', email: EMAIL, categoria: 'x', cursosRetirar: [], cursosMatricular: [] }, 'f'));
-  assert.equal(terminó, false);
-  await bus.vaciar();
-  assert.equal(terminó, true);
-});
-
-test('flujo completo en memoria: un POST produce el correo y el expediente de M2', async () => {
-  const reclamos = crearRepositorioReclamosMemoria();
-  const correos = [];
-  const m2 = crearClienteM2Memoria();
-  const bus = crearBusEnProceso();
-  bus.suscribir(RECLAMO_REGISTRADO, crearNotificadorDeReclamo({
-    componerCorreo: ({ id, categoria }) => ({ subject: `Reclamo registrado: ${id}`, html: `<p>${categoria}</p>` }),
-    enviarCorreo: async (c) => { correos.push(c); },
-  }), 'correo');
-  bus.suscribir(RECLAMO_REGISTRADO, crearEnviadorDeExpediente({ reclamos, m2 }), 'm2');
-
-  const { registrar } = armar({ reclamos, publicador: bus });
-  const res = respuesta();
-  await crearRegistrarReclamoHandler(registrar)({
-    studentEmail: EMAIL,
-    body: entrada({ nombre: 'PEREZ, ANA', codigo_estudiante: '20240001A', descripcion: 'Texto formal del reclamo' }),
-  }, res);
-  await bus.vaciar();
-
-  assert.deepEqual(correos, [{ to: EMAIL, subject: 'Reclamo registrado: REC-2026-0001', html: '<p>Cruce de horarios</p>' }]);
-  assert.deepEqual(m2.expedientes, [{
-    id: 'REC-2026-0001', codigoEstudiante: '20240001A', email: EMAIL, nombre: 'PEREZ, ANA',
-    motivoReclamo: 'Cruce de horarios', descripcion: 'Texto formal del reclamo',
-  }]);
-});
-
-test('consumidor de M2: si el reclamo no existe, falla en vez de enviar vacío', async () => {
-  const m2 = crearClienteM2Memoria();
-  const consumir = crearEnviadorDeExpediente({ reclamos: crearRepositorioReclamosMemoria(), m2 });
-  await assert.rejects(consumir({ reclamo: { id: 'REC-2026-9999' } }), /no existe/);
-  assert.equal(m2.expedientes.length, 0);
-});
-
-test('cliente M2 HTTP: manda el contrato actual y falla con error si M2 responde mal', async () => {
-  const llamadas = [];
-  const ok = crearClienteM2Http({ url: 'http://m2.test/api/v1/m2/expedientes', fetchFn: async (u, o) => { llamadas.push([u, o]); return { ok: true }; } });
-  await ok.registrarExpediente({ id: 'R1', descripcion: 'd' });
-  assert.equal(llamadas[0][0], 'http://m2.test/api/v1/m2/expedientes');
-  assert.equal(llamadas[0][1].method, 'POST');
-  assert.equal(llamadas[0][1].headers.Authorization, undefined);
-  assert.deepEqual(JSON.parse(llamadas[0][1].body), { id: 'R1', descripcion: 'd' });
-  const mal = crearClienteM2Http({ url: 'http://m2.test', fetchFn: async () => ({ ok: false, status: 502 }) });
-  await assert.rejects(mal.registrarExpediente({ id: 'R1' }), /M2 respondió 502/);
+test('repositorio en memoria: obtenerParaExpediente devuelve lo que lee el consumidor de M2, o null', async () => {
+  const { registrar, reclamos } = armar();
+  const { id } = await registrar({ email: EMAIL, entrada: entrada({ nombre: 'PEREZ, ANA', codigo_estudiante: '20240001A' }) });
+  const fila = await reclamos.obtenerParaExpediente(id);
+  assert.deepEqual(
+    { id: fila.id, codigo_estudiante: fila.codigo_estudiante, email: fila.email, nombre: fila.nombre, categoria: fila.categoria, descripcion: fila.descripcion },
+    { id, codigo_estudiante: '20240001A', email: EMAIL, nombre: 'PEREZ, ANA', categoria: 'Cruce de horarios', descripcion: 'Me cruzan dos cursos' },
+  );
+  assert.equal(await reclamos.obtenerParaExpediente('REC-2026-9999'), null);
 });
 
 test('política: respeta el orden y los mensajes de la ruta actual, y da el código de cada rechazo', async () => {

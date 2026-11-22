@@ -12,17 +12,19 @@ Con el flujo por eventos, la API guarda el reclamo y publica un solo evento, `Re
 POST /api/reclamos
    │
    ▼
-presentacion/registrarReclamoHandler.js   (Express: HTTP ⇄ caso de uso)
+reclamos: presentacion/rutas.js y registrarReclamoHandler.js   (Express: HTTP ⇄ caso de uso)
    │
    ▼
-aplicacion/registrarReclamo.js            (reglas del registro)
+reclamos: aplicacion/registrarReclamo.js                       (reglas del registro)
    │  guarda en RepositorioReclamos (puerto)
    │  publica en PublicadorEventos  (puerto)
    ▼
-infraestructura/busEnProceso.js
-   ├─► aplicacion/consumidores/notificarReclamoRegistrado.js  → correo de confirmación
-   └─► aplicacion/consumidores/enviarExpedienteAM2.js          → POST a M2
+compartido: eventos/busEnProceso.js
+   ├─► notificaciones: aplicacion/notificarReclamoRegistrado.js  → correo de confirmación
+   └─► notificaciones: aplicacion/enviarExpedienteAM2.js          → POST a M2
 ```
+
+Desde el #50, quien publica y quienes consumen viven en módulos distintos ([particiones](../particiones.md)): `reclamos` publica, `notificaciones` consume, y ninguno importa al otro. `server.js` los conecta.
 
 ## Endpoint
 
@@ -96,9 +98,11 @@ El evento **no lleva la descripción**. Es texto libre del estudiante y no tiene
 
 ## Consumidores
 
+Los dos viven en el módulo `notificaciones` (#50), no en el que publica: no importan nada de `reclamos`, el nombre del evento se lo da `server.js` y de cada evento leen solo los campos que se indican abajo. `backend/tests/flujoReclamoRegistrado.test.js` comprueba que el evento de `reclamos` los trae.
+
 **Notificador de correo.** Usa `id`, `email`, `nombre` y `categoria`. La plantilla y el envío se inyectan (`componerCorreo`, `enviarCorreo`); en producción son los de `/api/reclamos/confirmar` y `sendEmail`, con su cadena Brevo → Resend → Mailjet.
 
-**Envío a M2.** Lee el reclamo por id y manda al servicio M2 el mismo cuerpo que hoy manda la aplicación:
+**Envío a M2.** Lee el reclamo por id, por el puerto `FuenteDeExpedientes` (lo implementa el repositorio de reclamos y se lo pasa `server.js`), y manda al servicio M2 el mismo cuerpo que hoy manda la aplicación:
 
 ```
 POST {M2_URL}   (hoy https://tefiis-m2.onrender.com/api/v1/m2/expedientes)
@@ -120,34 +124,37 @@ Hay dos diferencias con lo que manda hoy la aplicación:
 | `RepositorioReclamos` | `repositorioReclamosSupabase.js` (PostgREST) | `repositorioReclamosMemoria.js` |
 | `PublicadorEventos` | `busEnProceso.js` | `publicadorMemoria.js` |
 | `ClienteM2` | `clienteM2.js` → `crearClienteM2Http` | `clienteM2.js` → `crearClienteM2Memoria` |
+| `FuenteDeExpedientes` | `obtenerParaExpediente` del repositorio de reclamos, que `server.js` le pasa a `notificaciones` | un objeto con `obtenerParaExpediente` |
 | `PoliticaDeRecepcion` | `politicaDeRecepcion.js` (envuelve las tres comprobaciones de `server.js`) | una función que devuelve `null` o un mensaje |
 
-Los puertos están descritos en `backend/dominio/puertosReclamos.js`. El dominio no conoce HTTP: sus errores llevan un `motivo`, y la traducción a 400, 403, 409 o 503 (con su `codigo`) vive en `presentacion/registrarReclamoHandler.js`.
+Los puertos de `reclamos` están descritos en `backend/modulos/reclamos/dominio/puertosReclamos.js`, y los de `notificaciones` (`ClienteM2` y `FuenteDeExpedientes`), en `backend/modulos/notificaciones/dominio/puertos.js`. El dominio no conoce HTTP: sus errores llevan un `motivo`, y la traducción a 400, 403, 409 o 503 (con su `codigo`) vive en `presentacion/registrarReclamoHandler.js`, dentro del módulo `reclamos`.
 
 ## Conexión al arranque compartido (`server.js`)
 
-Está conectado en `server.js` desde el #51, con los dos consumidores. El enganche es este; en el código, el repositorio se llama `repositorioReclamos`, el cliente de M2 espera hasta 60 segundos y hay un segundo caso de uso para la transición, que se explica más abajo:
+Está conectado en `server.js` desde el #51, con los dos consumidores. Desde el #50, `server.js` arma los módulos y los conecta. El cliente de M2 espera hasta 60 segundos, y el segundo caso de uso de la transición, que se explica más abajo, vive dentro del módulo `reclamos`:
 
 ```js
 const bus = crearBusEnProceso({ alFallar: (ev, quien, err) => console.error(`${quien} falló en ${ev.eventoId}:`, err.message) });
-const reclamos = crearRepositorioReclamosSupabase(sbRest);
 
-bus.suscribir(RECLAMO_REGISTRADO, crearNotificadorDeReclamo({ componerCorreo: componerConfirmacion, enviarCorreo: sendEmail }), 'correo');
-bus.suscribir(RECLAMO_REGISTRADO, crearEnviadorDeExpediente({
-  reclamos,
-  // Sin M2_URL (desarrollo y Compose) no se llama al M2 real: así la prueba E1 no le manda expedientes falsos.
-  m2: process.env.M2_URL ? crearClienteM2Http({ url: process.env.M2_URL }) : crearClienteM2Memoria(),
-}), 'm2');
-
-const registrarReclamo = crearRegistrarReclamo({
-  reclamos, publicador: bus, catalogoCursos: CATALOGO_CURSOS, esEvidenciaPropia, logActividad,
-  politica: crearPoliticaDeRecepcion({ tefiDurmiendoActivo, despedidaActivaPara, puedeEnviarReclamo }),
-  registrarError: (mensaje, err) => console.error(mensaje, err?.message ?? ''),
+const reclamos = crearModuloReclamos({
+  sbRest, publicador: bus, catalogoCursos: CATALOGO_CURSOS, esEvidenciaPropia, esDocumentoPropio, logActividad, registrarError,
+  interruptores: { tefiDurmiendoActivo, despedidaActivaPara, puedeEnviarReclamo },
+  exigirEstudiante: requireStudentAuth, exigirAdmin: requireAdminAuth,
 });
-app.post('/api/reclamos', requireStudentAuth, crearRegistrarReclamoHandler(registrarReclamo));
+
+const consumidores = crearConsumidoresDeReclamoRegistrado({
+  enviarCorreo: sendEmail,
+  fuenteDeExpedientes: reclamos.fuenteDeExpedientes,
+  // Sin M2_URL (desarrollo y Compose) no se llama al M2 real: así la prueba E1 no le manda expedientes falsos.
+  m2: process.env.M2_URL ? crearClienteM2Http({ url: process.env.M2_URL, timeoutMs: 60_000 }) : crearClienteM2Memoria(),
+});
+bus.suscribir(RECLAMO_REGISTRADO, consumidores.correo, 'correo');
+bus.suscribir(RECLAMO_REGISTRADO, consumidores.m2, 'm2');
+
+app.use(reclamos.rutas);
 ```
 
-`componerConfirmacion({ id, nombre, categoria, email })` ya está extraída de `/api/reclamos/confirmar` en `backend/presentacion/componerConfirmacion.js` (la plantilla HTML y `primerNombre`). `email` es opcional: solo sirve para el saludo cuando `nombre` no trae el formato «APELLIDOS, NOMBRES». `server.js` la importa, y la ruta `/api/reclamos/confirmar` también la usa mientras exista, así que las dos mandan el mismo correo. `emailTemplate`, `escaparHtml` y las tres URL de imagen están en `backend/presentacion/plantillaCorreo.js`, y `server.js` ya no tiene su propia copia: el código de verificación y la respuesta del Tercio usan la misma plantilla.
+`componerConfirmacion({ id, nombre, categoria, email })` ya está extraída de `/api/reclamos/confirmar` en `backend/modulos/notificaciones/presentacion/componerConfirmacion.js` (la plantilla HTML y `primerNombre`). `email` es opcional: solo sirve para el saludo cuando `nombre` no trae el formato «APELLIDOS, NOMBRES». `server.js` la importa de `@tefiis/notificaciones`, y la ruta `/api/reclamos/confirmar` también la usa mientras exista, así que las dos mandan el mismo correo. `emailTemplate`, `escaparHtml` y las tres URL de imagen están en `backend/compartido/correo/plantillaCorreo.js`, y `server.js` ya no tiene su propia copia: el código de verificación y la respuesta del Tercio usan la misma plantilla.
 
 **Transición entre el front anterior y el nuevo.** El front anterior envía él mismo el correo (`/api/reclamos/confirmar`) y el expediente a M2, y el nuevo (#46) se los deja a la API. La API (Railway) y el front (Cloudflare) se despliegan por separado, y un estudiante puede seguir con la página anterior abierta, así que durante un tiempo conviven los dos. Para que cada reclamo siga un solo camino:
 
@@ -172,14 +179,13 @@ En los cuatro casos sale un correo y un expediente por reclamo, sin importar qu�
 
 ## Pruebas
 
-`backend/tests/registrarReclamo.test.js` cubre, sin base de datos ni credenciales:
+Sin base de datos ni credenciales:
 
-- el registro y el evento publicado, sin descripción;
-- reintentos, cursos fuera de catálogo, choques de id y secuencia caída;
-- los errores 400, 403, 409, 500 y 503 con su `codigo`, y que un fallo al publicar no deshace el reclamo;
-- el bus: aislamiento entre consumidores y que `publicar` no espera;
-- el flujo completo en memoria: un POST produce el correo y el expediente de M2;
-- los adaptadores de PostgREST y de M2.
+- `backend/modulos/reclamos/tests/registrarReclamo.test.js`: el registro y el evento publicado, sin descripción; reintentos, cursos fuera de catálogo, choques de id y secuencia caída; los errores 400, 403, 409, 500 y 503 con su `codigo`; que un fallo al publicar no deshace el reclamo; y el adaptador de PostgREST.
+- `backend/modulos/reclamos/tests/modulo.test.js`: el módulo montado solo en un Express aparte, con sesiones falsas.
+- `backend/modulos/notificaciones/tests/`: los dos consumidores y el cliente de M2, sin el módulo `reclamos`.
+- `backend/compartido/tests/busEnProceso.test.js`: el bus, el aislamiento entre consumidores y que `publicar` no espera.
+- `backend/tests/flujoReclamoRegistrado.test.js`: el contrato entre los dos módulos (el evento trae lo que lee `notificaciones`, y el repositorio de `reclamos` cumple su fuente de expedientes) y el flujo completo en memoria: un POST produce un solo correo y un solo expediente.
 
 ```bash
 cd sistema-reclamos

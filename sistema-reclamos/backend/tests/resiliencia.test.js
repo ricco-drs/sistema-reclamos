@@ -1,16 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { crearEnviadorCorreo } from '../infraestructura/enviadorCorreo.js';
+import { crearEnviadorCorreo, crearPublicadorMemoria, crearBusEnProceso } from '@tefiis/compartido';
+import {
+  crearRegistrarReclamo, crearRegistrarReclamoHandler, crearRepositorioReclamosMemoria, RECLAMO_REGISTRADO,
+} from '@tefiis/reclamos';
+import {
+  crearNotificadorDeReclamo, crearEnviadorDeExpediente, crearClienteM2Http, crearClienteM2Memoria,
+} from '@tefiis/notificaciones';
 import { crearProveedorCorreoSimulado } from '../../pruebas/proveedorCorreoSimulado.js';
-import { crearRegistrarReclamo } from '../aplicacion/registrarReclamo.js';
-import { crearNotificadorDeReclamo } from '../aplicacion/consumidores/notificarReclamoRegistrado.js';
-import { crearEnviadorDeExpediente } from '../aplicacion/consumidores/enviarExpedienteAM2.js';
-import { crearRegistrarReclamoHandler } from '../presentacion/registrarReclamoHandler.js';
-import { crearRepositorioReclamosMemoria } from '../infraestructura/repositorioReclamosMemoria.js';
-import { crearPublicadorMemoria } from '../infraestructura/publicadorMemoria.js';
-import { crearBusEnProceso } from '../infraestructura/busEnProceso.js';
-import { crearClienteM2Http, crearClienteM2Memoria } from '../infraestructura/clienteM2.js';
-import { RECLAMO_REGISTRADO } from '../dominio/eventos.js';
 
 const CATALOGO = new Map([
   ['SW708', { nombre: 'Arquitectura de Software', secciones: ['U'] }],
@@ -166,7 +163,7 @@ test('Resiliencia por eventos (ReclamoRegistrado en proceso): fallas o bloqueo e
   }), 'correo');
 
   bus.suscribir(RECLAMO_REGISTRADO, crearEnviadorDeExpediente({
-    reclamos,
+    fuente: reclamos,
     m2: m2ConFallaParcial,
   }), 'm2');
 

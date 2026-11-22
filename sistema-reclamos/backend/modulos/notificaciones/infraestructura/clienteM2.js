@@ -4,7 +4,7 @@
  * (para que el bus lo registre) y corta a los 10 s, porque el servicio puede estar dormido.
  *
  * @param {{url: string, fetchFn?: typeof fetch, timeoutMs?: number}} opciones
- * @returns {import('../dominio/puertosReclamos.js').ClienteM2}
+ * @returns {import('../dominio/puertos.js').ClienteM2}
  */
 export function crearClienteM2Http({ url, fetchFn = fetch, timeoutMs = 10_000 }) {
   return {

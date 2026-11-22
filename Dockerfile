@@ -1,10 +1,8 @@
 FROM docker.io/library/node:22-bookworm-slim AS build
 
 WORKDIR /app
-COPY sistema-reclamos/package*.json ./
-RUN npm ci
 COPY sistema-reclamos/ ./
-RUN npm run build && npm prune --omit=dev
+RUN npm ci && npm run build && npm prune --omit=dev
 
 FROM docker.io/library/node:22-bookworm-slim
 

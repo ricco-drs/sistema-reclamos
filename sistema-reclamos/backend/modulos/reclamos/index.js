@@ -38,6 +38,11 @@ const SIN_PUBLICAR = Object.freeze({ publicar: async () => {} });
  * @param {(ref: string, email: string) => boolean} dep.esDocumentoPropio
  * @param {Function} dep.logActividad
  * @param {(mensaje: string, err?: unknown) => void} dep.registrarError
+ * @param {Function} dep.sbRestTodo lectura paginada del historial de actividad
+ * @param {Function} dep.sendEmail enviador de correo de compartido
+ * @param {Function} dep.componerConfirmacion plantilla que entrega notificaciones
+ * @param {Function} dep.limiteEnvioCodigo límite compartido con acceso para el correo heredado
+ * @param {{subir: Function, referencia: Function, borrar: Function}} dep.almacenamientoDeEvidencias
  * @param {Function} dep.exigirEstudiante middleware de sesión del estudiante
  * @param {Function} dep.exigirAdmin middleware de sesión del administrador
  * @returns {{rutas: import('express').Router,
@@ -48,6 +53,7 @@ const SIN_PUBLICAR = Object.freeze({ publicar: async () => {} });
 export function crearModuloReclamos({
   sbRest, publicador, interruptores, catalogoCursos, esEvidenciaPropia, esDocumentoPropio,
   logActividad, registrarError, exigirEstudiante, exigirAdmin,
+  sbRestTodo, sendEmail, componerConfirmacion, limiteEnvioCodigo, almacenamientoDeEvidencias,
 }) {
   const repositorio = crearRepositorioReclamosSupabase(sbRest);
   const comunes = {
@@ -64,8 +70,11 @@ export function crearModuloReclamos({
 
   return {
     rutas: crearRutasDeReclamos({
-      exigirEstudiante,
-      exigirAdmin,
+      requireStudentAuth: exigirEstudiante,
+      requireAdminAuth: exigirAdmin,
+      sbRest, sbRestTodo, sendEmail, componerConfirmacion, limiteEnvioCodigo, almacenamientoDeEvidencias,
+      esEvidenciaPropia,
+      despedidaActivaPara: interruptores.despedidaActivaPara,
       registrarReclamo: crearRegistrarReclamo({ ...comunes, publicador }),
       registrarReclamoSinAvisos: crearRegistrarReclamo({ ...comunes, publicador: SIN_PUBLICAR }),
       guardarCursosResueltos: crearGuardarCursosResueltos(crearRepositorioCursosSupabase(sbRest)),

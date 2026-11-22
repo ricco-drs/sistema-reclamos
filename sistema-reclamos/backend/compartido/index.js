@@ -10,3 +10,11 @@ export {
 export { crearBusEnProceso } from './eventos/busEnProceso.js';
 export { crearPublicadorMemoria } from './eventos/publicadorMemoria.js';
 export { respuestaDeCuerpoInvalido, MENSAJE_CUERPO_INVALIDO } from './http/cuerpoInvalido.js';
+export { sbRest, sbRestTodo } from './supabase/postgrest.js';
+export { logActividad } from './supabase/actividad.js';
+export {
+  parseStorageRef, deleteStorageFile, createSignedUrl, referenciaDeArchivo, subirArchivo,
+} from './supabase/almacenamiento.js';
+export {
+  claveIp, limiteSubidas, MAX_PDF_BYTES, marcarLimite, soloPdf, errorTipoArchivo,
+} from './http/subidas.js';

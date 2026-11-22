@@ -3,12 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Piezas técnicas sin reglas de negocio que usan todos los módulos: envío de correo, bus de eventos y respuestas HTTP comunes.",
+  "description": "Piezas t\u00e9cnicas sin reglas de negocio que usan todos los m\u00f3dulos: env\u00edo de correo, bus de eventos y respuestas HTTP comunes.",
   "exports": "./index.js",
   "scripts": {
     "test": "node --test \"tests/*.test.js\""
   },
   "devDependencies": {
     "express": "^5.2.1"
+  },
+  "dependencies": {
+    "express-rate-limit": "^8.6.2"
   }
 }

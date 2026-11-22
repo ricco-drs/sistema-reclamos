@@ -1,6 +1,6 @@
 # Particiones del backend (Lab09)
 
-> **Estado:** confirmada. Ricco confirmó la partición B (por módulos de negocio) en la revisión del #42. El #50 la lleva al build en dos partes: la primera declara los workspaces, mueve `reclamos`, crea `notificaciones` y `compartido` y amplía las reglas; la segunda mueve lo que sigue en `server.js`. Ver [Cómo quedó en el build](#cómo-quedó-en-el-build).
+> **Estado:** confirmada. Ricco confirmó la partición B (por módulos de negocio) en la revisión del #42. El #50 la lleva al build en dos partes: la primera declara los workspaces, mueve `reclamos`, crea `notificaciones` y `compartido` y amplía las reglas; la segunda reparte las 39 rutas restantes y deja `server.js` como punto de arranque. Ver [Cómo quedó en el build](#cómo-quedó-en-el-build).
 
 ## Qué se parte y por qué
 
@@ -27,7 +27,7 @@ La partición B sale de estos cuatro rastros, no de las carpetas.
 
 **1. La palabra cambia de significado.**
 
-- **«Estado»** no es lo mismo para el Tercio que para el estudiante. Para el Tercio es el estado de trabajo, que va y viene mientras delibera (`PENDIENTE`, `EN_REVISION`, `ACEPTADO`…). Para el estudiante es el último estado que se le comunicó por correo: `GET /api/reclamos/mine/:id` lo arma desde `respuestas_reclamo`, no desde el estado interno (`server.js`, líneas 1027 a 1049).
+- **«Estado»** no es lo mismo para el Tercio que para el estudiante. Para el Tercio es el estado de trabajo, que va y viene mientras delibera (`PENDIENTE`, `EN_REVISION`, `ACEPTADO`…). Para el estudiante es el último estado que se le comunicó por correo: `GET /api/reclamos/mine/:id` lo arma desde `respuestas_reclamo`, no desde el estado interno (`backend/modulos/reclamos/presentacion/rutas.js`).
 - **«Cursos»** son, para el estudiante, los que pidió retirar o matricular. Para el Tercio son los que de verdad se resolvieron (`cursos_resueltos`, ADR-0002), y esos el estudiante no los ve.
 - **«Documento»** del SIGA es del estudiante y se reutiliza de un reclamo al siguiente. La prueba (evidencia) es de un solo reclamo.
 
@@ -45,7 +45,7 @@ Con una muestra tan chica no se puede sostener una frontera. Lo poco que hay apu
 **3. Hay un dueño distinto.**
 
 - El **Tercio** pide cambios en la bandeja, los estados, los cursos resueltos y las respuestas.
-- El **administrador principal** es dueño de los interruptores, del historial de actividad y del corpus de Tefi: `server.js` exige su correo en las seis rutas de interruptores, en `/api/admin/activity` y al indexar documentos de Tefi.
+- El **administrador principal** es dueño de los interruptores, del historial de actividad y del corpus de Tefi: Los módulos `configuracion` y `tefi` exigen su correo en las seis rutas de interruptores, en `/api/admin/activity` y al indexar documentos de Tefi.
 - El **estudiante** es dueño de su registro, de sus documentos y de sus preguntas a Tefi.
 
 **4. Los datos tienen ciclos distintos.**
@@ -61,7 +61,7 @@ Un módulo por cada capacidad que muestran los rastros. Cada uno tiene adentro s
 
 | Módulo | Rutas | Qué contiene | Rastro que lo separa |
 |---|---|---|---|
-| `reclamos` | 12 | Registro, consulta del estudiante, bandeja, estados, cursos resueltos, respuestas por correo y pruebas adjuntas. | Dueño (el Tercio) y ciclo de datos (ráfagas al cierre). |
+| `reclamos` | 12 | Registro, consulta del estudiante, bandeja, estados, cursos resueltos, respuestas por correo, confirmación heredada y pruebas adjuntas. | Dueño (el Tercio) y ciclo de datos (ráfagas al cierre). |
 | `notificaciones` | 0 | Los consumidores de `ReclamoRegistrado`: el correo de confirmación al estudiante y el expediente a M2. Se agregó al implementar el #50. | Reacciona a lo que pasa en `reclamos` sin escribir sus tablas, y sus fallas (el correo, M2) no deben tocar el registro (E5). |
 | `configuracion` | 14 | Ventana de reclamos, modos almuerzo, mantenimiento, Tefi durmiendo y despedida, `/health` y el historial de actividad. | Dueño (el administrador principal) y ciclo de datos (se lee siempre, se escribe a mano). |
 | `documentos` | 8 | Documentos del SIGA del estudiante, los datos extraídos y los enlaces firmados. | Palabra («documento» frente a «prueba») y ciclo de datos (una vez por estudiante). |
@@ -149,9 +149,9 @@ Ninguna de las cuatro descarta B. La 2 y la 4 dejan dos cosas a vigilar: `activi
 
 ## Cómo quedó en el build
 
-Lo implementó Ricco en el #50. Esta sección empezó como lo que la partición pedía; ahora dice qué se hizo y qué falta.
+Ricco preparó los workspaces, el registro de reclamos y sus consumidores en el #67. Lenin completó la migración de rutas y las pruebas de integración del #50.
 
-- **Build.** `sistema-reclamos/package.json` declara los workspaces de npm `backend/compartido` y `backend/modulos/*`. Cada módulo tiene su `package.json`, con su nombre (`@tefiis/reclamos`, `@tefiis/notificaciones`, `@tefiis/compartido`), sus dependencias explícitas y un `exports` que solo deja entrar por su `index.js`: si alguien importa `@tefiis/reclamos/dominio/reclamo.js`, Node lo rechaza. `server.js` importa cada módulo por su paquete.
+- **Build.** `sistema-reclamos/package.json` declara los workspaces de npm `backend/compartido` y `backend/modulos/*`. Cada módulo tiene su `package.json`, con su nombre bajo `@tefiis/`, sus dependencias explícitas y un `exports` que solo deja entrar por su `index.js`: si alguien importa `@tefiis/reclamos/dominio/reclamo.js`, Node lo rechaza. `server.js` importa cada módulo por su paquete.
 - **Esto no reabre el ADR-0005.** Ese ADR descartó un monorepo con workspaces que uniera la aplicación de estudiantes y el panel, porque obligaba a cambiar la instalación y la construcción en Railway, Cloudflare y Firebase Hosting. Estos workspaces viven solo dentro de `sistema-reclamos/`: el panel no se toca, y Railway y Cloudflare siguen construyendo desde `sistema-reclamos/`, como hoy. `npm ci` y `npm install` enlazan los módulos solos.
 - **Reglas de límites**, en `.dependency-cruiser.cjs`, con la misma herramienta de la semana 6:
   - las tres reglas de capas (`dominio-limpio`, `aplicacion-sin-infraestructura`, `dominio-sin-paquetes`), ahora dentro de cada módulo; además, el dominio y la aplicación no pueden importar `compartido`, que es técnico;
@@ -159,14 +159,17 @@ Lo implementó Ricco en el #50. Esta sección empezó como lo que la partición 
   - `compartido-no-importa-modulos` y `modulo-no-importa-el-arranque`: `compartido` no depende de ningún módulo, y ningún módulo depende de `server.js`;
   - `entrada-publica-de-los-modulos` y `entrada-publica-de-compartido`: desde fuera, solo se entra por el `index.js`;
   - `paquetes-declarados`: cada módulo declara en su `package.json` los paquetes de npm que importa. Por ejemplo, `reclamos` declara `express` porque registra sus rutas.
-- **Módulos de esta primera parte:**
-  - `reclamos`: el registro y su evento, los cursos resueltos, sus repositorios y sus rutas (`POST /api/reclamos` y `PUT /api/admin/reclamos/:id/cursos-resueltos`, en `presentacion/rutas.js`). `crearModuloReclamos` recibe lo que necesita de afuera: PostgREST, el bus, los interruptores de configuración (con ellos arma el puerto `PoliticaDeRecepcion`) y los middlewares de sesión.
+- **Implementación:**
+  - `reclamos` agrupa el registro y su evento, la bandeja, el seguimiento del estudiante, las respuestas, las evidencias y los cursos resueltos. Recibe la política de recepción, la sesión y el acceso a archivos desde el arranque.
   - `notificaciones`, **nuevo**, acordado con Roy: los dos consumidores de `ReclamoRegistrado`, `componerConfirmacion` y el cliente de M2. Ninguno de los cinco módulos de la tabla calzaba con ellos, y el Lab10 (paso 6) pide que el consumidor viva en un módulo distinto del que publica. No importa a `reclamos`: el nombre del evento se lo pasa `server.js`, de cada evento usa solo `id`, `email`, `nombre` y `categoria`, y la descripción la lee por el puerto `FuenteDeExpedientes`, que define él e implementa `reclamos` (`obtenerParaExpediente`). El evento sigue en la versión 1, sin la descripción. `backend/tests/flujoReclamoRegistrado.test.js` prueba ese contrato fuera de los dos módulos.
-  - `compartido`: el enviador de correo con sus proveedores, la plantilla de los correos (la usan el código de verificación, la respuesta del Tercio y la confirmación), el bus de eventos y la respuesta al cuerpo inválido.
-- **Pruebas por módulo.** Cada módulo tiene sus pruebas en `tests/` y se prueba solo: `npm test -w @tefiis/reclamos`, o `npm run test:modulos` para todos. `modulo.test.js` monta solo `reclamos` en un Express aparte, con sesiones falsas, como se dijo para E3 en la confrontación con los escenarios. Las pruebas que cruzan módulos están en `backend/tests/`.
+  - `acceso` emite y verifica sesiones de estudiante, verifica tokens de Firebase y controla los permisos del panel. Los demás módulos reciben sus middlewares al arrancar.
+  - `configuracion` concentra los interruptores, el historial de actividad y `/health`. Entrega por función los modos que consultan `reclamos`, `documentos` y `tefi`, y lee el nombre del store del RAG desde `app_settings`.
+  - `documentos` guarda los documentos académicos y datos extraídos, firma enlaces y facilita la comprobación de propiedad y el almacenamiento de evidencias que usa `reclamos`.
+  - `tefi` agrupa RAG, historial de chat y auditoría de conversaciones. Solo este módulo usa Gemini en el backend.
+  - `compartido` contiene el cliente de PostgREST, el almacenamiento, el registro de actividad, el envío y las plantillas de correo, el bus y los utilitarios HTTP.
+- **Pruebas por módulo.** `npm run test:modulos` ejecuta las suites propias de `acceso`, `reclamos`, `notificaciones` y `compartido`. `reclamos` se monta en un Express aparte con sesiones de prueba. `acceso` prueba el inicio de sesión y los permisos con un verificador de Firebase simulado. Las pruebas que cruzan módulos están en `backend/tests/` y en `pruebas/probar-registro-con-bus.mjs`.
 - **El catálogo de cursos** (`src/data/cursos_secciones.json`) se queda donde está, porque también lo importa `useReclamos.ts`, del front. Lo lee `server.js` y se lo pasa a `reclamos`, así que ningún módulo lo importa.
-- **Arranque.** `server.js` es el único lugar que conecta los módulos: crea el bus, arma `reclamos`, le pasa a `notificaciones` la fuente de expedientes de `reclamos` y registra las rutas del módulo.
-- **Falta, en la segunda parte del #50:** mover lo que sigue en `server.js` a `acceso`, `configuracion`, `documentos`, `tefi` y el resto de `reclamos`, y pasar a `compartido` el cliente de PostgREST, el registro de actividad y el almacenamiento. Ahí cada módulo declara sus paquetes: Gemini solo en `tefi` y `firebase-admin` solo en `acceso`. Las reglas ya están escritas para `modulos/*` y valen para los módulos nuevos sin cambiarlas.
+- **Arranque.** `server.js` conecta los módulos y sus consumidores, monta los routers y aplica CORS y el manejo de errores HTTP. El contrato de las 41 rutas conserva sus métodos, URLs y requisitos de sesión.
 
 ## Cómo se comprueba
 

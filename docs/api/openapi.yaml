@@ -3,7 +3,7 @@ info:
   title: API de TEFIIS
   version: 2.0.0
   description: |
-    Contrato HTTP de la API de TEFIIS (`sistema-reclamos/backend/server.js`).
+    Contrato HTTP de la API de TEFIIS. El arranque de Express monta las rutas de cada módulo del backend.
 
     **Alcance.** Las 18 rutas de `/api/admin/*`, que usa el panel del Tercio
     (`sistema-admin`), y `POST /api/reclamos`, que dispara el evento
@@ -38,7 +38,7 @@ info:
     - `sesionAdmin`: ID token de Firebase. Además de ser válido, su correo tiene
       que estar en `ADMIN_EMAILS`. Las cuentas de `ADMIN_EMAILS_SOLO_LECTURA`
       solo pueden usar `GET`. Seis interruptores y el historial de actividad
-      son solo del administrador principal, cuyo correo está fijo en `server.js`.
+      son solo del administrador principal, cuyo correo está definido por el módulo `acceso`.
 
     **Errores.** En las rutas del panel, todo error responde
     `{ "error": "<mensaje>" }`, y el mensaje es para mostrarlo a una persona, no
@@ -1135,7 +1135,7 @@ paths:
       summary: Cierra o reabre el ciclo de matrícula
       description: |
         Con el modo activo, `POST /api/reclamos` responde 503, salvo para los
-        correos exceptuados en `server.js`. Si la fila no existe, se crea.
+        correos exceptuados en el módulo `configuracion`. Si la fila no existe, se crea.
       requestBody:
         required: true
         content:

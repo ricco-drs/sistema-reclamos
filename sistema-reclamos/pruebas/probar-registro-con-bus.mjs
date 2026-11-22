@@ -41,7 +41,7 @@ fs.copyFileSync(path.join(RAIZ, 'src', 'data', 'cursos_secciones.json'), path.jo
 // ── Servicios falsos ──
 const estado = {
   reclamos: [], secuencia: 41, correos: [], expedientes: [], actividad: [],
-  correoCaido: false, m2Caido: false, tefiDurmiendo: false, noSimuladas: [],
+  correoCaido: false, m2Caido: false, tefiDurmiendo: false, almuerzoFestivo: true, noSimuladas: [],
 };
 const leerCuerpo = (req) => new Promise((listo) => {
   let datos = '';
@@ -60,7 +60,11 @@ const falso = http.createServer(async (req, res) => {
   const ruta = url.pathname;
 
   if (ruta === '/rest/v1/app_settings' && req.method === 'GET') {
-    return responder(res, 200, q.key === 'eq.tefi_durmiendo' && estado.tefiDurmiendo ? [{ value: true }] : []);
+    const activo = {
+      'eq.tefi_durmiendo': estado.tefiDurmiendo,
+      'eq.modo_almuerzo_festivo': estado.almuerzoFestivo,
+    }[q.key];
+    return responder(res, 200, activo ? [{ value: true }] : []);
   }
   if (ruta === '/rest/v1/rpc/siguiente_id_reclamo') return responder(res, 200, ++estado.secuencia);
   if (ruta === '/rest/v1/reclamos' && req.method === 'POST') {
@@ -178,6 +182,16 @@ const errorRegistrado = (consumidor, id) => registro.some((l) => l.includes(`[EV
 
 try {
   if (!arriba) throw new Error('server.js no arrancó');
+
+  const consultaTefi = await fetch(`${base}/api/rag/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question: '¿Dónde consulto los horarios?' }),
+  });
+  const chatPausado = await consultaTefi.json();
+  comprobar('Tefi consulta configuración al preguntar', '503 almuerzo_festivo',
+    `${consultaTefi.status} ${chatPausado.motivo}`,
+    consultaTefi.status === 503 && chatPausado.motivo === 'almuerzo_festivo');
 
   // ── Rechazos ──
   let r = await registrar(reclamo('sin sesión'), { sesion: false });

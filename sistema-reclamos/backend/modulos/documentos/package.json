@@ -1,0 +1,12 @@
+{
+  "name": "@tefiis/documentos",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": "./index.js",
+  "dependencies": {
+    "@tefiis/compartido": "0.0.0",
+    "express": "^5.2.1",
+    "multer": "^2.1.1"
+  }
+}

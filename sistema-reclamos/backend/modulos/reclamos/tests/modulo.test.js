@@ -31,6 +31,7 @@ async function levantar({ abierta = true } = {}) {
   const pg = postgrestFalso();
   const publicador = crearPublicadorMemoria();
   const modulo = crearModuloReclamos({
+    limiteEnvioCodigo: (_req, _res, next) => next(),
     sbRest: pg.sbRest,
     publicador,
     interruptores: {

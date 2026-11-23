@@ -105,3 +105,56 @@ OK  Tefi durmiendo: esperado 503 SISTEMA_EN_PAUSA, sin Retry-After | obtenido 50
 # npm ci --> added 609 packages; node_modules/@tefiis/{compartido,notificaciones,reclamos} enlazados
 # npm test --> 91 pass, 0 fail | npm run arch:check --> sin violaciones | npm run build --> ok
 # validar-openapi --> Sin problemas | probar-registro-con-bus --> 22 de 22 correctos
+
+## 8. Segunda parte del #50, 22 de noviembre
+
+Clon Git limpio, sin .env ni node_modules, con Node v22.23.5.
+Base de comparación 6c887c8 (#67).
+
+$ npm ci --no-audit
+added 613 packages
+
+$ npm test
+# tests 97
+# pass 97
+# fail 0
+
+$ npm run test:modulos
+85 pruebas en las suites de compartido, acceso, notificaciones y reclamos. Todas pasaron.
+
+$ npm run build
+✓ built in 2.34s
+
+$ node pruebas/validar-openapi.cjs
+operaciones: 19 (en el código: 19) | $ref: 131 | ejemplos validados: 197 | mensajes de error comprobados: 38 | pendientes de implementar: 0
+Sin problemas.
+
+Se compararon las declaraciones HTTP de ambos árboles por método, URL y middleware de sesión.
+Coinciden las 41 rutas. Acceso tiene 2, configuración 14, documentos 8, reclamos 12 y Tefi 5.
+Se conservaron las 10 rutas públicas, 19 de administrador y 12 de estudiante.
+
+Prueba en rojo con un archivo temporal en backend/modulos/tefi/presentacion/_prueba-limite.js
+que importa '../../configuracion/index.js':
+
+$ npm run arch:check
+  error modulo-no-importa-otro-modulo: backend/modulos/tefi/presentacion/_prueba-limite.js → backend/modulos/configuracion/index.js
+x 1 dependency violations (1 errors, 0 warnings). 76 modules, 139 dependencies cruised.
+Código de salida 1.
+
+Tras retirar el archivo temporal:
+
+$ npm run arch:check
+✔ no dependency violations found (75 modules, 138 dependencies cruised)
+Código de salida 0.
+
+$ node pruebas/probar-registro-con-bus.mjs
+OK  Tefi consulta configuración al preguntar: esperado 503 almuerzo_festivo | obtenido 503 almuerzo_festivo
+23 de 23 correctos.
+
+$ docker compose -p tefiis-particion50 up --build --detach --wait --wait-timeout 120
+PostgreSQL, PostgREST, el proxy REST y la API arrancaron. Comprobaciones desde la API local:
+200 para /health y el portal.
+200 para la ventana de reclamos, con habilitados: true.
+400 para solicitar el enlace de un documento con sesión y sin URL.
+400 para consultar a Tefi sin la pregunta.
+201 al registrar un reclamo sintético y 200 al consultar su detalle autenticado mediante Location.

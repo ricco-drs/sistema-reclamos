@@ -49,3 +49,31 @@ EMAIL_TIMEOUT_MS="abc" no es un número válido; se usan 3000 ms.
 [EMAIL] Brevo falló, probando el siguiente proveedor: Brevo caído a propósito
 [EVENTOS] correo falló en REC-2026-0044:ReclamoRegistrado: Brevo caído a propósito
 [EVENTOS] m2 falló en REC-2026-0045:ReclamoRegistrado: M2 respondió 500 al registrar REC-2026-0045
+
+## Verificación en Docker Compose de la #51 (23 de noviembre)
+
+Backend de develop en fca8e51 (#68) con compose.eventos.yaml. La ruta de registro usó PostgreSQL y PostgREST del laboratorio. Correo y M2 apuntaron a simuladores HTTP de la red de Compose.
+
+$ docker compose -p tefiis-eventos51 -f compose.yaml -f compose.eventos.yaml up --build --detach --wait --wait-timeout 120
+API, PostgreSQL, PostgREST, proxy REST y simuladores en ejecución.
+
+$ docker compose -p tefiis-eventos51 -f compose.yaml -f compose.eventos.yaml exec -T api node scripts/probar-eventos-compose.mjs
+201 POST /api/reclamos (avisos: api, Location: /api/reclamos/mine/REC-2026-0001)
+Correo: brevo=200. Una confirmación aceptada.
+M2: 1 intento HTTP 200, expediente de REC-2026-0001 comprobado.
+200 reintento con el mismo ID y sin avisos adicionales.
+
+Para cada variante se volvió a ejecutar `up --detach --wait` con los valores indicados antes de correr el guion. Los comandos de reproducción están en docs/resiliencia.md, sección 6.
+
+| Ajustes sobre los valores por defecto | Argumentos del guion | Registro y reintento | Correo simulado | M2 |
+|---|---|---|---|---|
+| BREVO_MODO=lento, DEMORA_CORREO_MS=2000, EMAIL_TIMEOUT_MS=500, M2_MODO=502 | resend 502 | 201, luego 200 con el mismo ID (REC-2026-0002) | Brevo interrumpido y Resend 200. Una confirmación | 1 intento, 502 |
+| BREVO_MODO=lento, DEMORA_CORREO_MS=2000, EMAIL_TIMEOUT_MS=0, M2_MODO=502 | brevo 502 | 201, luego 200 con el mismo ID (REC-2026-0003) | Brevo 200. Una confirmación | 1 intento, 502 |
+| BREVO_MODO=401, RESEND_MODO=429 | mailjet 200 | 201, luego 200 con el mismo ID (REC-2026-0004) | Brevo 401, Resend 429 y Mailjet 200. Una confirmación | 1 intento, 200 |
+
+El guion verificó el contenido del expediente en los cuatro casos y comprobó que el reintento no originó más llamadas. El log de la API para REC-2026-0002 mostró:
+
+[EVENTOS] m2 falló en REC-2026-0002:ReclamoRegistrado: M2 respondió 502 al registrar REC-2026-0002
+[EMAIL] Brevo falló, probando el siguiente proveedor: Brevo excedió el tiempo límite de 500 ms
+
+Las 97 pruebas de Node, arch:check, el validador de OpenAPI y los 23 casos de probar-registro-con-bus.mjs también pasaron.

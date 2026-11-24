@@ -16,7 +16,9 @@
     "seed-rag": "node scripts/seed_rag.js",
     "test": "node --test \"backend/**/*.test.js\"",
     "test:modulos": "npm test --workspaces --if-present",
-    "arch:check": "depcruise backend --config .dependency-cruiser.cjs"
+    "arch:check": "depcruise backend --config .dependency-cruiser.cjs",
+    "api:generar": "node scripts/generar-interfaces.mjs",
+    "api:verificar": "node scripts/generar-interfaces.mjs --verificar"
   },
   "dependencies": {
     "@google/genai": "^1.50.1",

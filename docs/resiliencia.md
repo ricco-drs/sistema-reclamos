@@ -110,3 +110,38 @@ const sendEmail = crearEnviadorCorreo({
     : 3000,
 });
 ```
+
+## 6. Registro real con simuladores en Docker Compose
+
+La [configuración adicional de Compose](../compose.eventos.yaml) conecta la API a simuladores HTTP de Brevo, Resend, Mailjet y M2 sin publicar puertos para ellos. PostgreSQL, PostgREST y `POST /api/reclamos` son los del entorno de Lab11. El simulador guarda en memoria los intentos y sus resultados, que se pueden consultar en `/eventos` desde la red del proyecto.
+
+Ejecuta ambos comandos desde la raíz del repositorio.
+
+```bash
+docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml up --build --detach --wait
+docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml exec -T api node scripts/probar-eventos-compose.mjs
+```
+
+La prueba usa una sesión sintética y la misma opción `avisos: "api"` que envía el portal desde el #46. Comprueba el `201`, el encabezado `Location`, una confirmación aceptada, el contenido del expediente y que reenviar la misma solicitud devuelve `200` con el mismo ID sin volver a notificar.
+
+Para cambiar la respuesta de un proveedor, configura `BREVO_MODO`, `RESEND_MODO` o `MAILJET_MODO` en el entorno de Compose o en el `.env` de la raíz. Cada uno acepta `ok`, `401`, `429`, `500` y `lento`. La demora de `lento` se controla con `DEMORA_CORREO_MS`. Para simular una falla de M2, define `M2_MODO=502`.
+
+El siguiente ejemplo reproduce el respaldo a Resend cuando Brevo demora más que el timeout y M2 responde `502`. Aplica los valores siguientes y vuelve a ejecutar el comando `up`.
+
+```dotenv
+BREVO_MODO=lento
+DEMORA_CORREO_MS=2000
+EMAIL_TIMEOUT_MS=500
+M2_MODO=502
+```
+
+```bash
+docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml exec -T api node scripts/probar-eventos-compose.mjs resend 502
+docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml logs api
+```
+
+Para comparar el timeout con el mismo proveedor lento, usa `EMAIL_TIMEOUT_MS=0` y espera un correo aceptado por `brevo`. Vuelve a aplicar cada configuración con `up` antes de ejecutar el guion. Los argumentos del guion son el proveedor que debe aceptar la confirmación y el estado esperado de M2. Sus valores predeterminados son `brevo 200`.
+
+Al terminar, detén el entorno con `docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml down`. El volumen local queda disponible para repetir la prueba, que genera un correo sintético diferente en cada ejecución.
+
+La [evidencia de la prueba funcional](evidencias/lab10-bus-conectado.txt) incluye una ejecución con ambos servicios sanos y una con timeout de Brevo y fallo de M2. Este recorrido deja disponible el entorno para la comparación antes y después de la #33.

@@ -14,7 +14,9 @@ docker compose up --build --detach --wait
 
 Abre el [portal estudiantil](http://localhost:4173) y comprueba la [salud de la API](http://localhost:3005/health). `docker compose ps` muestra el estado de los servicios. PostgreSQL inicializa un esquema de pruebas en el volumen `datos`. La API consulta ese esquema vía PostgREST y solo el portal y la API tienen puertos publicados en el equipo.
 
-El entorno permite registrar y consultar reclamos con sesiones sintéticas. Para parametrizarlo, copia [`.env.example`](.env.example) a `.env` en la raíz. `JWT_SECRET` se aplica tanto a la API como a las sesiones de prueba. Para usar el panel local con un proyecto Firebase de pruebas, configura también `FIREBASE_SERVICE_ACCOUNT` y `ADMIN_EMAILS` y levanta el panel con sus propias variables web. El esquema local cubre el flujo de reclamos. El envío de correo, la consulta de Tefi, los archivos de Supabase Storage y el envío a M2 requieren sus servicios correspondientes para probarse de punta a punta. El portal de Compose solo permite conexiones del navegador hacia la API local.
+El entorno permite registrar y consultar reclamos con sesiones sintéticas. Para parametrizarlo, copia [`.env.example`](.env.example) a `.env` en la raíz. `JWT_SECRET` se aplica tanto a la API como a las sesiones de prueba. Para usar el panel local con un proyecto Firebase de pruebas, configura también `FIREBASE_SERVICE_ACCOUNT` y `ADMIN_EMAILS` y levanta el panel con sus propias variables web. El esquema local cubre el flujo de reclamos. Las consultas de Tefi y los archivos de Supabase Storage requieren sus servicios correspondientes. El portal de Compose solo permite conexiones del navegador hacia la API local.
+
+Para probar el correo y M2 con servicios simulados, usa [la configuración de eventos](docs/resiliencia.md#6-registro-real-con-simuladores-en-docker-compose). Ese entorno comprueba el registro y su reintento con PostgreSQL y PostgREST locales.
 
 ### Datos para los escenarios E1, E2 y E3
 

@@ -282,6 +282,7 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Herramienta:** Codex
 - **Para qué se usó:** Mover las 39 rutas que seguían en `server.js` y conectar los módulos a través del arranque.
 - **Qué se aceptó:** La distribución de la partición B y las dependencias que dejó el #67. PostgREST, Storage y actividad quedaron en `compartido`. La confirmación anterior y el contrato del evento se conservaron durante la migración. Se compararon los métodos, las URLs y el middleware de sesión de las 41 rutas antes y después.
+- **Qué se descartó y por qué:** Retirar la confirmación heredada durante el traslado. El portal todavía contempla `/api/reclamos/confirmar` en su transición, así que moverla a `reclamos` permitió conservar el contrato HTTP.
 - **Registra:** Lenin Castro
 
 ### Entrada del 23 de noviembre, registro por eventos en Compose (#51)
@@ -290,4 +291,5 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Herramienta:** Codex
 - **Para qué se usó:** Configurar en Compose proveedores HTTP simulados de correo y M2, y comprobar el registro desde la API del laboratorio.
 - **Qué se aceptó:** Una configuración adicional de Compose y un guion que comprueba el registro, el contenido del expediente y el reintento. Los simuladores permiten cambiar las respuestas y la latencia del correo para repetir la medición de resiliencia.
+- **Qué se descartó y por qué:** Arrancar los simuladores con el Compose base. La configuración adicional permite activarlos para las pruebas de correo y M2 y conservar el arranque habitual del laboratorio.
 - **Registra:** Lenin Castro

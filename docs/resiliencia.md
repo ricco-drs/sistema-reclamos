@@ -236,6 +236,31 @@ docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml logs ap
 docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml down
 ```
 
-*Resultados de la Corrida E: pendientes de registrar en el siguiente commit tras publicar y subir esta hipótesis previa.*
+*Resultados medidos de la Corrida E (ejecutada sobre el commit [`cfa4c6e`](https://github.com/ricco-drs/sistema-reclamos/commit/cfa4c6e) después de publicar la hipótesis previa en [#33 (comentario)](https://github.com/ricco-drs/sistema-reclamos/issues/33#issuecomment-7152252722)):*
+
+| Fase de la Corrida E | Lote | Estado de Brevo / M2 | Respuestas `201` | Intentos Brevo | Intentos Resend | Correos aceptados | Expedientes M2 | Duración HTTP (5 POST) | Duración total | Cola tras último POST |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Fase 1 (falla y apertura `open`)** | `2bda0926` | Brevo `lento` (`2 000 ms`), M2 `502` | **5 / 5** | **3** | **5** | **5 Resend** (`0` Brevo) | 5 (`502` aislados) | 2 601 ms | 2 607 ms | **6 ms** |
+| **Fase 2 (recuperación `halfOpen -> close`)** | `5cccc38f` | Brevo `ok`, M2 `ok` (tras `6 s > resetTimeout 5 000 ms`) | **5 / 5** | **5** | **0** | **5 Brevo** (`0` Resend) | 5 (`200 OK`) | 2 510 ms | 2 516 ms | **6 ms** |
+
+**Extracto real de logs de `api-1` en la Corrida E (ciclo completo `open -> halfOpen -> close`):**
+
+```text
+api-1  | [EVENTOS] m2 falló en REC-2026-0039:ReclamoRegistrado: M2 respondió 502 al registrar REC-2026-0039
+api-1  | [EMAIL] Brevo falló, probando el siguiente proveedor: Brevo excedió el tiempo límite de 500 ms
+api-1  | [EVENTOS] m2 falló en REC-2026-0040:ReclamoRegistrado: M2 respondió 502 al registrar REC-2026-0040
+api-1  | [EMAIL] Brevo falló, probando el siguiente proveedor: Brevo excedió el tiempo límite de 500 ms
+api-1  | [EVENTOS] m2 falló en REC-2026-0041:ReclamoRegistrado: M2 respondió 502 al registrar REC-2026-0041
+api-1  | [EMAIL][CB] Circuito de Brevo pasó a estado: open
+api-1  | [EMAIL] Brevo falló, probando el siguiente proveedor: Brevo excedió el tiempo límite de 500 ms
+api-1  | [EMAIL] Brevo falló, probando el siguiente proveedor: Circuito abierto para Brevo: se omite el intento y se pasa al respaldo
+api-1  | [EVENTOS] m2 falló en REC-2026-0042:ReclamoRegistrado: M2 respondió 502 al registrar REC-2026-0042
+api-1  | [EMAIL] Brevo falló, probando el siguiente proveedor: Circuito abierto para Brevo: se omite el intento y se pasa al respaldo
+api-1  | [EVENTOS] m2 falló en REC-2026-0043:ReclamoRegistrado: M2 respondió 502 al registrar REC-2026-0043
+api-1  | [EMAIL][CB] Circuito de Brevo pasó a estado: halfOpen
+api-1  | [EMAIL][CB] Circuito de Brevo pasó a estado: close
+```
+
+**Validación de la hipótesis previa (Corrida E):** Los valores medidos coinciden exactamente con las predicciones publicadas antes de ejecutar la prueba (`brevo: 3, resend: 5` en la Fase 1 y `brevo: 5, resend: 0` en la Fase 2, con las transiciones `open -> halfOpen -> close` registradas en `api-1`).
 
 Al terminar, detén el entorno con `docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml down`. El volumen local queda disponible para repetir la prueba, que genera un correo sintético diferente en cada ejecución. La [evidencia de la prueba funcional](evidencias/lab10-bus-conectado.txt) incluye además la ejecución funcional de 1 reclamo con ambos servicios sanos y con timeout de Brevo y fallo de M2 (`d2977e1`).

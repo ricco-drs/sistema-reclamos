@@ -30,10 +30,11 @@ test('E5 normal: Brevo disponible acepta el envío sin llamar a Resend ni a Mail
 });
 
 for (const modoFalla of ['401', '429']) {
-  test(`E5 Brevo en modo ${modoFalla}: 100 envíos conmutan a Resend (100 Brevo, 100 Resend, 0 Mailjet)`, async () => {
+  test(`E5 Brevo en modo ${modoFalla} (sin circuit breaker): 100 envíos conmutan a Resend (100 Brevo, 100 Resend, 0 Mailjet)`, async () => {
     const sim = crearProveedorCorreoSimulado({ Brevo: modoFalla, Resend: 'ok', Mailjet: 'ok' });
     const sendEmail = crearEnviadorCorreo({
       fetchFn: sim.fetchFn,
+      circuitBreaker: false,
       ...sim.credencialesFalsas,
       registrarError: () => {},
     });
@@ -51,6 +52,179 @@ for (const modoFalla of ['401', '429']) {
     assert.ok(sim.enviados.every((e) => e.proveedor === 'Resend'));
   });
 }
+
+test('Circuit Breaker (opossum): abre el circuito tras fallos en Brevo, evita llamadas redundantes y recupera en halfOpen', async () => {
+  const sim = crearProveedorCorreoSimulado({ Brevo: 'colgado', Resend: 'ok', Mailjet: 'ok' });
+  const transiciones = [];
+  const sendEmail = crearEnviadorCorreo({
+    fetchFn: sim.fetchFn,
+    timeoutMs: 15,
+    circuitBreaker: {
+      habilitado: true,
+      volumeThreshold: 3,
+      errorThresholdPercentage: 50,
+      resetTimeout: 60,
+    },
+    ...sim.credencialesFalsas,
+    registrarError: () => {},
+    registrarEstadoCircuito: (prov, estado) => transiciones.push(`${prov}:${estado}`),
+  });
+
+  try {
+    for (let i = 1; i <= 20; i++) {
+      await sendEmail({
+        to: correoPrueba(i),
+        subject: `Reclamo CB #${i}`,
+        html: '<p>Confirmación</p>',
+      });
+    }
+
+    // Solo los primeros 3 intentos tocan Brevo antes de abrir el circuito; los 17 restantes van directo a Resend.
+    assert.equal(sim.conteos.Brevo, 3);
+    assert.equal(sim.conteos.Resend, 20);
+    assert.equal(sim.conteos.Mailjet, 0);
+    assert.equal(sim.enviados.length, 20);
+    assert.equal(sendEmail.estadoCircuitos().Brevo, 'open');
+    assert.ok(transiciones.includes('Brevo:open'));
+
+    // Recuperamos Brevo y esperamos el resetTimeout para comprobar la transición halfOpen -> closed.
+    sim.modos.Brevo = 'ok';
+    await new Promise((r) => setTimeout(r, 90));
+    await sendEmail({ to: correoPrueba(21), subject: 'Recuperación Brevo', html: '<p>ok</p>' });
+
+    assert.equal(sim.conteos.Brevo, 4);
+    assert.equal(sim.enviados[20].proveedor, 'Brevo');
+    assert.equal(sendEmail.estadoCircuitos().Brevo, 'closed');
+    assert.ok(transiciones.includes('Brevo:halfOpen'));
+    assert.ok(transiciones.includes('Brevo:close'));
+  } finally {
+    sendEmail.cerrar();
+  }
+});
+
+test('Circuit Breaker (errorFilter): errores 400 y 422 por una dirección inválida no abren los circuitos ni bloquean envíos válidos', async () => {
+  const llamadas = { Brevo: 0, Resend: 0, Mailjet: 0 };
+  const fetchSimulado = async (url, init = {}) => {
+    const cuerpo = init.body ? JSON.parse(init.body) : {};
+    const destinatario =
+      cuerpo?.to?.[0]?.email ||
+      cuerpo?.to?.[0] ||
+      cuerpo?.Messages?.[0]?.To?.[0]?.Email ||
+      '';
+    const proveedor = url.includes('brevo') ? 'Brevo' : (url.includes('resend') ? 'Resend' : 'Mailjet');
+    llamadas[proveedor]++;
+
+    if (destinatario.startsWith('invalido')) {
+      const status = destinatario.includes('422') ? 422 : 400;
+      return {
+        ok: false,
+        status,
+        async json() {
+          return { message: `Dirección rechazada (${status})`, ErrorMessage: `Dirección rechazada (${status})` };
+        },
+      };
+    }
+    return {
+      ok: true,
+      status: 200,
+      async json() { return { id: 'ok' }; },
+    };
+  };
+
+  const sendEmail = crearEnviadorCorreo({
+    fetchFn: fetchSimulado,
+    fromEmail: 'tefiis@prueba.test',
+    brevo: { apiKey: 'k-brevo', url: 'http://correo.simulado.local/brevo' },
+    resend: { apiKey: 'k-resend', url: 'http://correo.simulado.local/resend' },
+    mailjet: { apiKey: 'k-mj', secretKey: 's-mj', url: 'http://correo.simulado.local/mailjet' },
+    circuitBreaker: {
+      habilitado: true,
+      volumeThreshold: 3,
+      errorThresholdPercentage: 50,
+      resetTimeout: 30_000,
+    },
+    registrarError: () => {},
+    registrarEstadoCircuito: () => {},
+  });
+
+  try {
+    for (const correoRechazado of ['invalido1@uni.pe', 'invalido2@uni.pe', 'invalido-422@uni.pe']) {
+      await assert.rejects(
+        sendEmail({ to: correoRechazado, subject: 'Código', html: '<p>1234</p>' }),
+        /Dirección rechazada/,
+      );
+    }
+
+    // Los tres circuitos permanecen cerrados porque 400 y 422 son errores del destinatario/petición.
+    assert.deepEqual(sendEmail.estadoCircuitos(), {
+      Brevo: 'closed',
+      Resend: 'closed',
+      Mailjet: 'closed',
+    });
+
+    // El siguiente envío a una dirección válida sale en el primer intento por Brevo.
+    const resValido = await sendEmail({ to: 'valido@uni.pe', subject: 'Código', html: '<p>1234</p>' });
+    assert.equal(resValido.proveedor, 'Brevo');
+    assert.equal(llamadas.Brevo, 4);
+    assert.equal(llamadas.Resend, 3);
+    assert.equal(llamadas.Mailjet, 3);
+  } finally {
+    sendEmail.cerrar();
+  }
+});
+
+test('Circuit Breaker (rollingCountTimeout): con ventana amplia abre ante tráfico espaciado; con ventana corta expira antes de alcanzar volumeThreshold', async () => {
+  // 1. Con ventana muy corta (30 ms) y envíos cada 25 ms, en 30 ms nunca coinciden 3 fallos -> no abre.
+  const simVentanaCorta = crearProveedorCorreoSimulado({ Brevo: '500', Resend: 'ok', Mailjet: 'ok' });
+  const sendVentanaCorta = crearEnviadorCorreo({
+    fetchFn: simVentanaCorta.fetchFn,
+    circuitBreaker: {
+      habilitado: true,
+      volumeThreshold: 3,
+      errorThresholdPercentage: 50,
+      rollingCountTimeout: 30,
+      rollingCountBuckets: 3,
+      resetTimeout: 30_000,
+    },
+    ...simVentanaCorta.credencialesFalsas,
+    registrarError: () => {},
+    registrarEstadoCircuito: () => {},
+  });
+
+  // 2. Con ventana por defecto (60 000 ms) y el mismo espaciado, los 3 primeros fallos caen dentro de la ventana y abre al 3.º.
+  const simVentanaAmplia = crearProveedorCorreoSimulado({ Brevo: '500', Resend: 'ok', Mailjet: 'ok' });
+  const sendVentanaAmplia = crearEnviadorCorreo({
+    fetchFn: simVentanaAmplia.fetchFn,
+    circuitBreaker: {
+      habilitado: true,
+      volumeThreshold: 3,
+      errorThresholdPercentage: 50,
+      rollingCountTimeout: 60_000,
+      resetTimeout: 30_000,
+    },
+    ...simVentanaAmplia.credencialesFalsas,
+    registrarError: () => {},
+    registrarEstadoCircuito: () => {},
+  });
+
+  try {
+    for (let i = 1; i <= 5; i++) {
+      await sendVentanaCorta({ to: correoPrueba(i), subject: `Corta #${i}`, html: '<p>x</p>' });
+      await sendVentanaAmplia({ to: correoPrueba(i), subject: `Amplia #${i}`, html: '<p>x</p>' });
+      if (i < 5) await new Promise((r) => setTimeout(r, 25));
+    }
+
+    assert.equal(sendVentanaCorta.estadoCircuitos().Brevo, 'closed');
+    assert.equal(simVentanaCorta.conteos.Brevo, 5);
+
+    assert.equal(sendVentanaAmplia.estadoCircuitos().Brevo, 'open');
+    assert.equal(simVentanaAmplia.conteos.Brevo, 3);
+    assert.equal(simVentanaAmplia.conteos.Resend, 5);
+  } finally {
+    sendVentanaCorta.cerrar();
+    sendVentanaAmplia.cerrar();
+  }
+});
 
 test('E5 Brevo lento y colgado (ANTES vs DESPUÉS): sin timeout espera o se cuelga en Brevo; con timeout corta y entrega por Resend', async () => {
   // 1. Modo lento sin timeout (timeoutMs: 0): Brevo tarda pero termina aceptando sin conmutar a Resend
@@ -138,6 +312,7 @@ test('Resiliencia por eventos (ReclamoRegistrado en proceso): fallas o bloqueo e
   const sendEmail = crearEnviadorCorreo({
     fetchFn: simCorreo.fetchFn,
     timeoutMs: 15,
+    circuitBreaker: false,
     ...simCorreo.credencialesFalsas,
     registrarError: () => {},
   });

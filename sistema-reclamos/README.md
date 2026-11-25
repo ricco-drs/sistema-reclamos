@@ -85,6 +85,11 @@ Crea un archivo `.env` en esta carpeta (`sistema-reclamos/`):
 | `BREVO_API_KEY`, `RESEND_API_KEY`, `MAILJET_API_KEY` y `MAILJET_SECRET_KEY` | Proveedores de correo, en ese orden de respaldo.                        | Al menos uno |
 | `M2_URL`                                                                    | Servicio M2 que recibe el expediente de cada reclamo.                   | En Railway   |
 | `EMAIL_TIMEOUT_MS`                                                          | Espera máxima por proveedor de correo, en ms. Por defecto, 3000.        | No           |
+| `EMAIL_CB_ENABLED`                                                          | Activa el circuit breaker (`opossum`) por proveedor (`true` por defecto). | No           |
+| `EMAIL_CB_VOLUME_THRESHOLD`                                                 | Intentos mínimos en la ventana antes de evaluar apertura (por defecto, 3). | No           |
+| `EMAIL_CB_ERROR_THRESHOLD`                                                  | Porcentaje de fallos que abre el circuito (por defecto, 50).            | No           |
+| `EMAIL_CB_RESET_MS`                                                         | Espera en ms antes de probar `halfOpen` (por defecto, 30000).           | No           |
+| `EMAIL_CB_WINDOW_MS`                                                        | Ventana deslizante de conteo en ms (por defecto, 60000).                | No           |
 | `BREVO_API_URL`, `RESEND_API_URL` y `MAILJET_API_URL`                       | Otra URL por proveedor, por ejemplo uno simulado en pruebas.            | No           |
 | `ADMIN_EMAILS_SOLO_LECTURA`                                                 | Cuentas del panel que solo pueden consultar.                            | No           |
 | `ALLOWED_ORIGINS`                                                           | Orígenes permitidos por CORS. Sin ella se acepta cualquiera.            | No           |

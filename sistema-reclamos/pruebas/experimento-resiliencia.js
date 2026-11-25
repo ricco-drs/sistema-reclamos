@@ -30,7 +30,7 @@ const CATALOGO = new Map([
   ['SW708', { nombre: 'Arquitectura de Soluciones de Software', secciones: ['U'] }],
 ]);
 
-async function correrExperimentoCorreo({ titulo, modoBrevo, modoResend = 'ok', modoMailjet = 'ok', timeoutMs, demoraLentoMs = 50 }) {
+async function correrExperimentoCorreo({ titulo, modoBrevo, modoResend = 'ok', modoMailjet = 'ok', timeoutMs, demoraLentoMs = 50, circuitBreaker = false }) {
   const sim = crearProveedorCorreoSimulado({
     Brevo: modoBrevo,
     Resend: modoResend,
@@ -40,8 +40,10 @@ async function correrExperimentoCorreo({ titulo, modoBrevo, modoResend = 'ok', m
   const sendEmail = crearEnviadorCorreo({
     fetchFn: sim.fetchFn,
     timeoutMs,
+    circuitBreaker,
     ...sim.credencialesFalsas,
     registrarError: () => {},
+    registrarEstadoCircuito: () => {},
   });
 
   // Si Brevo está en modo 'colgado' y no hay timeout (timeoutMs === 0), la primera llamada
@@ -75,6 +77,8 @@ async function correrExperimentoCorreo({ titulo, modoBrevo, modoResend = 'ok', m
   }
 
   const duracionTotalMs = Math.round(performance.now() - t0);
+  const estadoCircuitoBrevo = sendEmail.estadoCircuitos().Brevo;
+  sendEmail.cerrar();
   const aceptadosBrevo = sim.enviados.filter((e) => e.proveedor === 'Brevo').length;
   const aceptadosResend = sim.enviados.filter((e) => e.proveedor === 'Resend').length;
 
@@ -82,6 +86,7 @@ async function correrExperimentoCorreo({ titulo, modoBrevo, modoResend = 'ok', m
     titulo,
     modoBrevo,
     timeoutMs: timeoutMs || 'Sin timeout',
+    circuitoBrevo: estadoCircuitoBrevo,
     intentosBrevo: sim.conteos.Brevo,
     abortadosTimeout: sim.abortadosPorTimeout.Brevo,
     intentosResend: sim.conteos.Resend,
@@ -262,7 +267,9 @@ const resultadosCorreo = [
   await correrExperimentoCorreo({ titulo: '5. Brevo lento 50 ms (Antes: sin timeout)', modoBrevo: 'lento', timeoutMs: 0, demoraLentoMs: 50 }),
   await correrExperimentoCorreo({ titulo: '6. Brevo lento 50 ms (Después: timeout 10 ms)', modoBrevo: 'lento', timeoutMs: 10, demoraLentoMs: 50 }),
   await correrExperimentoCorreo({ titulo: '7. Brevo colgado (Antes: sin timeout)', modoBrevo: 'colgado', timeoutMs: 0 }),
-  await correrExperimentoCorreo({ titulo: '8. Brevo colgado (Después: timeout 10 ms)', modoBrevo: 'colgado', timeoutMs: 10 }),
+  await correrExperimentoCorreo({ titulo: '8. Brevo colgado (Solo timeout 10 ms)', modoBrevo: 'colgado', timeoutMs: 10 }),
+  await correrExperimentoCorreo({ titulo: '9. Brevo lento 50 ms (Timeout 10 ms + CB opossum)', modoBrevo: 'lento', timeoutMs: 10, demoraLentoMs: 50, circuitBreaker: { habilitado: true, volumeThreshold: 3, resetTimeout: 30_000 } }),
+  await correrExperimentoCorreo({ titulo: '10. Brevo colgado (Timeout 10 ms + CB opossum)', modoBrevo: 'colgado', timeoutMs: 10, circuitBreaker: { habilitado: true, volumeThreshold: 3, resetTimeout: 30_000 } }),
 ];
 
 const resultadoEventos = await correrExperimentoRegistroEventos();

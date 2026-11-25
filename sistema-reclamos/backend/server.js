@@ -40,12 +40,18 @@ const port = process.env.PORT || 3005;
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .split(',').map(o => o.trim()).filter(Boolean);
 
+// Cabeceras de la respuesta que el front puede leer desde otro origen. Sin exponerlas, el navegador
+// las recibe pero se las oculta a JavaScript: Location (el reclamo creado) y Retry-After (cuántos
+// segundos esperar antes de reintentar) llegarían como null.
+const exposedHeaders = ['Location', 'Retry-After'];
+
 if (ALLOWED_ORIGINS.length === 0) {
   console.warn('ALLOWED_ORIGINS no está definida — se acepta cualquier origen. Defínela con las URLs del front.');
-  app.use(cors());
+  app.use(cors({ exposedHeaders }));
 } else {
   console.log('CORS restringido a:', ALLOWED_ORIGINS.join(', '));
   app.use(cors({
+    exposedHeaders,
     origin: (origin, cb) => {
       // Sin origin son peticiones que no vienen de un navegador (curl, health
       // checks de Railway): no hay nada que proteger con CORS ahí.

@@ -19,6 +19,8 @@ npm run api:generar     # escribe src/api/generado/ a partir de docs/api/openapi
 npm run api:verificar   # falla si src/api/generado/ no corresponde al contrato
 ```
 
+`api:generar` genera en una carpeta temporal y reemplaza `generado/` solo si el generador termina bien: si falla, queda el cliente que había.
+
 Si cambias el contrato, corre `npm run api:generar` y sube el resultado junto con el cambio. Las versiones están fijas (`openapitools.json` para el generador y `scripts/generar-interfaces.mjs` para su envoltorio de npm), para que el resultado sea el mismo en cualquier máquina.
 
 ## Cómo se usa
@@ -36,6 +38,8 @@ try {
   if (e instanceof ErrorDeApi) console.log(e.estado, e.codigo); // por ejemplo 400 'CODIGO_UNI_INVALIDO'
 }
 ```
+
+Desde un navegador en otro origen, `ubicacion` y `reintentarDespuesDe` se pueden leer porque la API expone `Location` y `Retry-After` en CORS (`backend/server.js`).
 
 ## Lo que el generador no resuelve
 

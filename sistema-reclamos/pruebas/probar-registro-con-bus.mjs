@@ -154,7 +154,8 @@ const cursoReal = { codigo: catalogo[0].codigo, seccion: catalogo[0].secciones[0
 async function registrar(cuerpo, { sesion = true, frontNuevo = true } = {}) {
   const r = await fetch(`${base}/api/reclamos`, {
     method: 'POST',
-    headers: sesion ? conSesion : { 'Content-Type': 'application/json' },
+    // Con Origin, como lo manda el navegador cuando el front está en otro origen.
+    headers: { ...(sesion ? conSesion : { 'Content-Type': 'application/json' }), Origin: 'http://localhost:5173' },
     body: JSON.stringify(frontNuevo ? { ...cuerpo, avisos: 'api' } : cuerpo),
   });
   return {
@@ -162,6 +163,7 @@ async function registrar(cuerpo, { sesion = true, frontNuevo = true } = {}) {
     cuerpo: await r.json(),
     location: r.headers.get('location'),
     reintentarDespues: r.headers.get('retry-after'),
+    expuestas: r.headers.get('access-control-expose-headers'),
   };
 }
 const reclamo = (descripcion) => ({
@@ -239,6 +241,8 @@ try {
     r.status === 201 && /^REC-\d{4}-\d{4}$/.test(id) && r.cuerpo.avisos === 'api' && r.location === `/api/reclamos/mine/${id}`);
   comprobar('  estado y creado_en en el 201', 'PENDIENTE y una fecha ISO', `${r.cuerpo.estado} ${r.cuerpo.creado_en}`,
     r.cuerpo.estado === 'PENDIENTE' && /^\d{4}-\d{2}-\d{2}T/.test(r.cuerpo.creado_en) && guardado?.created_at === r.cuerpo.creado_en);
+  // Node lee todas las cabeceras; el navegador, desde otro origen, solo las que la API expone.
+  comprobar('  CORS expone Location y Retry-After', 'Location,Retry-After', r.expuestas, r.expuestas === 'Location,Retry-After');
   const creadoEnOriginal = r.cuerpo.creado_en;
   comprobar('  cursos_descartados en el 201', 'XX999 por NO_EXISTE_EN_CATALOGO', JSON.stringify(r.cuerpo.cursos_descartados),
     JSON.stringify(r.cuerpo.cursos_descartados) === JSON.stringify([{ lista: 'retirar', codigo: 'XX999', seccion: 'Z', motivo: 'NO_EXISTE_EN_CATALOGO' }]));

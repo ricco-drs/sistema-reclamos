@@ -4,7 +4,7 @@
 //
 // Uso, desde sistema-reclamos/ (hace falta Java 11 o superior y red la primera vez, para bajar
 // el generador):
-//   npm run api:generar     escribe src/api/generado/
+//   npm run api:generar     escribe src/api/generado/; si el generador falla, deja el que había
 //   npm run api:verificar   falla si src/api/generado/ no coincide con el contrato
 //
 // Las versiones quedan fijas para que el resultado sea el mismo en cualquier máquina:
@@ -39,8 +39,9 @@ function comprobarJava() {
   }
 }
 
+// Escribe en `salida`, que está vacía o no existe. Si el generador falla lanza un Error en vez de
+// salir con process.exit, que se saltaría los `finally` que borran las carpetas temporales.
 function generar(salida) {
-  fs.rmSync(salida, { recursive: true, force: true });
   // Una sola cadena y con shell: en Windows `npx` es un .cmd y no se puede lanzar sin shell.
   const comando = [
     'npx --yes', `@openapitools/openapi-generator-cli@${VERSION_ENVOLTORIO}`,
@@ -49,7 +50,7 @@ function generar(salida) {
   ].join(' ');
   const r = spawnSync(comando, { cwd: RAIZ, encoding: 'utf8', shell: true, maxBuffer: 64 * 1024 * 1024 });
   if (r.status !== 0) {
-    fallar(`openapi-generator falló (código ${r.status}):\n${r.stdout ?? ''}\n${r.stderr ?? ''}`);
+    throw new Error(`openapi-generator falló (código ${r.status}):\n${r.stdout ?? ''}\n${r.stderr ?? ''}`);
   }
   const avisos = `${r.stdout ?? ''}${r.stderr ?? ''}`.split('\n').filter((l) => /WARN|ERROR/.test(l));
   return avisos.map((l) => l.replace(/\u001b\[[0-9;]*m/g, '').replace(/^\[main\]\s*/, '').trim());
@@ -82,27 +83,58 @@ function diferencias(esperado, actual) {
   return problemas;
 }
 
-comprobarJava();
-if (!fs.existsSync(CONTRATO)) fallar(`No se encontró el contrato en ${CONTRATO}.`);
+// Genera en una carpeta temporal y reemplaza `destino` solo si el generador termina bien. La temporal
+// va junto a `destino`, en el mismo disco, para que el cambio sea un renombrado y no una copia que
+// pueda quedar a medias.
+function generarYReemplazar(destino) {
+  fs.mkdirSync(path.dirname(destino), { recursive: true });
+  const temporal = fs.mkdtempSync(path.join(path.dirname(destino), '.generando-'));
+  try {
+    const nuevo = path.join(temporal, 'nuevo');
+    const anterior = path.join(temporal, 'anterior');
+    const avisos = generar(nuevo);
+    if (fs.existsSync(destino)) fs.renameSync(destino, anterior);
+    try {
+      fs.renameSync(nuevo, destino);
+    } catch (error) {
+      if (fs.existsSync(anterior)) fs.renameSync(anterior, destino);
+      throw error;
+    }
+    return avisos;
+  } finally {
+    fs.rmSync(temporal, { recursive: true, force: true });
+  }
+}
 
-if (process.argv.includes('--verificar')) {
+function verificar() {
   const temporal = fs.mkdtempSync(path.join(os.tmpdir(), 'interfaces-api-'));
   try {
     generar(temporal);
     const problemas = diferencias(temporal, DESTINO);
     if (problemas.length) {
-      fallar(`src/api/generado/ no corresponde a docs/api/openapi.yaml (${problemas.length} diferencias):\n`
+      throw new Error(`src/api/generado/ no corresponde a docs/api/openapi.yaml (${problemas.length} diferencias):\n`
         + `${problemas.slice(0, 15).map((p) => `  - ${p}`).join('\n')}\nCorre \`npm run api:generar\` y sube el resultado.`);
     }
     console.log(`Las interfaces de src/api/generado/ corresponden al contrato (${archivosDe(DESTINO).length} archivos).`);
   } finally {
     fs.rmSync(temporal, { recursive: true, force: true });
   }
-} else {
-  const avisos = generar(DESTINO);
-  console.log(`Interfaces generadas en src/api/generado/ (${archivosDe(DESTINO).length} archivos).`);
-  if (avisos.length) {
-    console.log(`Avisos del generador (${avisos.length}):`);
-    for (const a of [...new Set(avisos)]) console.log(`  - ${a}`);
+}
+
+comprobarJava();
+if (!fs.existsSync(CONTRATO)) fallar(`No se encontró el contrato en ${CONTRATO}.`);
+
+try {
+  if (process.argv.includes('--verificar')) {
+    verificar();
+  } else {
+    const avisos = generarYReemplazar(DESTINO);
+    console.log(`Interfaces generadas en src/api/generado/ (${archivosDe(DESTINO).length} archivos).`);
+    if (avisos.length) {
+      console.log(`Avisos del generador (${avisos.length}):`);
+      for (const a of [...new Set(avisos)]) console.log(`  - ${a}`);
+    }
   }
+} catch (error) {
+  fallar(error.message);
 }

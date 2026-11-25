@@ -37,3 +37,26 @@ OK  Sin sesión: esperado 401 SESION_REQUERIDA | obtenido 401 SESION_REQUERIDA
 OK  Token falsificado: esperado 401 SESION_INVALIDA | obtenido 401 SESION_INVALIDA
 OK  registrarReclamo() generado, sobre un 201: esperado solo id y creadoEn: pierde estado y cursosDescartados (por eso existe ./reclamos.ts) | obtenido claves: id, creadoEn, avisos
 9 de 9 correctos.
+
+# Correcciones tras la revisión del #72
+
+## 1. api:generar ya no borra el cliente si el generador falla
+# Antes, con una línea inválida agregada al contrato: api:generar salía con código 1 y src/api/generado/ ya no existía.
+# Después, con el mismo contrato roto:
+$ npm run api:generar
+openapi-generator falló (código 1): ...
+Código de salida 1. src/api/generado/ conserva sus 55 archivos, con el mismo contenido, y no queda ninguna carpeta temporal.
+# Con el contrato restaurado: api:generar reemplaza la carpeta (un archivo sobrante puesto a mano desaparece),
+# también funciona si la carpeta no existe, y api:verificar pasa.
+
+## 2. CORS expone Location y Retry-After
+$ node pruebas/probar-registro-con-bus.mjs
+OK    CORS expone Location y Retry-After: esperado Location,Retry-After | obtenido Location,Retry-After
+24 de 24 correctos.
+# Quitando exposedHeaders de la configuración abierta, ese caso falla (obtenido null): 23 de 24.
+
+# En Chrome, desde http://localhost:4173 contra http://localhost:3005 (Compose, con ALLOWED_ORIGINS), usando registrarReclamo():
+201: ubicacion = /api/reclamos/mine/REC-2026-0001
+200 (reenvío): ubicacion = /api/reclamos/mine/REC-2026-0001
+429 de POST /api/auth/verify-code: Retry-After = 900
+# Sobre esa misma imagen, pruebas/probar-cliente-generado.ts: 9 de 9 correctos.

@@ -30,7 +30,7 @@ TEFIIS como una sola caja negra de software central, los tres actores que intera
 | **Miembro del tercio estudiantil** | Persona | Utiliza el panel de gestión para revisar expedientes de reclamos, proponer soluciones y emitir respuestas a los alumnos. |
 | **Administrador del sistema** | Persona | Accede al panel administrativo para gestionar cuentas de usuario, permisos y parámetros operativos del sistema. |
 | **Sistema TEFIIS** | Software System | Registra, gestiona, automatiza y resuelve integralmente el ciclo de vida de los reclamos de matrícula estudiantiles. |
-| **Proveedores de correo** | Sistema externo | Despacha correos electrónicos transaccionales con códigos de verificación, confirmaciones y resoluciones con timeout y fallback automático (`Brevo -> Resend -> Mailjet`). |
+| **Proveedores de correo** | Sistema externo | Despacha correos electrónicos transaccionales con códigos de verificación, confirmaciones y resoluciones con timeout, circuit breaker (`opossum`) y fallback automático (`Brevo -> Resend -> Mailjet`). |
 | **Servicio LLM Externo (Gemini API)** | Sistema externo | Ejecuta la búsqueda semántica sobre los reglamentos universitarios indexados (RAG) para generar las respuestas del asistente Tefi. |
 | **Firebase Authentication** | Sistema externo | Gestiona la autenticación, emisión y validación de tokens de identidad para el acceso seguro al panel administrativo. |
 | **Servicio M2** | Sistema externo | Recibe el expediente de cada reclamo (ID, código, correo, nombre, motivo y descripción) al registrarse en el sistema. |

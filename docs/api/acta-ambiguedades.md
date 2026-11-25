@@ -63,6 +63,31 @@ El campo `avisos` (#58) llegó después de la revisión, para la transición ent
 | **El código UNI** se valida solo si viene, y se aceptan espacios en los bordes y la letra en minúscula: se guarda normalizado. El contrato pedía la letra en mayúscula. | El contrato se ajusta a lo implementado, en vez de volver estricto el servidor: el front ya lo manda en mayúsculas, y aceptarlo normalizado no perjudica a ningún cliente. Un consumidor que mande `20240001a` recibe 201, no 400. |
 | **`lista` en `cursos_descartados`:** la primera implementación devolvía `cursos_retirar` y `cursos_matricular`. | Se mantiene lo acordado con el consumidor, `retirar` y `matricular`, y se ajusta el código. Cambiar el valor ahora obligaría a avisarle al consumidor un cambio de contrato. |
 
+## 7. Interfaces generadas desde el contrato (paso 4)
+
+Se generaron con openapi-generator las interfaces TypeScript de la API, a partir de `openapi.yaml`.
+
+| | |
+|---|---|
+| **Herramienta** | openapi-generator 7.14.0 (envoltorio de npm 2.21.0), generador `typescript-fetch`, con una interfaz por grupo de operaciones. |
+| **Qué se generó** | `sistema-reclamos/src/api/generado/`: 6 interfaces `…ApiInterface` con su clase `…Api` y 42 modelos, que cubren las 19 operaciones del contrato. |
+| **Cómo** | `npm run api:generar`. `npm run api:verificar` regenera en una carpeta temporal y falla si lo que está en el repositorio no corresponde al contrato (probado: con un cambio en un valor del contrato falla y nombra el archivo, y sin él pasa). |
+| **Prueba** | `pruebas/probar-cliente-generado.ts` usa el cliente contra la API de Docker Compose: 9 de 9 casos (201, reenvío 200, y los códigos 400, 401 y 403 del contrato). `tsc --noEmit` compila el cliente, incluso con `--strict`. |
+| **Detalle y uso** | [`sistema-reclamos/src/api/README.md`](../../sistema-reclamos/src/api/README.md) |
+
+**Por qué cliente y no servidor.** Quienes consumen la API, el front y el equipo consumidor, necesitan los tipos; el servidor ya existe, es Express escrito a mano y está partido en módulos. Un generador de servidor (`nodejs-express-server`) crearía su propia estructura de rutas, que duplicaría los módulos y chocaría con la partición B. Del lado del servidor, el contrato se hace cumplir al revés: `validar-openapi.cjs` lo compara con el código.
+
+**Lo que encontró el generador** (el detalle está en el README de `src/api/`):
+
+| # | Hallazgo | Qué se hizo |
+|---|---|---|
+| G1 | `POST /api/reclamos` tiene dos respuestas exitosas con cuerpos distintos (201 y 200). El generador escribe un solo tipo de retorno, el de la última, que es el del reenvío, y con él un 201 pierde `estado` y `cursosDescartados`. | Se escribió `src/api/reclamos.ts`, que separa los dos casos por el código HTTP. El contrato no cambia: las dos respuestas son las acordadas con el consumidor. |
+| G2 | Los errores no se modelan como retorno: el cliente lanza un `ResponseError` genérico. | `reclamos.ts` lo convierte en `ErrorDeApi`, con el `codigo` estable de `ErrorDeReclamo`. |
+| G3 | Las respuestas de los cinco interruptores no tienen nombre en el contrato, y salieron como `InlineObject` e `InlineObject1`. | Queda como mejora del contrato: darles nombre. No cambia el comportamiento. |
+| G4 | El esquema `Error` se renombró a `ModelError`, porque `Error` es un tipo de JavaScript, y las propiedades pasan a `camelCase` (`creado_en` llega como `creadoEn`, de tipo `Date`). | Se acepta y se documenta. |
+
+**Qué no se hizo.** El generador necesita Java y red la primera vez, así que `api:verificar` no se agregó al CI para no volverlo rojo por una dependencia externa. Si se quiere, es el comando a agregar. Y el front todavía no usa las interfaces: `useReclamos.ts` sigue con sus propias llamadas.
+
 ## Estado
 
 - **Contrato:** actualizado en `openapi.yaml` 2.0.0. Ya no queda ningún ejemplo con `x-pendiente`: el #40 implementó `CUERPO_INVALIDO` y el #62, los tres mensajes que faltaban.

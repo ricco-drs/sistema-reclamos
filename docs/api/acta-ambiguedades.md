@@ -5,7 +5,7 @@ Revisión del contrato de `POST /api/reclamos` por el equipo consumidor, y cómo
 | | |
 |---|---|
 | **Qué se revisó** | `POST /api/reclamos`: petición, respuestas, errores y el evento `ReclamoRegistrado` que dispara. |
-| **Quién lo revisó** | Benjamín, del equipo consumidor. |
+| **Quién lo revisó** | Benjamín, del Equipo 4, que actuó como equipo consumidor. |
 | **Con quién se acordó** | Ricco, por el equipo de TEFIIS. Christopher registró la revisión y resolvió los huecos. |
 | **Fecha** | 20 y 21 de noviembre de 2026. |
 | **Seguimiento** | Issue #31 (contrato y acta), #61 (implementación) y #40 (cuerpo inválido, ya implementado). |
@@ -83,7 +83,7 @@ Se generaron con openapi-generator las interfaces TypeScript de la API, a partir
 |---|---|---|
 | G1 | `POST /api/reclamos` tiene dos respuestas exitosas con cuerpos distintos (201 y 200). El generador escribe un solo tipo de retorno, el de la última, que es el del reenvío, y con él un 201 pierde `estado` y `cursosDescartados`. | Se escribió `src/api/reclamos.ts`, que separa los dos casos por el código HTTP. El contrato no cambia: las dos respuestas son las acordadas con el consumidor. |
 | G2 | Los errores no se modelan como retorno: el cliente lanza un `ResponseError` genérico. | `reclamos.ts` lo convierte en `ErrorDeApi`, con el `codigo` estable de `ErrorDeReclamo`. |
-| G3 | Las respuestas de los cinco interruptores no tienen nombre en el contrato, y salieron como `InlineObject` e `InlineObject1`. | Queda como mejora del contrato: darles nombre. No cambia el comportamiento. |
+| G3 | Las respuestas de los cinco interruptores no tienen nombre en el contrato, y salieron como `InlineObject` e `InlineObject1`. | Se les dio nombre en el contrato 2.0.1 (#81): `InterruptorActivoGuardado` para los que usan `activo` y `InterruptorEnabledGuardado` para los que usan `enabled`. No cambia lo que viaja. |
 | G4 | El esquema `Error` se renombró a `ModelError`, porque `Error` es un tipo de JavaScript, y las propiedades pasan a `camelCase` (`creado_en` llega como `creadoEn`, de tipo `Date`). | Se acepta y se documenta. |
 
 **Qué no se hizo.** El generador necesita Java y red la primera vez, así que `api:verificar` no se agregó al CI para no volverlo rojo por una dependencia externa. Si se quiere, es el comando a agregar. Y el front todavía no usa las interfaces: `useReclamos.ts` sigue con sus propias llamadas.

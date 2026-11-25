@@ -20,12 +20,19 @@ En la revisión del modelo C4 ([docs/c4/leyenda.md](c4/leyenda.md)) y en la form
 
 ## 2. Hipótesis del experimento (Lab11, paso 5)
 
-Antes de ejecutar las corridas comparativas en proceso y en Docker Compose (registrado previamente en el historial en los commits [`4729908`](https://github.com/ricco-drs/sistema-reclamos/commit/4729908) del PR #34 y [`445c536`](https://github.com/ricco-drs/sistema-reclamos/commit/445c536) de la primera versión del PR #73), formulamos la siguiente hipótesis falsable:
+En las corridas iniciales (`A`–`D`), la hipótesis y los resultados se subieron en el mismo commit (`445c536` / `5d65ab7`), por lo que el historial de Git no demuestra por sí solo que la hipótesis se hubiera escrito antes de provocar la falla.
 
-> **Hipótesis:** Cuando el proveedor principal (`Brevo`) entra en degradación sostenida (latencia mayor a `EMAIL_TIMEOUT_MS` o conexión colgada) y el servicio `M2` falla con `502`:
+> **Hipótesis general (corridas A–D):** Cuando el proveedor principal (`Brevo`) entra en degradación sostenida (latencia mayor a `EMAIL_TIMEOUT_MS` o conexión colgada) y el servicio `M2` falla con `502`:
 > 1. **Sin timeout ni circuit breaker (antes):** los envíos en modo `lento` acumulan toda la demora en `Brevo` sin conmutar a `Resend`, y en modo `colgado` el proceso queda bloqueado con `0 / 100` entregas.
 > 2. **Con timeout (`AbortSignal.timeout`) pero sin circuit breaker:** el sistema corta cada intento lento/colgado en `Brevo` y entrega `100 / 100` correos por `Resend`, pero sigue haciendo `100` intentos desperdiciados contra `Brevo` (pagando `~100 × timeoutMs`).
-> 3. **Con timeout + Circuit Breaker (`opossum`, `volumeThreshold = 3`, `errorThresholdPercentage = 50`, `rollingCountTimeout = 60 000 ms`) + bus de eventos `ReclamoRegistrado` (después):** una vez alcanzado el volumen mínimo de `3` intentos dentro de la ventana deslizante de `60 s` y superado el `50 %` de fallos del proveedor (excluyendo errores `400` y `422` atribuibles a la petición/destinatario mediante `errorFilter`), el circuito de `opossum` para `Brevo` pasa a estado `open`; los siguientes envíos dentro de la ventana fallan rápido en memoria sin tocar la red de `Brevo` y salen directo por `Resend`, reduciendo los intentos desperdiciados a `Brevo` a `3` (incluso con tráfico espaciado de 1 reclamo cada 6 s), mientras `POST /api/reclamos` mantiene `100 %` de respuestas `201 Created` sin verse afectado por `Brevo` ni por `M2 (502)`. Tras `resetTimeout`, si `Brevo` se recupera, el circuito pasa por `halfOpen` y vuelve a `closed`.
+> 3. **Con timeout + Circuit Breaker (`opossum`, `volumeThreshold = 3`, `errorThresholdPercentage = 50`, `rollingCountTimeout = 60 000 ms`) + bus de eventos `ReclamoRegistrado` (después):** una vez alcanzado el volumen mínimo de `3` intentos dentro de la ventana deslizante de `60 s` y superado el `50 %` de fallos del proveedor (excluyendo errores `400` y `422` atribuibles a la petición/destinatario mediante `errorFilter`), el circuito de `opossum` para `Brevo` pasa a estado `open`; los siguientes envíos dentro de la ventana fallan rápido en memoria sin tocar la red de `Brevo` y salen directo por `Resend`, reduciendo los intentos desperdiciados a `Brevo` a `3` (incluso con tráfico espaciado de 1 reclamo cada 6 s), mientras `POST /api/reclamos` mantiene `100 %` de respuestas `201 Created` sin verse afectado por `Brevo` ni por `M2 (502)`.
+
+Para cumplir estrictamente con el registro previo en el historial antes de ejecutar la prueba, formulamos y publicamos por adelantado (en un comentario de la issue #33 y en un commit previo separado) la siguiente hipótesis para una **nueva corrida en Docker Compose (Corrida E — Recuperación del circuito cuando Brevo vuelve)**:
+
+> **Hipótesis previa de la Corrida E (recuperación `open -> halfOpen -> close` en Docker Compose):**
+> En un mismo contenedor `api-1` levantado con `EMAIL_TIMEOUT_MS=500`, `EMAIL_CB_ENABLED=true`, `EMAIL_CB_VOLUME_THRESHOLD=3`, `EMAIL_CB_RESET_MS=5000` y `EMAIL_CB_WINDOW_MS=60000`:
+> 1. **Fase 1 (falla sostenida de Brevo: `BREVO_MODO=lento` de `2 000 ms`, `M2_MODO=502`, 5 reclamos espaciados `600 ms`):** los primeros `3` reclamos intentarán `Brevo`, sufrirán timeout a los `500 ms` y abrirán el circuito (`[EMAIL][CB] Circuito de Brevo pasó a estado: open`). Los reclamos 4 y 5 omitirán `Brevo`, resultando en **`intentosCorreo.brevo = 3`**, **`intentosCorreo.resend = 5`**, **`aceptadosCorreo.resend = 5`** y `5 / 5` respuestas `201 Created`.
+> 2. **Fase 2 (recuperación de Brevo sin reiniciar `api-1`: se recrea únicamente el contenedor `simuladores` con `--no-deps` en `BREVO_MODO=ok` y `M2_MODO=ok`, se esperan `6 s > EMAIL_CB_RESET_MS=5000` y se envían 5 reclamos nuevos espaciados `600 ms`):** al cumplirse `EMAIL_CB_RESET_MS`, el circuito de `Brevo` en `api-1` pasará a **`halfOpen`** (`[EMAIL][CB] Circuito de Brevo pasó a estado: halfOpen`), probará el primer correo de la Fase 2 contra `Brevo`, recibirá `200 OK` y cerrará el circuito (`[EMAIL][CB] Circuito de Brevo pasó a estado: close`). En consecuencia, los `5` reclamos de la Fase 2 serán aceptados directamente por `Brevo` (**`intentosCorreo.brevo = 5`**, **`intentosCorreo.resend = 0`**, **`aceptadosCorreo.brevo = 5`** y `5 / 5` expedientes en M2 con código `200`).
 
 ---
 
@@ -57,7 +64,7 @@ Conectado en `backend/server.js` (`#58`) y consumido por el frontend con `"aviso
 
 - **Entrega al menos una vez (*at-least-once*):** Abortar un `fetch` por timeout no garantiza que `Brevo` no haya recibido la solicitud antes de cortar la conexión, por lo que podría haber un correo duplicado si `Brevo` responde tarde y `Resend` también entrega. Para confirmaciones de reclamo esto es preferible a bloquear o perder la confirmación.
 - **Estado del circuito en memoria por instancia:** `opossum` mantiene el estado del circuito en memoria del proceso Node. En TEFIIS corre una sola instancia de la API en Railway, por lo que es suficiente; si en el futuro se escalara a múltiples réplicas, cada instancia abriría su circuito de forma independiente.
-- **Tráfico muy disperso fuera de `EMAIL_CB_WINDOW_MS`:** Como `opossum` decide por porcentaje de error dentro de la ventana deslizante (`60 s` por defecto), si llegaran menos de `3` correos en un lapso de `60 s` (por ejemplo, 1 reclamo cada 25 s), el conteo de la ventana caducaría antes de alcanzar `volumeThreshold` y cada envío volvería a probar `Brevo` (quedando protegido por el timeout de `3 s`).
+- **Tráfico muy disperso fuera de `EMAIL_CB_WINDOW_MS`:** Como `opossum` decide por porcentaje de error dentro de la ventana deslizante (`60 s` por defecto), si llegaran menos de `3` correos en un lapso de `60 s`, el conteo de la ventana caducaría antes de alcanzar `volumeThreshold` y cada envío volvería a probar `Brevo` (quedando protegido por el timeout de `3 s`).
 - **Ventana de `resetTimeout`:** Mientras el circuito de `Brevo` permanece abierto (`30 s` por defecto), el tráfico va por `Resend` aunque `Brevo` se haya recuperado segundos antes, consumiendo cuota de `Resend` hasta el intento de prueba en `halfOpen`.
 
 ---
@@ -207,6 +214,28 @@ api-1  | [EMAIL] Brevo falló, probando el siguiente proveedor: Circuito abierto
 api-1  | [EVENTOS] m2 falló en REC-2026-0024:ReclamoRegistrado: M2 respondió 502 al registrar REC-2026-0024
 ```
 
-**Conclusión en Compose:** Se confirma la hipótesis tanto con ráfagas (1 reclamo cada `600 ms`, Corrida C) como con tráfico espaciado (1 reclamo cada `6 s`, Corrida D). En ambos casos, tras los `3` primeros timeouts dentro de la ventana deslizante de `60 s`, `opossum` abre el circuito de `Brevo`, omite los intentos restantes contra `Brevo`, entrega el `100 %` de confirmaciones por `Resend` y reduce la cola posterior al último `POST` de `2 046 ms` (antes) / `520 ms` (solo timeout) a **`6–8 ms`**.
+**Conclusión en Compose (Corridas A–D):** Se confirma el comportamiento esperado tanto con ráfagas (1 reclamo cada `600 ms`, Corrida C) como con tráfico espaciado (1 reclamo cada `6 s`, Corrida D). En ambos casos, tras los `3` primeros timeouts dentro de la ventana deslizante de `60 s`, `opossum` abre el circuito de `Brevo`, omite los intentos restantes contra `Brevo`, entrega el `100 %` de confirmaciones por `Resend` y reduce la cola posterior al último `POST` de `2 046 ms` (antes) / `520 ms` (solo timeout) a **`6–8 ms`**.
+
+### 6.3 Corrida E — Recuperación del circuito en Docker Compose cuando Brevo vuelve (`open -> halfOpen -> close`)
+
+**Procedimiento diseñado antes de ejecutar la corrida:**
+
+```bash
+# Fase 1: Brevo lento (2 000 ms) con timeout 500 ms y resetTimeout de 5 000 ms (5 reclamos)
+BREVO_MODO=lento DEMORA_CORREO_MS=2000 EMAIL_TIMEOUT_MS=500 EMAIL_CB_ENABLED=true EMAIL_CB_VOLUME_THRESHOLD=3 EMAIL_CB_RESET_MS=5000 EMAIL_CB_WINDOW_MS=60000 M2_MODO=502 \
+  docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml up --build --detach --wait
+docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml exec -T api node scripts/probar-resiliencia-compose.mjs 5 resend 502 600
+
+# Fase 2: Brevo y M2 vuelven a 'ok' recreando solo 'simuladores' (--no-deps) sin reiniciar 'api-1'
+BREVO_MODO=ok M2_MODO=ok \
+  docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml up --detach --no-deps --force-recreate simuladores
+# Se esperan 6 s (> EMAIL_CB_RESET_MS=5000) y se envían 5 reclamos nuevos esperando entrega por Brevo
+sleep 6
+docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml exec -T api node scripts/probar-resiliencia-compose.mjs 5 brevo 200 600
+docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml logs api --tail=40
+docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml down
+```
+
+*Resultados de la Corrida E: pendientes de registrar en el siguiente commit tras publicar y subir esta hipótesis previa.*
 
 Al terminar, detén el entorno con `docker compose -p tefiis-eventos -f compose.yaml -f compose.eventos.yaml down`. El volumen local queda disponible para repetir la prueba, que genera un correo sintético diferente en cada ejecución. La [evidencia de la prueba funcional](evidencias/lab10-bus-conectado.txt) incluye además la ejecución funcional de 1 reclamo con ambos servicios sanos y con timeout de Brevo y fallo de M2 (`d2977e1`).

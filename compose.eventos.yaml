@@ -10,9 +10,15 @@ services:
       MAILJET_API_KEY: mailjet-solo-laboratorio
       MAILJET_SECRET_KEY: mailjet-secreto-laboratorio
       EMAIL_TIMEOUT_MS: "${EMAIL_TIMEOUT_MS:-3000}"
+      EMAIL_CB_ENABLED: "${EMAIL_CB_ENABLED:-true}"
+      EMAIL_CB_VOLUME_THRESHOLD: "${EMAIL_CB_VOLUME_THRESHOLD:-3}"
+      EMAIL_CB_ERROR_THRESHOLD: "${EMAIL_CB_ERROR_THRESHOLD:-50}"
+      EMAIL_CB_RESET_MS: "${EMAIL_CB_RESET_MS:-30000}"
+      EMAIL_CB_WINDOW_MS: "${EMAIL_CB_WINDOW_MS:-60000}"
       M2_URL: http://simuladores:8081/m2
     volumes:
       - ./docker/probar-eventos-compose.mjs:/app/scripts/probar-eventos-compose.mjs:ro
+      - ./docker/probar-resiliencia-compose.mjs:/app/scripts/probar-resiliencia-compose.mjs:ro
     depends_on:
       simuladores:
         condition: service_healthy

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: API de TEFIIS
-  version: 2.0.0
+  version: 2.0.1
   description: |
     Contrato HTTP de la API de TEFIIS. El arranque de Express monta las rutas de cada módulo del backend.
 
@@ -28,7 +28,9 @@ info:
     - **Parche:** solo cambian descripciones o ejemplos.
 
     La 2.0.0 es la versión acordada de `POST /api/reclamos`: crear pasa de 200
-    a 201, y la ventana o el ciclo cerrado pasan de 503 a 409.
+    a 201, y la ventana o el ciclo cerrado pasan de 503 a 409. La 2.0.1 solo les
+    da nombre a las respuestas de los interruptores (`InterruptorActivoGuardado`
+    e `InterruptorEnabledGuardado`); no cambia nada de lo que viaja.
 
     **Autenticación.**
     - `sesionEstudiante`: JWT que firma la propia API al verificar el código de
@@ -1279,14 +1281,7 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            required: [success, activo]
-            properties:
-              success:
-                type: boolean
-                enum: [true]
-              activo:
-                type: boolean
+            $ref: '#/components/schemas/InterruptorActivoGuardado'
           example:
             success: true
             activo: true
@@ -1295,14 +1290,7 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            required: [success, enabled]
-            properties:
-              success:
-                type: boolean
-                enum: [true]
-              enabled:
-                type: boolean
+            $ref: '#/components/schemas/InterruptorEnabledGuardado'
           example:
             success: true
             enabled: true
@@ -1848,6 +1836,28 @@ components:
         created_at:
           type: string
           format: date-time
+
+    InterruptorActivoGuardado:
+      type: object
+      description: Respuesta de los interruptores que usan el campo activo (modo almuerzo, almuerzo festivo y despedida).
+      required: [success, activo]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        activo:
+          type: boolean
+
+    InterruptorEnabledGuardado:
+      type: object
+      description: Respuesta de los interruptores que usan el campo enabled (mantenimiento y Tefi durmiendo).
+      required: [success, enabled]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        enabled:
+          type: boolean
 
     InterruptorActivo:
       type: object

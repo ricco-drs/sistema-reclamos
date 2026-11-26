@@ -2,9 +2,9 @@
 /* eslint-disable */
 /**
  * API de TEFIIS
- * Contrato HTTP de la API de TEFIIS. El arranque de Express monta las rutas de cada módulo del backend.  **Alcance.** Las 18 rutas de `/api/admin/_*`, que usa el panel del Tercio (`sistema-admin`), y `POST /api/reclamos`, que dispara el evento `ReclamoRegistrado` descrito en [eventos.md](eventos.md). Quedan fuera las demás rutas del estudiante, las rutas públicas y `POST /api/rag/upload`.  **Cómo se escribió.** Las rutas de `/api/admin/_*` describen el comportamiento actual del código; donde el código hace algo discutible, la operación lo dice en vez de esconderlo. `POST /api/reclamos` describe la versión acordada con el equipo consumidor ([acta](acta-ambiguedades.md)), y que implementó el #61. Los ejemplos marcados con `x-pendiente` tienen mensajes que el código aún no devuelve (hoy no hay ninguno); el validador (`sistema-reclamos/pruebas/validar-openapi.cjs`) los cuenta aparte, y la marca se quita cuando su issue entra.  **Versionado.** La versión sigue el formato `MAYOR.MENOR.PARCHE`: - **Mayor:** se quita o renombra un campo, un campo opcional pasa a ser   obligatorio, cambia el tipo de un campo o un código de respuesta cambia de   significado. Quien ya usa la API tiene que enterarse antes del cambio. - **Menor:** se agrega un campo opcional, un código de error o una ruta. - **Parche:** solo cambian descripciones o ejemplos.  La 2.0.0 es la versión acordada de `POST /api/reclamos`: crear pasa de 200 a 201, y la ventana o el ciclo cerrado pasan de 503 a 409.  **Autenticación.** - `sesionEstudiante`: JWT que firma la propia API al verificar el código de   4 dígitos (`POST /api/auth/verify-code`). Lleva `{ email }` y vence a las   24 h. El correo que decide de quién son los datos sale siempre del token,   nunca del cuerpo. - `sesionAdmin`: ID token de Firebase. Además de ser válido, su correo tiene   que estar en `ADMIN_EMAILS`. Las cuentas de `ADMIN_EMAILS_SOLO_LECTURA`   solo pueden usar `GET`. Seis interruptores y el historial de actividad   son solo del administrador principal, cuyo correo está definido por el módulo `acceso`.  **Errores.** En las rutas del panel, todo error responde `{ \"error\": \"<mensaje>\" }`, y el mensaje es para mostrarlo a una persona, no para que el cliente lo compare. `POST /api/reclamos` agrega un `codigo` estable (`ErrorDeReclamo`), que es lo que el cliente compara. Tres casos generales que valen para todas las rutas: - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde **400**   `{ \"codigo\": \"CUERPO_INVALIDO\", \"error\": \"…\" }`, antes de mirar la sesión   (#40). - Si `ALLOWED_ORIGINS` está definida, una petición desde un origen que no   está en la lista responde **403** `Origen no permitido por CORS.` - Cuando falla Supabase, el 500 puede traer en `error` el texto crudo que   devolvió PostgREST. 
+ * Contrato HTTP de la API de TEFIIS. El arranque de Express monta las rutas de cada módulo del backend.  **Alcance.** Las 18 rutas de `/api/admin/_*`, que usa el panel del Tercio (`sistema-admin`), y `POST /api/reclamos`, que dispara el evento `ReclamoRegistrado` descrito en [eventos.md](eventos.md). Quedan fuera las demás rutas del estudiante, las rutas públicas y `POST /api/rag/upload`.  **Cómo se escribió.** Las rutas de `/api/admin/_*` describen el comportamiento actual del código; donde el código hace algo discutible, la operación lo dice en vez de esconderlo. `POST /api/reclamos` describe la versión acordada con el equipo consumidor ([acta](acta-ambiguedades.md)), y que implementó el #61. Los ejemplos marcados con `x-pendiente` tienen mensajes que el código aún no devuelve (hoy no hay ninguno); el validador (`sistema-reclamos/pruebas/validar-openapi.cjs`) los cuenta aparte, y la marca se quita cuando su issue entra.  **Versionado.** La versión sigue el formato `MAYOR.MENOR.PARCHE`: - **Mayor:** se quita o renombra un campo, un campo opcional pasa a ser   obligatorio, cambia el tipo de un campo o un código de respuesta cambia de   significado. Quien ya usa la API tiene que enterarse antes del cambio. - **Menor:** se agrega un campo opcional, un código de error o una ruta. - **Parche:** solo cambian descripciones o ejemplos.  La 2.0.0 es la versión acordada de `POST /api/reclamos`: crear pasa de 200 a 201, y la ventana o el ciclo cerrado pasan de 503 a 409. La 2.0.1 solo les da nombre a las respuestas de los interruptores (`InterruptorActivoGuardado` e `InterruptorEnabledGuardado`); no cambia nada de lo que viaja.  **Autenticación.** - `sesionEstudiante`: JWT que firma la propia API al verificar el código de   4 dígitos (`POST /api/auth/verify-code`). Lleva `{ email }` y vence a las   24 h. El correo que decide de quién son los datos sale siempre del token,   nunca del cuerpo. - `sesionAdmin`: ID token de Firebase. Además de ser válido, su correo tiene   que estar en `ADMIN_EMAILS`. Las cuentas de `ADMIN_EMAILS_SOLO_LECTURA`   solo pueden usar `GET`. Seis interruptores y el historial de actividad   son solo del administrador principal, cuyo correo está definido por el módulo `acceso`.  **Errores.** En las rutas del panel, todo error responde `{ \"error\": \"<mensaje>\" }`, y el mensaje es para mostrarlo a una persona, no para que el cliente lo compare. `POST /api/reclamos` agrega un `codigo` estable (`ErrorDeReclamo`), que es lo que el cliente compara. Tres casos generales que valen para todas las rutas: - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde **400**   `{ \"codigo\": \"CUERPO_INVALIDO\", \"error\": \"…\" }`, antes de mirar la sesión   (#40). - Si `ALLOWED_ORIGINS` está definida, una petición desde un origen que no   está en la lista responde **403** `Origen no permitido por CORS.` - Cuando falla Supabase, el 500 puede traer en `error` el texto crudo que   devolvió PostgREST. 
  *
- * The version of the OpenAPI document: 2.0.0
+ * The version of the OpenAPI document: 2.0.1
  * 
  *
  * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
@@ -17,24 +17,24 @@ import * as runtime from '../runtime';
 import type {
   CambiarVentanaDeReclamos200Response,
   CambiarVentanaDeReclamosRequest,
-  InlineObject,
-  InlineObject1,
   InterruptorActivo,
+  InterruptorActivoGuardado,
   InterruptorEnabled,
+  InterruptorEnabledGuardado,
 } from '../models/index';
 import {
     CambiarVentanaDeReclamos200ResponseFromJSON,
     CambiarVentanaDeReclamos200ResponseToJSON,
     CambiarVentanaDeReclamosRequestFromJSON,
     CambiarVentanaDeReclamosRequestToJSON,
-    InlineObjectFromJSON,
-    InlineObjectToJSON,
-    InlineObject1FromJSON,
-    InlineObject1ToJSON,
     InterruptorActivoFromJSON,
     InterruptorActivoToJSON,
+    InterruptorActivoGuardadoFromJSON,
+    InterruptorActivoGuardadoToJSON,
     InterruptorEnabledFromJSON,
     InterruptorEnabledToJSON,
+    InterruptorEnabledGuardadoFromJSON,
+    InterruptorEnabledGuardadoToJSON,
 } from '../models/index';
 
 export interface CambiarMantenimientoRequest {
@@ -76,13 +76,13 @@ export interface InterruptoresApiInterface {
      * @throws {RequiredError}
      * @memberof InterruptoresApiInterface
      */
-    cambiarMantenimientoRaw(requestParameters: CambiarMantenimientoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject1>>;
+    cambiarMantenimientoRaw(requestParameters: CambiarMantenimientoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorEnabledGuardado>>;
 
     /**
      * Pausa la aplicación de estudiantes para todos. Si la fila no existe, se crea, como en los demás interruptores (#40). 
      * Activa o desactiva el modo mantenimiento
      */
-    cambiarMantenimiento(requestParameters: CambiarMantenimientoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject1>;
+    cambiarMantenimiento(requestParameters: CambiarMantenimientoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorEnabledGuardado>;
 
     /**
      * Los reclamos siguen funcionando. Si la fila no existe, se crea.
@@ -92,13 +92,13 @@ export interface InterruptoresApiInterface {
      * @throws {RequiredError}
      * @memberof InterruptoresApiInterface
      */
-    cambiarModoAlmuerzoRaw(requestParameters: CambiarModoAlmuerzoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject>>;
+    cambiarModoAlmuerzoRaw(requestParameters: CambiarModoAlmuerzoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorActivoGuardado>>;
 
     /**
      * Los reclamos siguen funcionando. Si la fila no existe, se crea.
      * Pausa o reanuda las consultas a Tefi
      */
-    cambiarModoAlmuerzo(requestParameters: CambiarModoAlmuerzoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject>;
+    cambiarModoAlmuerzo(requestParameters: CambiarModoAlmuerzoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorActivoGuardado>;
 
     /**
      * Independiente del modo almuerzo diario. Si la fila no existe, se crea.
@@ -108,13 +108,13 @@ export interface InterruptoresApiInterface {
      * @throws {RequiredError}
      * @memberof InterruptoresApiInterface
      */
-    cambiarModoAlmuerzoFestivoRaw(requestParameters: CambiarModoAlmuerzoFestivoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject>>;
+    cambiarModoAlmuerzoFestivoRaw(requestParameters: CambiarModoAlmuerzoFestivoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorActivoGuardado>>;
 
     /**
      * Independiente del modo almuerzo diario. Si la fila no existe, se crea.
      * Pausa o reanuda las consultas a Tefi en feriados
      */
-    cambiarModoAlmuerzoFestivo(requestParameters: CambiarModoAlmuerzoFestivoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject>;
+    cambiarModoAlmuerzoFestivo(requestParameters: CambiarModoAlmuerzoFestivoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorActivoGuardado>;
 
     /**
      * Con el modo activo, `POST /api/reclamos` responde 503, salvo para los correos exceptuados en el módulo `configuracion`. Si la fila no existe, se crea. 
@@ -124,13 +124,13 @@ export interface InterruptoresApiInterface {
      * @throws {RequiredError}
      * @memberof InterruptoresApiInterface
      */
-    cambiarModoDespedidaRaw(requestParameters: CambiarModoDespedidaRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject>>;
+    cambiarModoDespedidaRaw(requestParameters: CambiarModoDespedidaRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorActivoGuardado>>;
 
     /**
      * Con el modo activo, `POST /api/reclamos` responde 503, salvo para los correos exceptuados en el módulo `configuracion`. Si la fila no existe, se crea. 
      * Cierra o reabre el ciclo de matrícula
      */
-    cambiarModoDespedida(requestParameters: CambiarModoDespedidaRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject>;
+    cambiarModoDespedida(requestParameters: CambiarModoDespedidaRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorActivoGuardado>;
 
     /**
      * Con el modo activo, `POST /api/reclamos` responde 503. Si la fila no existe, se crea.
@@ -140,13 +140,13 @@ export interface InterruptoresApiInterface {
      * @throws {RequiredError}
      * @memberof InterruptoresApiInterface
      */
-    cambiarTefiDurmiendoRaw(requestParameters: CambiarTefiDurmiendoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject1>>;
+    cambiarTefiDurmiendoRaw(requestParameters: CambiarTefiDurmiendoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorEnabledGuardado>>;
 
     /**
      * Con el modo activo, `POST /api/reclamos` responde 503. Si la fila no existe, se crea.
      * Apaga o enciende la plataforma de estudiantes («Tefi durmiendo»)
      */
-    cambiarTefiDurmiendo(requestParameters: CambiarTefiDurmiendoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject1>;
+    cambiarTefiDurmiendo(requestParameters: CambiarTefiDurmiendoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorEnabledGuardado>;
 
     /**
      * Con la ventana cerrada, `POST /api/reclamos` responde 503, salvo para el administrador principal. Si la fila no existe, se crea. 
@@ -175,7 +175,7 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
      * Pausa la aplicación de estudiantes para todos. Si la fila no existe, se crea, como en los demás interruptores (#40). 
      * Activa o desactiva el modo mantenimiento
      */
-    async cambiarMantenimientoRaw(requestParameters: CambiarMantenimientoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject1>> {
+    async cambiarMantenimientoRaw(requestParameters: CambiarMantenimientoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorEnabledGuardado>> {
         if (requestParameters['interruptorEnabled'] == null) {
             throw new runtime.RequiredError(
                 'interruptorEnabled',
@@ -208,14 +208,14 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
             body: InterruptorEnabledToJSON(requestParameters['interruptorEnabled']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => InlineObject1FromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => InterruptorEnabledGuardadoFromJSON(jsonValue));
     }
 
     /**
      * Pausa la aplicación de estudiantes para todos. Si la fila no existe, se crea, como en los demás interruptores (#40). 
      * Activa o desactiva el modo mantenimiento
      */
-    async cambiarMantenimiento(requestParameters: CambiarMantenimientoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject1> {
+    async cambiarMantenimiento(requestParameters: CambiarMantenimientoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorEnabledGuardado> {
         const response = await this.cambiarMantenimientoRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -224,7 +224,7 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
      * Los reclamos siguen funcionando. Si la fila no existe, se crea.
      * Pausa o reanuda las consultas a Tefi
      */
-    async cambiarModoAlmuerzoRaw(requestParameters: CambiarModoAlmuerzoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject>> {
+    async cambiarModoAlmuerzoRaw(requestParameters: CambiarModoAlmuerzoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorActivoGuardado>> {
         if (requestParameters['interruptorActivo'] == null) {
             throw new runtime.RequiredError(
                 'interruptorActivo',
@@ -257,14 +257,14 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
             body: InterruptorActivoToJSON(requestParameters['interruptorActivo']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => InlineObjectFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => InterruptorActivoGuardadoFromJSON(jsonValue));
     }
 
     /**
      * Los reclamos siguen funcionando. Si la fila no existe, se crea.
      * Pausa o reanuda las consultas a Tefi
      */
-    async cambiarModoAlmuerzo(requestParameters: CambiarModoAlmuerzoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject> {
+    async cambiarModoAlmuerzo(requestParameters: CambiarModoAlmuerzoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorActivoGuardado> {
         const response = await this.cambiarModoAlmuerzoRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -273,7 +273,7 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
      * Independiente del modo almuerzo diario. Si la fila no existe, se crea.
      * Pausa o reanuda las consultas a Tefi en feriados
      */
-    async cambiarModoAlmuerzoFestivoRaw(requestParameters: CambiarModoAlmuerzoFestivoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject>> {
+    async cambiarModoAlmuerzoFestivoRaw(requestParameters: CambiarModoAlmuerzoFestivoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorActivoGuardado>> {
         if (requestParameters['interruptorActivo'] == null) {
             throw new runtime.RequiredError(
                 'interruptorActivo',
@@ -306,14 +306,14 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
             body: InterruptorActivoToJSON(requestParameters['interruptorActivo']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => InlineObjectFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => InterruptorActivoGuardadoFromJSON(jsonValue));
     }
 
     /**
      * Independiente del modo almuerzo diario. Si la fila no existe, se crea.
      * Pausa o reanuda las consultas a Tefi en feriados
      */
-    async cambiarModoAlmuerzoFestivo(requestParameters: CambiarModoAlmuerzoFestivoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject> {
+    async cambiarModoAlmuerzoFestivo(requestParameters: CambiarModoAlmuerzoFestivoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorActivoGuardado> {
         const response = await this.cambiarModoAlmuerzoFestivoRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -322,7 +322,7 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
      * Con el modo activo, `POST /api/reclamos` responde 503, salvo para los correos exceptuados en el módulo `configuracion`. Si la fila no existe, se crea. 
      * Cierra o reabre el ciclo de matrícula
      */
-    async cambiarModoDespedidaRaw(requestParameters: CambiarModoDespedidaRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject>> {
+    async cambiarModoDespedidaRaw(requestParameters: CambiarModoDespedidaRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorActivoGuardado>> {
         if (requestParameters['interruptorActivo'] == null) {
             throw new runtime.RequiredError(
                 'interruptorActivo',
@@ -355,14 +355,14 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
             body: InterruptorActivoToJSON(requestParameters['interruptorActivo']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => InlineObjectFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => InterruptorActivoGuardadoFromJSON(jsonValue));
     }
 
     /**
      * Con el modo activo, `POST /api/reclamos` responde 503, salvo para los correos exceptuados en el módulo `configuracion`. Si la fila no existe, se crea. 
      * Cierra o reabre el ciclo de matrícula
      */
-    async cambiarModoDespedida(requestParameters: CambiarModoDespedidaRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject> {
+    async cambiarModoDespedida(requestParameters: CambiarModoDespedidaRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorActivoGuardado> {
         const response = await this.cambiarModoDespedidaRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -371,7 +371,7 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
      * Con el modo activo, `POST /api/reclamos` responde 503. Si la fila no existe, se crea.
      * Apaga o enciende la plataforma de estudiantes («Tefi durmiendo»)
      */
-    async cambiarTefiDurmiendoRaw(requestParameters: CambiarTefiDurmiendoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InlineObject1>> {
+    async cambiarTefiDurmiendoRaw(requestParameters: CambiarTefiDurmiendoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InterruptorEnabledGuardado>> {
         if (requestParameters['interruptorEnabled'] == null) {
             throw new runtime.RequiredError(
                 'interruptorEnabled',
@@ -404,14 +404,14 @@ export class InterruptoresApi extends runtime.BaseAPI implements InterruptoresAp
             body: InterruptorEnabledToJSON(requestParameters['interruptorEnabled']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => InlineObject1FromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => InterruptorEnabledGuardadoFromJSON(jsonValue));
     }
 
     /**
      * Con el modo activo, `POST /api/reclamos` responde 503. Si la fila no existe, se crea.
      * Apaga o enciende la plataforma de estudiantes («Tefi durmiendo»)
      */
-    async cambiarTefiDurmiendo(requestParameters: CambiarTefiDurmiendoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InlineObject1> {
+    async cambiarTefiDurmiendo(requestParameters: CambiarTefiDurmiendoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InterruptorEnabledGuardado> {
         const response = await this.cambiarTefiDurmiendoRaw(requestParameters, initOverrides);
         return await response.value();
     }

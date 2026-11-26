@@ -32,10 +32,10 @@ models/GuardarDatosDeEstudiante200Response.ts
 models/GuardarDatosDeEstudianteRequest.ts
 models/Hilo.ts
 models/HiloTurnosInner.ts
-models/InlineObject.ts
-models/InlineObject1.ts
 models/InterruptorActivo.ts
+models/InterruptorActivoGuardado.ts
 models/InterruptorEnabled.ts
+models/InterruptorEnabledGuardado.ts
 models/ModelError.ts
 models/NuevoReclamo.ts
 models/NuevoReclamoDocumentos.ts

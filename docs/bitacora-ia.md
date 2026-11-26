@@ -347,3 +347,12 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Qué se aceptó:** Descargar el `.jar` 7.14.0 de Maven Central si falta, guardarlo en `~/.cache/openapi-generator/` y comprobar su SHA-256 antes de usarlo (su SHA-1 coincide con el que publica Maven), poner un tiempo límite a la descarga y al generador, llamar a Java sin shell y quitar `openapitools.json`. Se probó sin el `.jar`, con el guardado, con uno dañado, con tres fallos de descarga, con un contrato roto y con un contrato cambiado, y con carpetas con espacios. Con el contrato 2.0.0 lo generado no cambia, y `api:verificar` también pasa con el contrato y el cliente 2.0.1 del #82.
 - **Qué se descartó y por qué:** Seguir pasando por el envoltorio, porque deja el comando dependiendo de algo que se puede colgar sin explicación. Usar el `.jar` descargado sin comprobar su suma, porque se ejecutaría un archivo incompleto o distinto sin avisar.
 - **Registra:** Roy Puris
+
+### Entrada del 25 de noviembre, Lab10: respuestas de los interruptores con nombre y equipo consumidor en el acta
+
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code
+- **Para qué se usó:** Revisar el #72 (el script del generador, el envoltorio de `reclamos.ts` y la sección 7 del acta); darles nombre en el contrato a las respuestas de los cinco interruptores (`InterruptorActivoGuardado` e `InterruptorEnabledGuardado`, hallazgo G3) y subir la versión a 2.0.1; actualizar el acta y el README de `src/api/`; y averiguar por qué `npm run api:verificar` se quedaba colgado.
+- **Qué se aceptó:** Los dos esquemas con nombre, sin cambiar lo que viaja, y la versión 2.0.1 como parche, según las reglas de versionado del contrato. Como `api:verificar` no terminaba, se verificó generando con el mismo `.jar` de openapi-generator 7.14.0 llamado directo con `java -jar`, con las mismas opciones del script: lo generado desde el contrato 2.0.1 es idéntico, archivo por archivo, a `src/api/generado/`. El diagnóstico (el envoltorio de npm se cuelga, el `.jar` no) llevó al #83.
+- **Qué corrigió el equipo:** El número del equipo consumidor no salía de la IA ni del repositorio: Christopher se lo preguntó a Benjamín, que confirmó que es el Equipo 4. Un primer intento de comparar el cliente regenerado salió mal, porque se comparó contra la copia ya regenerada y no contra lo commiteado; se repitió contra el contrato 2.0.1.
+- **Registra:** Christopher Albino

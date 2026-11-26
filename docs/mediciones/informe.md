@@ -1,6 +1,6 @@
 # Informe de medición: E2, bandeja del panel del Tercio
 
-Lab12. La hipótesis está en [`hipotesis.md`](hipotesis.md) y entró a `main` antes del script y de cualquier medición (#80). Este informe tiene hasta ahora la línea base (#77) y el diagnóstico (#78). Faltan la mejora (#78), la segunda medición y la decisión (#79).
+Lab12. La hipótesis está en [`hipotesis.md`](hipotesis.md) y entró a `main` antes del script y de cualquier medición (#80). Este informe reúne la línea base (#77), el diagnóstico y la única mejora aplicada (#78), y la segunda medición con la decisión final (#79).
 
 ## Escenario, carga y umbral
 
@@ -17,11 +17,11 @@ Tomados de E2 en [`docs/escenarios.md`](../escenarios.md), sin cambios.
 | Script | [`carga/escenario.js`](../../carga/escenario.js), con k6 1.8.2 (imagen `grafana/k6:1.8.2`) dentro de la red de Compose |
 | Entorno | Compose del Lab11 (`compose.yaml`) más [`carga/compose.yaml`](../../carga/compose.yaml): la sesión de admin con el emulador de Firebase y los tiempos de PostgREST. La API, PostgreSQL 16, PostgREST y nginx no cambian. |
 | Datos | Base vacía (`down --volumes`), con los 1 500 reclamos de `scripts/sembrar-reclamos.js` (REC-2026-1001 a REC-2026-2500, 1,5 MB de tabla) |
-| Commit medido | `a3a73c2` (`develop` con el #74), sin cambios en el código |
+| Commit medido | Antes: `a3a73c2` (`develop` con el #74, sin cambios en el código). Después: `ae01f19` (única mejora: lectura paginada de la bandeja en #78) |
 | Máquina | Intel Core i7-12700H (20 hilos), 15,6 GB, Windows 11. Docker Desktop 29.9.3 con 20 CPU y 7,6 GB asignados |
-| Comando | `node carga/correr.mjs --etiqueta antes` (pasos en [`carga/README.md`](../../carga/README.md)) |
-| Cuándo | 25 de noviembre de 2026, de 18:18 a 18:28 (hora de Lima), tres corridas seguidas |
-| Datos crudos | [`corridas/`](corridas/): `antes-<n>-k6.*`, `antes-<n>-docker-stats.csv`, `antes-<n>-postgrest.csv` y `antes-entorno.json` |
+| Comando | `node carga/correr.mjs --etiqueta antes` y `node carga/correr.mjs --etiqueta despues` (pasos en [`carga/README.md`](../../carga/README.md)) |
+| Cuándo | 25 de noviembre de 2026 (hora de Lima): tres corridas «antes» de 18:18 a 18:28 y tres corridas «después» de 18:50 a 18:59 |
+| Datos crudos | [`corridas/`](corridas/): `{antes,despues}-<n>-k6.*`, `{antes,despues}-<n>-docker-stats.csv`, `{antes,despues}-<n>-postgrest.csv`, `{antes,despues}-entorno.json` y `{antes,despues}-resumen.md` |
 
 ## Antes: línea base
 
@@ -82,17 +82,38 @@ La API usa como máximo 158 MiB de memoria y la base 93 MiB. Durante las tres co
 | Unas 9 solicitudes por segundo y 0 % de errores | 9,68 solicitudes por segundo y 0 % | Acertamos |
 | Nos equivocaríamos si la bandeja trajera los 1 500, si el p95 pasara de 1,5 s o si el `EXPLAIN ANALYZE` mostrara que la consulta sola se lleva la mayor parte | No pasó ninguna de las tres | La hipótesis se sostiene |
 
+## La mejora aplicada (#78) y segunda medición (#79)
+
+En el commit `ae01f19` se aplicó una sola mejora en [`modulos/reclamos/presentacion/rutas.js`](../../sistema-reclamos/backend/modulos/reclamos/presentacion/rutas.js): `GET /api/admin/reclamos` pasó de `sbRest('/reclamos?select=*&order=created_at.desc')` a `sbRestTodo('/reclamos?select=*&order=created_at.desc,id.desc')`. `sbRestTodo` recorre PostgREST por páginas de 1 000 filas mediante `Range` hasta completar la tabla (2,00 consultas y 1 394 KB en total por cada apertura de bandeja con 1 500 reclamos), y `id.desc` desempata el orden para que filas con el mismo `created_at` no se repitan ni se salten entre páginas.
+
+Al repetir las tres corridas sobre `ae01f19` en la misma máquina, con los mismos 1 500 reclamos y el mismo `carga/escenario.js` ([`corridas/despues-resumen.md`](corridas/despues-resumen.md)):
+
+| Corrida | p95 | Mediana | Solicitudes/s | Errores HTTP | Reclamos faltantes |
+|---|---|---|---|---|---|
+| 1 (descartada, en frío) | 52,1 ms | 31,3 ms | 9,49 | 0 % | 0 en cada respuesta |
+| 2 | **38,3 ms** | 29,8 ms | **9,56** | **0 %** | **0** en las 1 730 respuestas |
+| 3 | **41,5 ms** | 30,1 ms | **9,54** | **0 %** | **0** en las 1 726 respuestas |
+
+En cada una de las 2 consultas, una por página, PostgREST respondió con un p95 de 12,0 ms (transacción en PostgreSQL: 10,2 y 10,7 ms p95). La CPU de los contenedores siguió holgada durante las corridas 2 y 3 (`api`: 20,2–20,8 % media / 39,6 % máx.; `db`: 12,6–12,8 % media / 21,5 % máx.; `postgrest`: 3,7–3,9 % media / 6,8 % máx.).
+
 ## Antes y después
 
-Se completa en #79 con la segunda medición, en la misma máquina, con los mismos datos y el mismo script.
+Comparación entre las corridas válidas (2 y 3) del antes (`a3a73c2`) y del después (`ae01f19`), en la misma máquina, con los mismos datos y el mismo script:
 
-| Qué | Antes | Después | Qué significa |
+| Qué | Antes (`a3a73c2`) | Después (`ae01f19`) | Qué significa |
 |---|---|---|---|
-| Latencia p95 | 28,1 ms y 27,7 ms | | |
-| Throughput | 9,68 y 9,69 solicitudes/s | | |
-| Tasa de error | 0 % | | |
-| Reclamos faltantes | 500 de 1 500 en cada respuesta | | |
-| Carga aplicada | 10 usuarios virtuales, 3 min, 1 s de pausa, 1 500 reclamos | | Si esta fila cambia, no se puede comparar |
+| Latencia p95 | 28,1 ms y 27,7 ms | **38,3 ms y 41,5 ms** | Sube ~10–14 ms (mediana de ~20 ms a ~30 ms) porque ahora la API hace 2 consultas a PostgREST y transfiere 1 394 KB (1 500 filas) en lugar de 930 KB (1 000 filas), pero queda **más de 36 veces por debajo** del umbral de 1 500 ms. |
+| Throughput | 9,68 y 9,69 solicitudes/s | **9,56 y 9,54 solicitudes/s** | Prácticamente igual (-1,3 %): sigue fijado por el ciclo de 10 usuarios virtuales con `sleep(1)` (~1,04 s por iteración). |
+| Tasa de error | 0 % | **0 %** | 0 respuestas fallidas en las 3 456 peticiones de las corridas 2 y 3. |
+| Reclamos faltantes | 500 de 1 500 en cada respuesta | **0 de 1 500** en cada respuesta | Se eliminó la pérdida de los 500 reclamos más antiguos (`REC-2026-1001` a `REC-2026-1500`). **E2 se cumple.** |
+| Carga aplicada | 10 usuarios virtuales, 3 min, 1 s de pausa, 1 500 reclamos | **10 usuarios virtuales, 3 min, 1 s de pausa, 1 500 reclamos** | Si esta fila cambia, no se puede comparar; las condiciones se mantuvieron idénticas. |
+
+## Decisión (#79)
+
+- **¿Se cumple E2 y se queda la mejora?** **Sí: E2 se cumple (p95 de 38,3 y 41,5 ms < 1 500 ms, 0 % de errores y 0 reclamos faltantes) y la mejora (`ae01f19`) se conserva.** El costo adicional de ~10–14 ms en p95 es proporcional al 50 % extra de filas que antes PostgREST descartaba en silencio (de 1 000 a 1 500 filas, 930 KB a 1 394 KB) y corrige el defecto funcional sin acercarse al presupuesto de 1,5 s ni saturar ningún contenedor.
+- **¿Qué haríamos después si el volumen creciera mucho más?**
+  1. **Proyectar solo las columnas de la bandeja en lugar de `select=*`:** El diagnóstico mostró que cuatro quintos del tiempo en PostgreSQL y la mitad de la latencia total provienen de armar y reenviar el JSON completo (`1,39 MB` por petición, que arrastra `descripcion`, `datos_estudiante`, `datos_academicos`, `documentos`, `urls` y `cursos_resueltos`). Si `GET /api/admin/reclamos` pidiera solo los campos que pinta la tabla de la bandeja y el detalle completo se consultara al abrir un expediente, el peso del JSON y la latencia bajarían sin tocar la base de datos.
+  2. **Paginar entre el panel (`sistema-admin`) y la API:** Hoy `sbRestTodo` pagina entre la API y PostgREST para mantener intacto el contrato que consume el panel (que recibe toda la lista y filtra en memoria). Si el histórico superara varios miles de reclamos, el siguiente paso sería paginar y filtrar desde `GET /api/admin/reclamos` (`?limit=...&offset=...&estado=...`) para no enviar toda la tabla en cada recarga del navegador.
 
 ## Límites de la medición
 

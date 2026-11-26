@@ -1,6 +1,6 @@
 # Informe de medición: E2, bandeja del panel del Tercio
 
-Lab12. La hipótesis está en [`hipotesis.md`](hipotesis.md) y entró a `main` antes del script y de cualquier medición (#80). Este informe reúne la línea base (#77), el diagnóstico y la única mejora aplicada (#78), y la segunda medición con la decisión final (#79).
+Lab12. La hipótesis está en [`hipotesis.md`](https://github.com/ricco-drs/sistema-reclamos/blob/d06db90bc0c425839ad9d8100922f4ec86d58cfa/docs/mediciones/hipotesis.md) y entró a `main` antes del script y de cualquier medición (#80). Este informe reúne la línea base (#77), el diagnóstico y la única mejora aplicada (#78), y la segunda medición con la decisión final (#79).
 
 ## Escenario, carga y umbral
 
@@ -102,18 +102,20 @@ Comparación entre las corridas válidas (2 y 3) del antes (`a3a73c2`) y del des
 
 | Qué | Antes (`a3a73c2`) | Después (`ae01f19`) | Qué significa |
 |---|---|---|---|
-| Latencia p95 | 28,1 ms y 27,7 ms | **38,3 ms y 41,5 ms** | Sube ~10–14 ms (mediana de ~20 ms a ~30 ms) porque ahora la API hace 2 consultas a PostgREST y transfiere 1 394 KB (1 500 filas) en lugar de 930 KB (1 000 filas), pero queda **más de 36 veces por debajo** del umbral de 1 500 ms. |
+| Latencia p95 | 28,1 ms y 27,7 ms | **38,3 ms y 41,5 ms** | Sube unos 10–14 ms. La API hace dos consultas y recibe 1 394 KB en vez de 930 KB. El p95 se mantiene por debajo de 1 500 ms. |
 | Throughput | 9,68 y 9,69 solicitudes/s | **9,56 y 9,54 solicitudes/s** | Prácticamente igual (-1,3 %): sigue fijado por el ciclo de 10 usuarios virtuales con `sleep(1)` (~1,04 s por iteración). |
 | Tasa de error | 0 % | **0 %** | 0 respuestas fallidas en las 3 456 peticiones de las corridas 2 y 3. |
 | Reclamos faltantes | 500 de 1 500 en cada respuesta | **0 de 1 500** en cada respuesta | Se eliminó la pérdida de los 500 reclamos más antiguos (`REC-2026-1001` a `REC-2026-1500`). **E2 se cumple.** |
-| Carga aplicada | 10 usuarios virtuales, 3 min, 1 s de pausa, 1 500 reclamos | **10 usuarios virtuales, 3 min, 1 s de pausa, 1 500 reclamos** | Si esta fila cambia, no se puede comparar; las condiciones se mantuvieron idénticas. |
+| Carga aplicada | 10 usuarios virtuales, 3 min, 1 s de pausa, 1 500 reclamos | 10 usuarios virtuales, 3 min, 1 s de pausa, 1 500 reclamos | Se mantuvieron las mismas condiciones. |
 
 ## Decisión (#79)
 
-- **¿Se cumple E2 y se queda la mejora?** **Sí: E2 se cumple (p95 de 38,3 y 41,5 ms < 1 500 ms, 0 % de errores y 0 reclamos faltantes) y la mejora (`ae01f19`) se conserva.** El costo adicional de ~10–14 ms en p95 es proporcional al 50 % extra de filas que antes PostgREST descartaba en silencio (de 1 000 a 1 500 filas, 930 KB a 1 394 KB) y corrige el defecto funcional sin acercarse al presupuesto de 1,5 s ni saturar ningún contenedor.
-- **¿Qué haríamos después si el volumen creciera mucho más?**
-  1. **Proyectar solo las columnas de la bandeja en lugar de `select=*`:** El diagnóstico mostró que cuatro quintos del tiempo en PostgreSQL y la mitad de la latencia total provienen de armar y reenviar el JSON completo (`1,39 MB` por petición, que arrastra `descripcion`, `datos_estudiante`, `datos_academicos`, `documentos`, `urls` y `cursos_resueltos`). Si `GET /api/admin/reclamos` pidiera solo los campos que pinta la tabla de la bandeja y el detalle completo se consultara al abrir un expediente, el peso del JSON y la latencia bajarían sin tocar la base de datos.
-  2. **Paginar entre el panel (`sistema-admin`) y la API:** Hoy `sbRestTodo` pagina entre la API y PostgREST para mantener intacto el contrato que consume el panel (que recibe toda la lista y filtra en memoria). Si el histórico superara varios miles de reclamos, el siguiente paso sería paginar y filtrar desde `GET /api/admin/reclamos` (`?limit=...&offset=...&estado=...`) para no enviar toda la tabla en cada recarga del navegador.
+Se conserva la mejora de `ae01f19` porque la bandeja recupera los 1 500 reclamos, cumple el umbral de latencia y mantiene el 0 % de errores HTTP.
+
+Si crece el historial:
+
+1. Pedir solo las columnas que muestra la bandeja y cargar el expediente completo al abrirlo. Hoy la API envía 1,39 MB por petición, incluidos `descripcion`, `datos_estudiante`, `datos_academicos`, `documentos`, `urls` y `cursos_resueltos`.
+2. Paginar y filtrar desde el panel. La API ya pagina al consultar PostgREST, pero el panel sigue recibiendo la lista completa y la filtra en memoria.
 
 ## Límites de la medición
 

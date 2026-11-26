@@ -214,7 +214,6 @@ export function crearModuloTefi({
               systemInstruction: PROMPT_TEFI,
           };
 
-          // Usamos gemini-2.5-flash porque es el que tu API Key gratuita tiene habilitado
           let response;
           try {
               response = await ai.models.generateContent({

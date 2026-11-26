@@ -99,8 +99,6 @@ select option {
   color: var(--select-option-text);
 }
 
-
-
 /* Search Box */
 .search-box {
   flex: 1;
@@ -260,7 +258,6 @@ select option {
   border-bottom: 1px solid var(--border-color);
 }
 
-
 .th {
   font-size: 0.75rem;
   font-weight: 600;
@@ -300,7 +297,6 @@ select option {
   overflow-y: auto;
 }
 
-
 .tr {
   display: grid;
   grid-template-columns: 60px 2.5fr 1fr 1.5fr 1.5fr 1fr 1fr 100px;
@@ -311,7 +307,6 @@ select option {
   transition: all 0.2s ease;
   align-items: center;
 }
-
 
 .tr:hover {
   background: var(--surface-hover);
@@ -415,7 +410,6 @@ select option {
 .status-teal-card .stat-value {
   color: var(--final-color);
 }
-
 
 .date-text {
   font-variant-numeric: tabular-nums;
@@ -675,8 +669,6 @@ select option {
   border-color: #3b82f6 !important;
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
-
-
 
 .table-controls {
   margin-bottom: 24px;
@@ -1035,7 +1027,6 @@ select option {
   background: #3b82f6;
   border-radius: 10px;
 }
-
 
 /* ===== HORARIO HEATMAP ===== */
 .horario-overlay {
@@ -1618,7 +1609,6 @@ select option {
 }
 
 /* Footer del sidebar con botones principales */
-
 
 /* Responsividad: volver a 1 columna en pantallas peque�as */
 @media (max-width: 850px) {

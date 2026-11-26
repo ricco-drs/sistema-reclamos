@@ -1,12 +1,10 @@
 # Flujo por eventos: ReclamoRegistrado
 
-Este documento describe el flujo por eventos del registro de reclamos (Lab10). El contrato HTTP del endpoint está en `docs/api/openapi.yaml`.
+El [contrato HTTP](openapi.yaml) describe el registro de reclamos.
 
 ## Qué cambia
 
-Hoy, cuando un estudiante registra un reclamo, la aplicación de estudiantes hace dos llamadas más por su cuenta: pide el correo de confirmación a `POST /api/reclamos/confirmar` y registra el expediente en el servicio M2 con un `fetch` directo. Si alguna falla, la aplicación solo deja un aviso en la consola del navegador, y esa llamada sale del navegador del estudiante, no de la API.
-
-Con el flujo por eventos, la API guarda el reclamo y publica un solo evento, `ReclamoRegistrado`. Dos consumidores reaccionan a él: el notificador de correo y el envío a M2. El endpoint no cambia para quien lo llama. El flujo por eventos no reintenta (ver «Limitaciones conocidas»).
+La API guarda el reclamo y publica `ReclamoRegistrado` cuando el portal le delega los avisos. Un consumidor envía el correo de confirmación y otro envía el expediente a M2. El portal conserva las llamadas directas como respaldo durante la transición.
 
 ```
 POST /api/reclamos

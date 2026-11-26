@@ -192,7 +192,6 @@ export function crearModuloDocumentos({
     } catch (err) { res.status(500).json({ error: err.message }); }
   });
 
-
   rutas.get('/api/docs/:email', requireStudentAuth, async (req, res) => {
     const email = req.studentEmail;
     try {

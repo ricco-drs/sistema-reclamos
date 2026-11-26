@@ -188,57 +188,57 @@ export default function ProfilePage({ email, sessionToken, onBack, onLogout, sol
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button onClick={onBack}
-          className="p-2 rounded-xl hover:bg-claude-border/50 transition-colors cursor-pointer text-claude-muted hover:text-claude-text">
+          className="p-2 rounded-xl hover:bg-tefiis-border/50 transition-colors cursor-pointer text-tefiis-muted hover:text-tefiis-text">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold text-claude-text">Mi perfil</h1>
+        <h1 className="text-xl font-bold text-tefiis-text">Mi perfil</h1>
       </div>
 
       {loading ? (
-        <div className="flex-1 flex items-center justify-center text-claude-muted text-sm">Cargando...</div>
+        <div className="flex-1 flex items-center justify-center text-tefiis-muted text-sm">Cargando...</div>
       ) : (
         <div className="flex flex-col gap-6">
           {/* Avatar + email */}
-          <div className="flex items-center gap-4 p-5 bg-claude-panel border border-claude-border rounded-2xl">
-            <div className="w-14 h-14 rounded-full bg-claude-accent/20 border-2 border-claude-accent/40 flex items-center justify-center text-2xl font-bold text-claude-accent">
+          <div className="flex items-center gap-4 p-5 bg-tefiis-panel border border-tefiis-border rounded-2xl">
+            <div className="w-14 h-14 rounded-full bg-tefiis-accent/20 border-2 border-tefiis-accent/40 flex items-center justify-center text-2xl font-bold text-tefiis-accent">
               {inicial}
             </div>
             <div>
-              <p className="font-semibold text-claude-text">{email}</p>
-              <p className="text-xs text-claude-muted mt-0.5">Estudiante FIIS · UNI</p>
+              <p className="font-semibold text-tefiis-text">{email}</p>
+              <p className="text-xs text-tefiis-muted mt-0.5">Estudiante FIIS · UNI</p>
             </div>
           </div>
 
           {!soloCerrarSesion && (<>
           {/* Documentos */}
-          <div className="bg-claude-panel border border-claude-border rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-claude-border">
-              <h2 className="font-semibold text-claude-text">Documentos académicos</h2>
-              <p className="text-xs text-claude-muted mt-0.5">Sube tus fichas en PDF para usar en reclamos</p>
+          <div className="bg-tefiis-panel border border-tefiis-border rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-tefiis-border">
+              <h2 className="font-semibold text-tefiis-text">Documentos académicos</h2>
+              <p className="text-xs text-tefiis-muted mt-0.5">Sube tus fichas en PDF para usar en reclamos</p>
             </div>
-            <div className="divide-y divide-claude-border">
+            <div className="divide-y divide-tefiis-border">
               {DOCS.map(({ tipo, label, field, desc }) => {
                 const tiene = !!docs?.[field];
                 const subiendo = uploadingDoc === tipo;
                 return (
                   <div key={tipo} className="flex items-center justify-between px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${tiene ? 'bg-green-500/15' : 'bg-claude-border/50'}`}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${tiene ? 'bg-green-500/15' : 'bg-tefiis-border/50'}`}>
                         {tiene
                           ? <CheckCircle className="w-4 h-4 text-green-400" />
-                          : <Upload className="w-4 h-4 text-claude-muted" />
+                          : <Upload className="w-4 h-4 text-tefiis-muted" />
                         }
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-claude-text">{label}</p>
-                        <p className="text-xs text-claude-muted">{tiene ? 'PDF guardado' : desc}</p>
+                        <p className="text-sm font-medium text-tefiis-text">{label}</p>
+                        <p className="text-xs text-tefiis-muted">{tiene ? 'PDF guardado' : desc}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {tiene && (
                         <>
                           <button onClick={() => handleVerDoc(tipo, docs[field])} disabled={viendoDoc !== null}
-                            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer bg-claude-border/50 text-claude-text hover:bg-claude-border disabled:opacity-50">
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer bg-tefiis-border/50 text-tefiis-text hover:bg-tefiis-border disabled:opacity-50">
                             {viendoDoc === tipo ? 'Abriendo...' : 'Ver'}
                           </button>
                           <button onClick={() => setDocPendienteEliminar({ tipo, field, label })} disabled={borrandoDoc !== null}
@@ -250,10 +250,10 @@ export default function ProfilePage({ email, sessionToken, onBack, onLogout, sol
                       )}
                       <label className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                         subiendo
-                          ? 'bg-claude-border text-claude-muted'
+                          ? 'bg-tefiis-border text-tefiis-muted'
                           : tiene
-                            ? 'bg-claude-border/50 text-claude-text hover:bg-claude-border'
-                            : 'bg-claude-accent/20 text-claude-accent hover:bg-claude-accent/30 border border-claude-accent/30'
+                            ? 'bg-tefiis-border/50 text-tefiis-text hover:bg-tefiis-border'
+                            : 'bg-tefiis-accent/20 text-tefiis-accent hover:bg-tefiis-accent/30 border border-tefiis-accent/30'
                       }`}>
                         {subiendo ? 'Subiendo...' : tiene ? 'Cambiar' : 'Subir PDF'}
                         <input type="file" accept=".pdf" className="hidden" disabled={uploadingDoc !== null}
@@ -267,14 +267,14 @@ export default function ProfilePage({ email, sessionToken, onBack, onLogout, sol
           </div>
 
           {/* Datos de contacto */}
-          <div className="bg-claude-panel border border-claude-border rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-claude-border">
-              <h2 className="font-semibold text-claude-text">Datos de contacto</h2>
-              <p className="text-xs text-claude-muted mt-0.5">Se usan para completar tus reclamos automáticamente</p>
+          <div className="bg-tefiis-panel border border-tefiis-border rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-tefiis-border">
+              <h2 className="font-semibold text-tefiis-text">Datos de contacto</h2>
+              <p className="text-xs text-tefiis-muted mt-0.5">Se usan para completar tus reclamos automáticamente</p>
             </div>
             <div className="px-5 py-4 flex flex-col gap-3">
               <div>
-                <label className="text-xs text-claude-muted mb-1 block">Teléfono</label>
+                <label className="text-xs text-tefiis-muted mb-1 block">Teléfono</label>
                 <input
                   type="tel"
                   placeholder="9 dígitos"
@@ -282,16 +282,16 @@ export default function ProfilePage({ email, sessionToken, onBack, onLogout, sol
                   maxLength={9}
                   disabled={!editandoContacto}
                   onChange={e => setContacto(p => ({ ...p, telefono: e.target.value.replace(/\D/g, '') }))}
-                  className="w-full px-4 py-2.5 rounded-xl bg-claude-bg border border-claude-border text-claude-text text-sm placeholder-claude-muted focus:outline-none focus:border-claude-accent disabled:opacity-60 disabled:cursor-default"
+                  className="w-full px-4 py-2.5 rounded-xl bg-tefiis-bg border border-tefiis-border text-tefiis-text text-sm placeholder-tefiis-muted focus:outline-none focus:border-tefiis-accent disabled:opacity-60 disabled:cursor-default"
                 />
               </div>
               <div>
-                <label className="text-xs text-claude-muted mb-1 block">Turno</label>
+                <label className="text-xs text-tefiis-muted mb-1 block">Turno</label>
                 <select
                   value={contacto.turno}
                   disabled={!editandoContacto}
                   onChange={e => setContacto(p => ({ ...p, turno: e.target.value }))}
-                  className="w-full px-4 py-2.5 rounded-xl bg-claude-bg border border-claude-border text-claude-text text-sm focus:outline-none focus:border-claude-accent disabled:opacity-60 disabled:cursor-default"
+                  className="w-full px-4 py-2.5 rounded-xl bg-tefiis-bg border border-tefiis-border text-tefiis-text text-sm focus:outline-none focus:border-tefiis-accent disabled:opacity-60 disabled:cursor-default"
                 >
                   <option value="0">Riesgo Académico</option>
                   <option value="promocion">Promoción</option>
@@ -305,7 +305,7 @@ export default function ProfilePage({ email, sessionToken, onBack, onLogout, sol
 
           {/* Actualizar datos */}
           <button onClick={handleBotonContacto} disabled={savingContacto}
-            className="w-full py-3 rounded-xl bg-claude-text text-claude-bg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 cursor-pointer">
+            className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 cursor-pointer">
             {savingContacto ? 'Guardando...' : savedOk ? '¡Actualizado!' : editandoContacto ? 'Guardar cambios' : 'Actualizar datos'}
           </button>
 

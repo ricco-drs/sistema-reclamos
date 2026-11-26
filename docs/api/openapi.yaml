@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: API de TEFIIS
-  version: 2.0.1
+  version: 2.0.2
   description: |
     Contrato HTTP de la API de TEFIIS. El arranque de Express monta las rutas de cada módulo del backend.
 
@@ -30,7 +30,8 @@ info:
     La 2.0.0 es la versión acordada de `POST /api/reclamos`: crear pasa de 200
     a 201, y la ventana o el ciclo cerrado pasan de 503 a 409. La 2.0.1 solo les
     da nombre a las respuestas de los interruptores (`InterruptorActivoGuardado`
-    e `InterruptorEnabledGuardado`); no cambia nada de lo que viaja.
+    e `InterruptorEnabledGuardado`). La 2.0.2 documenta la lectura paginada
+    de la bandeja. El panel sigue recibiendo un único arreglo.
 
     **Autenticación.**
     - `sesionEstudiante`: JWT que firma la propia API al verificar el código de
@@ -321,14 +322,13 @@ paths:
     get:
       tags: [Reclamos en el panel]
       operationId: listarReclamos
-      summary: Lista todos los reclamos, del más nuevo al más antiguo
+      summary: Lista los reclamos del más nuevo al más antiguo
       description: |
-        Devuelve las filas completas de la tabla `reclamos`, sin paginar.
-        PostgREST corta la respuesta en 1 000 filas sin avisar: con más
-        reclamos, los más antiguos no aparecen (escenario E2).
+        La API consulta PostgREST por páginas y devuelve hasta 50 000 reclamos
+        en un único arreglo. El cliente no envía parámetros de paginación.
       responses:
         '200':
-          description: Reclamos, ordenados por `created_at` descendente.
+          description: Reclamos ordenados por `created_at` e `id` descendentes.
           content:
             application/json:
               schema:

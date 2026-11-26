@@ -275,12 +275,16 @@ export function crearRutasDeReclamos({
     } catch (err) { res.status(500).json({ error: err.message }); }
   });
 
-  // Admin: ver todos los reclamos
+  // Admin: ver todos los reclamos. PostgREST corta cada respuesta en 1 000 filas
+  // (PGRST_DB_MAX_ROWS) sin avisar, y con más reclamos la bandeja perdía los más
+  // antiguos (E2, Lab12: faltaban 500 de 1 500). Se piden por páginas hasta
+  // traerlos todos. El id desempata el orden: sin él, dos reclamos con la misma
+  // fecha podrían repetirse o saltarse entre una página y la siguiente.
   rutas.get('/api/admin/reclamos', requireAdminAuth, async (req, res) => {
     try {
-      const r = await sbRest('/reclamos?select=*&order=created_at.desc');
-      if (!r.ok) { const t = await r.text(); return res.status(500).json({ error: t }); }
-      res.json(await r.json());
+      const r = await sbRestTodo('/reclamos?select=*&order=created_at.desc,id.desc');
+      if (!r.ok) { const t = await r.respuesta.text(); return res.status(500).json({ error: t }); }
+      res.json(r.filas);
     } catch (err) { res.status(500).json({ error: err.message }); }
   });
   // Admin: actualizar estado/comentario/respuesta de un reclamo

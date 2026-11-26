@@ -1,0 +1,25 @@
+{
+  "fecha": "2026-11-25T23:18:54.120Z",
+  "commit": "a3a73c2bf2a473c8b385546ddee47bea29b456fc",
+  "rama": "perf/77-carga-e2",
+  "cambiosSinCommit": null,
+  "maquina": {
+    "procesador": "12th Gen Intel(R) Core(TM) i7-12700H",
+    "nucleosLogicos": 20,
+    "memoriaGB": 15.6,
+    "sistema": "Windows_NT 10.0.26300"
+  },
+  "docker": {
+    "version": "29.9.3",
+    "cpusAsignadas": 20,
+    "memoriaAsignadaGB": 7.6,
+    "sistema": "Docker Desktop"
+  },
+  "imagenes": [
+    "sistema-reclamos-api-1: sistema-reclamos-api:latest sha256:a0908f5ae6fe",
+    "sistema-reclamos-firebase-auth-1: sistema-reclamos-firebase-auth:latest sha256:0551ca7e89e8",
+    "sistema-reclamos-rest-1: nginx:1.28-alpine sha256:a8b39bd9cf0f",
+    "sistema-reclamos-db-1: postgres:16-alpine sha256:81e77a483348",
+    "sistema-reclamos-postgrest-1: public.ecr.aws/supabase/postgrest:v16.5 sha256:1347d7552b88"
+  ]
+}

@@ -73,7 +73,8 @@ function registrarEntorno() {
 }
 
 // docker stats en continuo mientras corre k6: una fila por contenedor y muestra.
-function capturarStats(destino) {
+function capturarStats(destino, proyectoCompose) {
+  const prefijo = proyectoCompose + '-';
   const csv = createWriteStream(destino);
   csv.write('hora,contenedor,cpu_pct,memoria_mib\n');
   const proc = spawn('docker', ['stats', '--format', '{{json .}}']);
@@ -86,11 +87,11 @@ function capturarStats(destino) {
     for (const linea of lineas) {
       if (!linea.trim().startsWith('{')) continue;
       const s = JSON.parse(linea);
-      if (!s.Name.startsWith('sistema-reclamos-')) continue;
+      if (!s.Name.startsWith(prefijo)) continue;
       const [usada] = s.MemUsage.split('/');
       const mib = parseFloat(usada) * ({ KiB: 1 / 1024, MiB: 1, GiB: 1024, B: 1 / 2 ** 20 }[usada.trim().replace(/[\d.]/g, '')] ?? 1);
       // sistema-reclamos-api-1 → api; sistema-reclamos-k6-run-3f2a… → k6
-      const contenedor = s.Name.replace('sistema-reclamos-', '').replace(/-run-\w+$/, '').replace(/-\d+$/, '');
+      const contenedor = s.Name.slice(prefijo.length).replace(/-run-\w+$/, '').replace(/-\d+$/, '');
       csv.write(`${hora},${contenedor},${parseFloat(s.CPUPerc)},${mib.toFixed(1)}\n`);
     }
   });
@@ -203,13 +204,16 @@ if (args.resumir) {
   }
   escribirResumen(entorno, corridas);
 } else {
+  const proyectoCompose = JSON.parse(docker(...COMPOSE, 'config', '--format', 'json')).name;
   const entorno = registrarEntorno();
   for (let n = 1; n <= CORRIDAS; n++) {
     console.log(`\n=== Corrida ${n} de ${CORRIDAS} («${args.etiqueta}») ===`);
     const desde = new Date().toISOString();
-    const pararStats = capturarStats(archivo(`${n}-docker-stats.csv`));
-    await correrK6(n);
-    await pararStats();
+    const pararStats = capturarStats(archivo(`${n}-docker-stats.csv`), proyectoCompose);
+    const codigo = await correrK6(n).finally(pararStats);
+    if (codigo !== 0 && codigo !== 99) {
+      throw new Error(`k6 terminó la corrida ${n} con código ${codigo}. Revisa ${archivo(`${n}-k6.txt`)}.`);
+    }
     guardarTiemposPostgrest(desde, new Date().toISOString(), archivo(`${n}-postgrest.csv`));
     corridas.push(resumirCorrida(n));
   }

@@ -1,6 +1,6 @@
 # Carga del escenario E2
 
-Mide E2 de [`docs/escenarios.md`](../docs/escenarios.md): hasta 10 miembros del Tercio abren o recargan a la vez la bandeja de reclamos (`GET /api/admin/reclamos`). La medida es un p95 menor a 1,5 s y 0 reclamos faltantes. La hipótesis está en [`docs/mediciones/hipotesis.md`](../docs/mediciones/hipotesis.md) y entró a `main` antes de escribir esto (#76, #80).
+Mide E2 de [`docs/escenarios.md`](../docs/escenarios.md): hasta 10 miembros del Tercio abren o recargan a la vez la bandeja de reclamos (`GET /api/admin/reclamos`). La medida es un p95 menor a 1,5 s y 0 reclamos faltantes. La hipótesis entró a `main` antes de preparar la carga, en el [PR #80](https://github.com/ricco-drs/sistema-reclamos/pull/80).
 
 | Archivo | Qué hace |
 |---|---|
@@ -13,7 +13,19 @@ Mide E2 de [`docs/escenarios.md`](../docs/escenarios.md): hasta 10 miembros del 
 
 ## Cómo se corre
 
-Hace falta Docker y Node 22 o superior. No hace falta instalar k6: corre con la imagen `grafana/k6:1.8.2`, dentro de la red de Compose. Los comandos van desde la raíz del repositorio, en Git Bash o PowerShell.
+Hace falta Docker y Node 22 o superior. k6 corre dentro de Compose. Usa un clon descartable desde la raíz del repositorio. Los comandos de Compose eliminan los volúmenes del proyecto de medición, así que usa un nombre de proyecto dedicado.
+
+Para reproducir el **antes**, parte de una revisión que tenga esta guía y prepara el checkout en PowerShell:
+
+```powershell
+$revisionCarga = git rev-parse HEAD
+git fetch origin pull/84/head
+git switch --detach 42e7d17
+git restore --source=$revisionCarga --worktree -- carga
+$env:COMPOSE_PROJECT_NAME = 'tefiis-e2'
+```
+
+`42e7d17` conserva el backend medido en `a3a73c2` y añade las herramientas y la evidencia de la línea base. Para el **después**, usa otro clon descartable y cambia a `ae01f19` en el paso anterior. Restaura `carga/` desde la misma revisión en ambos clones. Ejecuta las dos fases por separado, en la misma máquina.
 
 1. Levantar el sistema con la base vacía y sembrar los 1 500 reclamos:
 
@@ -27,10 +39,12 @@ Hace falta Docker y Node 22 o superior. No hace falta instalar k6: corre con la 
 2. Correr las tres corridas. Hay que cerrar todo lo que no haga falta y no tocar la máquina hasta que terminen, unos 10 minutos:
 
    ```bash
-   node carga/correr.mjs --etiqueta antes
+   node carga/correr.mjs --etiqueta repetir-antes
    ```
 
-   Después de la mejora se usa el mismo comando con `--etiqueta despues`, sobre la misma máquina y los mismos datos. El script deja `docs/mediciones/corridas/<etiqueta>-resumen.md` con la tabla de las tres corridas. La primera se descarta, porque el sistema todavía está frío.
+   Para la segunda fase usa `--etiqueta repetir-despues`. Estas etiquetas preservan los [resultados originales de la línea base](../docs/mediciones/corridas/antes-resumen.md). El script deja `docs/mediciones/corridas/<etiqueta>-resumen.md` con la tabla de las tres corridas. Se descarta la primera porque el sistema todavía está frío.
+
+3. Al terminar cada fase, ejecuta `docker compose -f compose.yaml -f carga/compose.yaml down --volumes` en su clon antes de pasar a la otra.
 
 Para una sola corrida, sin guardar nada:
 

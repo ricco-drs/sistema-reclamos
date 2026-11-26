@@ -2,37 +2,28 @@
 
 Equipo 2, TEFIIS. SW708 Arquitectura de Soluciones de Software, 2026-2.
 
-El curso permite la IA con un papel distinto cada semana y pide declarar qué se usó, qué se aceptó y qué se descartó. Se evalúa el criterio, no la herramienta. Si en una semana no se usó, se declara así.
+La bitácora registra el uso de IA por semana y las decisiones del equipo.
 
 ## Cómo completar una semana
 
-Cada integrante completa la semana que le tocó, con estos campos y sin cambiar su orden:
+Indicar la herramienta, para qué se usó, qué se aceptó, qué corrigió o descartó el equipo y quién registra la entrada. Si no se usó IA, basta con indicarlo.
 
-- **¿Se usó IA?** Sí o No.
-- **Herramienta:** Claude, ChatGPT, Copilot u otra.
-- **Para qué se usó:** una frase concreta.
-- **Qué se aceptó:** lo que se dejó tal cual o con pocos cambios.
-- **Qué se descartó y por qué:** al menos una cosa que la IA propuso y no se usó, con el motivo.
-- **Registra:** quién escribe la entrada.
-
-Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis de `container` en Structurizr y me dio una versión vieja que corregí»). Donde dice `POR COMPLETAR` falta ese dato; se reemplaza y se borra la marca.
-
-| Semana | Papel de la IA según el curso                                                                                |
-| ------ | ------------------------------------------------------------------------------------------------------------ |
-| 1      | Guía de código ajeno: se verifica cada afirmación contra el código y se anota al menos un error suyo.        |
+| Semana | Papel de la IA según el curso |
+| --- | --- |
+| 1      | Guía de código ajeno: se verifica cada afirmación contra el código y se anota al menos un error suyo. |
 | 2      | Abogada del diablo: los escenarios se escriben a mano y la IA pregunta con qué instrumento se mide cada uno. |
-| 3      | Traductora a DSL: de la descripción en prosa al modelo C4.                                                   |
-| 4      | Generadora de alternativas: las consecuencias las escribe una persona.                                       |
-| 5      | No se usa.                                                                                                   |
-| 6      | No se usa.                                                                                                   |
-| 7      | Detectora de sobreingeniería: el equipo rechaza por escrito lo que no corresponde.                           |
+| 3      | Traductora a DSL: de la descripción en prosa al modelo C4. |
+| 4      | Generadora de alternativas: las consecuencias las escribe una persona. |
+| 5      | No se usa. |
+| 6      | No se usa. |
+| 7      | Detectora de sobreingeniería: el equipo rechaza por escrito lo que no corresponde. |
 
 ## Semana 1 · 5 de setiembre
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude
-- **Para qué se usó:** Preguntarle por los conceptos principales del sistema y pedirle un resumen de cómo funciona.
-- **Qué se aceptó:** Todo el resumen y las explicaciones de los conceptos.
+- **Para qué se usó:** Resumir cómo funciona el sistema y aclarar sus conceptos principales.
+- **Qué se aceptó:** El resumen y las explicaciones.
 - **Qué se descartó y por qué:** Nada: no se detectó ninguna afirmación errónea al leer las respuestas.
 - **Registra:** Roy Puris
 
@@ -40,7 +31,7 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude
-- **Para qué se usó:** Revisar, a nivel técnico, qué se podía mejorar en los cinco escenarios de calidad del módulo M3 (`ESC-M3-01` a `ESC-M3-05`, en [atributos_calidad_M3.md](atributos_calidad_M3.md)).
+- **Para qué se usó:** Revisar las medidas de los cinco escenarios de calidad del módulo M3 (`ESC-M3-01` a `ESC-M3-05`, en [atributos_calidad_M3.md](atributos_calidad_M3.md)).
 - **Qué se aceptó:** Las métricas que sugirió Claude para las medidas de los escenarios. Dos de las medidas se cambiaron: en rendimiento (`ESC-M3-02`) se pedía 1 s o menos y quedó en 2 s, y en confiabilidad (`ESC-M3-04`) se pedía que el 100 % de los correos se entregara y quedó en el 95 % dentro de 15 minutos. Lo demás que sugirió se aceptó.
 - **Qué se descartó y por qué:** Añadir más escenarios de calidad que no eran tan críticos. Se dejaron solo los más importantes.
 - **Registra:** Roy Puris
@@ -49,9 +40,9 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Antigravity
-- **Para qué se usó:** Se le pidió analizar la consistencia del borrador realizado en clase con el diagrama de contexto de structurizer, además de señalar debilidades en las 3 capas del diagrama.
-- **Qué se aceptó:** Se aceptó el cambio de sintaxis para actualizar el gráfico y se subsanó las inconsistencias señaladas.
-- **Qué se descartó y por qué:** Se descartó una observación que señalaba que no se contaba con un plan B respecto a Brevo (servicio de envío de email) debido a que sí se cuenta con un plan B configurado en el código.
+- **Para qué se usó:** Comparar el borrador de clase con el modelo C4 en Structurizr y revisar sus tres niveles.
+- **Qué se aceptó:** La corrección de sintaxis y los ajustes al modelo.
+- **Qué se descartó y por qué:** Se descartó la observación sobre Brevo porque el código sí tenía proveedores de respaldo.
 - **Registra:** Franz Nuñez
 
 ## Semana 4 · 9 de octubre
@@ -60,7 +51,7 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 - **Herramienta:** Codex.
 - **Para qué se usó:** Proponer alternativas para organizar la API y separar la persistencia de cursos resueltos en los ADR 001 y 002.
 - **Qué se aceptó:** La separación por capas dentro de la API existente y la inyección de un repositorio con `obtener` y `guardar`, para probar las reglas sin conectarse a Supabase.
-- **Qué se descartó y por qué:** Mantener las reglas dentro del endpoint, porque mezcla validación, HTTP y almacenamiento; crear un microservicio adicional, porque añade operación sin una necesidad demostrada; y migrar esta operación a un ORM, porque excede el alcance de la rodaja.
+- **Qué se descartó y por qué:** Se descartó mantener las reglas junto a HTTP y almacenamiento. Un microservicio y un ORM excedían lo que necesitaba esta parte del sistema.
 - **Registra:** Lenin.
 
 ## Semana 5
@@ -71,10 +62,7 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 ## Semana 6 · 14 de octubre
 
 - **¿Se usó IA?** No
-- **Herramienta:** Ninguna.
-- **Para qué se usó:** No se realizó el uso de un asistente en la refactorización a puertos y adaptadores.
-- **Qué se aceptó:** No aplica.
-- **Qué se descartó y por qué:** No aplica.
+- El equipo hizo la refactorización a puertos y adaptadores.
 - **Registra:** Ricco Rashuaman
 
 ## Semana 7 · 15 al 19 de octubre
@@ -83,49 +71,45 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Primer borrador del informe de la Entrega 1 a partir del contenido del repositorio.
-- **Qué se aceptó:** La reescritura de los escenarios de calidad sobre el comportamiento real del código (E1 a E6), la elección del ADR-0003 (la secuencia de PostgreSQL que numera los reclamos) y la estructura del informe.
-- **Qué se descartó y por qué:** Las consecuencias de los tres ADR, porque el curso exige que las escriba el equipo. El ADR-0003 ya fue reescrito por quien lo firma.
+- **Para qué se usó:** Preparar un borrador del informe de la Entrega 1 con el repositorio como fuente.
+- **Qué se aceptó:** La estructura del informe, la revisión de los escenarios E1 a E6 y la elección del ADR-0003.
+- **Qué se descartó o corrigió:** El equipo reescribió las consecuencias de los ADR porque el curso pide que las redacten sus autores.
 - **Registra:** Ricco Rashuaman
 
 ### Entrada del 17 al 19 de octubre, escenarios, ficha, interfaz y unión de los repositorios
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Redactar `docs/escenarios.md`, `docs/interfaz/` y `docs/ficha-del-sistema.md` a partir del borrador del informe y del código. Después, unir `sistema-admin` a este repositorio en dos carpetas sin perder el historial de cada uno, integrar los diagramas C4 de Franz, limpiar el borrador del informe en Word y completar la ficha y la interfaz.
-- **Qué se aceptó:** Los tres archivos, revisados antes de subirlos. Los pasos de la unión (mover el código a `sistema-reclamos/`, traer `sistema-admin` con el commit de Ricco y ajustar el CI), la resolución del conflicto del README con los cambios de Franz y lo que valida el panel en los cursos resueltos, comprobado en `sistema-admin/src/App.jsx`.
-- **Qué se descartó y por qué:** Datos del borrador que no coincidían con el código: la interfaz no comprueba el tamaño del PDF (solo lo hace el servidor), los cursos fuera del catálogo no se rechazan sino que se descartan sin avisar, y la columna «Lo valida el dominio» pasó a «Lo valida el servidor» porque casi todas esas reglas están en `server.js`. De la ficha se quitó lo que se decía de Ricco sobre el panel, porque no se pudo confirmar. Del Word se quitaron la página de notas internas, los comentarios al margen y las frases de relleno. Las consecuencias de los ADR que redactó la IA no se usan: las escribe el equipo.
+- **Para qué se usó:** Completar la ficha, los escenarios y la interfaz, y preparar la unión de los dos repositorios.
+- **Qué se aceptó:** La documentación revisada, la integración del C4 y la unión de ambos historiales.
+- **Qué se descartó o corrigió:** Al comparar con el código, el equipo corrigió quién valida el tamaño del PDF y qué pasa con cursos fuera del catálogo. Quitó atribuciones que no pudo confirmar y reescribió las consecuencias de los ADR.
 - **Registra:** Christopher Albino
 
 ### Entrada del 18 al 19 de octubre, git y consecuencias del ADR-0003
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Revisar y realizar una guía de preguntas para redactar las consecuencias del ADR-0003.
-- **Qué se aceptó:** El método de preguntas para redactar las consecuencias.
-- **Qué se descartó y por qué:** El borrador de consecuencias de la IA. Se reescribió con palabras propias y se quitaron dos viñetas que no se podían defender (el viaje extra a la base y el respaldo del método anterior).
+- **Para qué se usó:** Preparar preguntas para revisar las consecuencias del ADR-0003.
+- **Qué se aceptó:** La guía de preguntas.
+- **Qué se descartó o corrigió:** Roy reescribió el borrador y quitó dos supuestas consecuencias que no pudo justificar con la implementación.
 - **Registra:** Roy Puris
 
 ### Entrada del 19 de octubre, corrección de los escenarios
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Con la crítica escrita por el Equipo 3 sobre E1 a E6, se le pidió un borrador de las correcciones de `docs/escenarios.md`, apoyado en lo que dice el código (cómo se firma la sesión del estudiante, las URL de los proveedores de correo, el límite de cursos).
-- **Qué se aceptó:** Pasar cada observación a una corrección concreta (qué instrumento, qué script, quién lo corre), la matriz de casos de E3, el denominador de E6 y las tablas de antes y después.
-- **Qué se descartó y por qué:** La matriz de E3 ponía `POST /api/reclamos/evidencias` como la ruta que rechaza la evidencia ajena, pero esa ruta solo sube el archivo a la carpeta del propio estudiante. El rechazo está en `POST /api/reclamos`; se pidió en la revisión del PR #5 y Roy corrigió la ruta en ese mismo PR. Se encontró al revisar el borrador contra el código, con apoyo de Claude Code.
+- **Para qué se usó:** Revisar los escenarios E1 a E6 a partir de las observaciones del Equipo 3.
+- **Qué se aceptó:** La identificación de pruebas, responsables y medidas, incluida la matriz de E3 y el cálculo de E6.
+- **Qué se descartó o corrigió:** El borrador ubicaba el rechazo de una evidencia ajena en la subida del archivo. El equipo comprobó que ocurre al registrar el reclamo y lo corrigió en el PR #5.
 - **Registra:** Roy Puris
 
 ### Entrada del 19 de octubre, Lab07: patrones y acoplamiento
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Como detectora de sobreingeniería: se le pidió, a partir de la descripción de cada uno de los tres fragmentos del Lab07, la lista de patrones que podrían aplicarse. También midió el acoplamiento con dependency-cruiser y redactó el borrador de `docs/acoplamiento/2026-10-17.md`.
-- **Qué se aceptó:** Una tabla de funciones indexada por tipo para el fragmento A (Strategy en su forma mínima) y Adapter para el fragmento B. Para el fragmento C, no aplicar ningún patrón. De la medición, los números de Ca, Ce e I, revisados contra la salida de la herramienta.
-- **Qué se descartó y por qué:**
-  - **Fragmento A.** Strategy con una clase por tipo: tres archivos por cada tipo de comprobante para elegir una función. Factory Method: no se crea un objeto distinto por tipo, solo se elige qué función ejecutar. Chain of Responsibility: los tipos se excluyen entre sí y ninguno pasa la petición al siguiente. Visitor: no hay una estructura de objetos que recorrer.
-  - **Fragmento B.** Bridge: no hay dos jerarquías que varíen por separado, solo dos proveedores. Abstract Factory: no se crean familias de objetos relacionados. Template Method: obligaría a una clase base para dos subclases cuyas diferencias son de formato, no de pasos. Facade: sin una API que simplificar, solo hay que aislar los formatos.
-  - **Fragmento C.** Strategy, Template Method, Facade y Decorator: no hay variación ni cambio previsto en cuarenta líneas que nadie toca desde hace un año; cualquiera de ellos solo agregaría indirección.
-  - **Medición.** El resultado de la herramienta suma por archivo y no por carpeta, así que no se copió tal cual: el equipo contó por carpeta, como en el ejemplo del laboratorio.
+- **Para qué se usó:** Evaluar alternativas de diseño y apoyar la medición del acoplamiento del Lab07.
+- **Qué se aceptó:** Una tabla de funciones para el fragmento A, un adaptador para el B y mantener el C tal como estaba. El equipo verificó las métricas.
+- **Qué se descartó o corrigió:** Se descartaron patrones que añadían clases o pasos sin resolver el problema. La herramienta contaba por archivo y el equipo rehízo el conteo por carpeta. Ver [fichas](patrones/ficha-decision.md) y [medición](acoplamiento/2026-10-17.md).
 - **Registra:** Roy Puris
 
 ## Semana 10 · 7 de noviembre
@@ -134,61 +118,61 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Escribir las dos reglas nuevas de `sistema-reclamos/.dependency-cruiser.cjs` (que `aplicacion/` no importe infraestructura ni presentación, y que el dominio no importe paquetes de npm) y revisar que el código actual y el de la rama `feat/evento-reclamo-registrado` las cumplan.
-- **Qué se aceptó:** Las dos reglas, después de verlas fallar con un import prohibido de cada tipo, en la terminal y en la CI (ejecución #114), y volver a verde al quitar esos imports (ejecución #115).
-- **Qué se descartó y por qué:** Su propuesta de guardar las capturas sueltas en `docs/evidencias/`: se guardaron en `docs/evidencias/img/` para no mezclarlas con los archivos de texto del Lab04-05.
+- **Para qué se usó:** Redactar y probar las reglas de dependencias entre capas.
+- **Qué se aceptó:** Las dos reglas, tras comprobar que rechazaban dependencias prohibidas y que pasaban al retirarlas.
+- **Qué se descartó o corrigió:** Las capturas se guardaron en la carpeta de imágenes para que se puedan ubicar junto a su evidencia.
 - **Registra:** Ricco Rashuaman
 
 ### Entrada del 20 de noviembre, Lab10: flujo por eventos y entidad de cursos resueltos
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Leer `server.js` y proponer la ruta, los campos y el evento `ReclamoRegistrado` antes de acordarlos con Christopher. Después, escribir el caso de uso `registrarReclamo` con sus puertos y adaptadores en memoria, las pruebas, `docs/api/eventos.md` y el refactor de la entidad `CursosResueltos`, usando la rodaja de cursos resueltos como plantilla.
-- **Qué se aceptó:** La estructura de la rodaja existente aplicada al registro de reclamos, el bus en proceso que no espera a los consumidores y el cliente de M2 con tiempo límite. De la revisión de Christopher contra `server.js`, sus cuatro ajustes: agregar el 401 y el 500, aclarar que los cursos se cortan en 30 sin devolver error, que `categoria` es el texto y que el consumidor de M2 lee la descripción por id. Se comprobó con `npm test` y `npm run arch:check` (evidencia en `docs/evidencias/lab10-pruebas.txt`). También sus observaciones de la revisión: usar el cliente de M2 en memoria cuando `M2_URL` esté vacía, y presentar la falta de reintentos como limitación conocida.
-- **Qué se descartó y por qué:** El contrato inicial de la IA, que no tenía el 401 ni el 500, daba el límite de 30 cursos como si fuera un 400 y no mencionaba que el servidor numera con el método anterior si la secuencia no responde; Christopher lo encontró al compararlo con `server.js`. En la revisión del PR #27, Christopher encontró tres afirmaciones de `docs/api/eventos.md` que no eran ciertas: que hoy «nadie reintenta» (el bus tampoco reintenta), que el cuerpo a M2 era «el mismo que manda la aplicación» (el código UNI ahora sale del reclamo guardado) y que bastaba quitar las dos llamadas del front (faltaba cambiar el aviso de `ReclamosPanel.tsx` y definir `M2_URL`). Se verificó cada punto contra el código (`ReclamosPanel.tsx` líneas 500 a 502, `useReclamos.ts` línea 940 y `limiteEnvioCodigo`) y se corrigió el documento, con una sección de limitaciones conocidas. Además, el adaptador en memoria de reclamos usaba el reloj real y dos pruebas fallaban contra la fecha fija; se le inyectó el reloj. La IA no encontró el contrato de M2 en el repositorio; se usó la llamada de `useReclamos.ts` que indicó Christopher. La conexión al arranque de `server.js` no se hizo: solo Ricco lo modifica.
+- **Para qué se usó:** Proponer el contrato del registro, implementar el flujo por eventos y revisar la entidad de cursos resueltos.
+- **Qué se aceptó:** La separación entre el registro y sus avisos, y el envío a M2 con tiempo de espera. Christopher contrastó el contrato con el código.
+- **Qué se descartó o corrigió:** Se corrigieron errores omitidos, el comportamiento del límite de cursos y los datos enviados a M2. La falta de reintentos quedó documentada en el [flujo por eventos](api/eventos.md). Se conservaron las [pruebas del registro](evidencias/lab10-pruebas.txt).
 - **Registra:** Roy Puris
 
 ### Entrada del 20 de noviembre, generador de tokens para E1 y E3
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Escribir `sistema-reclamos/pruebas/generar-tokens.js` a partir de lo que piden E1 y E3 en el informe, y probarlo contra `requireStudentAuth` levantando `server.js` con una clave local y sin conexión a Supabase.
-- **Qué se aceptó:** El script con 200 tokens válidos, uno vencido y uno falsificado; los correos en el dominio reservado `prueba.test`; que el secreto se pase explícito y no se lea del `.env` del proyecto, que suele tener el de producción; y `tokens.json` fuera de git. Se comprobó que sin token, con el vencido, con el falsificado y con uno firmado con otra clave la API responde 401, y que los 200 válidos pasan la autenticación (evidencia en el PR #32).
-- **Qué se descartó y por qué:** Agregar un script en `package.json` y sumar `pruebas/` a `eslint.config.js`: el build solo lo modifica Ricco, así que se importó `process` en el propio archivo. La primera prueba del token firmado con otra clave no valía: el archivo se escribió en otra ruta, el token salió vacío y el 401 era por falta de token. Se repitió con un token real.
+- **Para qué se usó:** Preparar las sesiones de prueba para E1 y E3 y comprobar qué solicitudes acepta la API.
+- **Qué se aceptó:** El script usa datos y una clave de prueba. Se verificaron las sesiones válidas y los rechazos del [PR #32](https://github.com/ricco-drs/sistema-reclamos/pull/32).
+- **Qué se descartó o corrigió:** La primera prueba con otra firma enviaba un token vacío. Se repitió con un token generado con otra clave para comprobar el motivo del rechazo.
 
 ### Entrada del 20 de noviembre, Lab10: contrato OpenAPI
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Leer en `server.js` las 18 rutas de `/api/admin/*` y `POST /api/reclamos`, y redactar `docs/api/openapi.yaml` con sus ejemplos y errores. También para comparar el contrato con la tabla de errores de `docs/api/eventos.md` (#27) y para escribir un validador local, `sistema-reclamos/pruebas/validar-openapi.cjs`.
-- **Qué se aceptó:** El contrato escrito sobre el comportamiento actual del código, con los mensajes de error copiados de `server.js`, y el validador: las 19 operaciones coinciden con las rutas del código, y los 192 ejemplos y los 34 mensajes de error se comprueban (evidencia en `docs/evidencias/lab10-openapi.txt`). Lo que el código hace de forma discutible quedó documentado tal cual: un cuerpo que no es JSON válido responde 500, `POST /api/admin/maintenance` no crea su fila y los interruptores usan tres nombres de campo distintos.
-- **Qué se descartó y por qué:** Validar con Redocly por `npx`, porque descarga y ejecuta un paquete de internet; se usaron `js-yaml` y `ajv`, que ya instala `npm ci`. Corregir esos comportamientos en este PR, porque son cambios a `server.js` y los decide el equipo. Cambiar la fila del informe de la Entrega 1 que limita el contrato a `/api/admin/*`, porque es un documento ya entregado. La primera versión del validador se caía ante una `$ref` rota sin informar los demás errores; se corrigió para que la cuente como un problema más.
+- **Para qué se usó:** Redactar el primer contrato OpenAPI y preparar un validador con el código como referencia.
+- **Qué se aceptó:** El contrato de 19 operaciones y las [comprobaciones de ejemplos y mensajes](evidencias/lab10-openapi.txt).
+- **Qué se descartó o corrigió:** El validador dejó de detenerse en la primera referencia rota. Los cambios de comportamiento se dejaron para los PR de implementación.
 
 ### Entrada del 20 de noviembre, Lab09: particiones del backend
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Clasificar por módulo las 41 rutas de `server.js`, revisar qué piezas comparten (PostgREST, correo, sesión, interruptores) y redactar el borrador de `docs/particiones.md`, con las dos particiones, el cuadro por escenario y la recomendación.
-- **Qué se aceptó:** Las dos alternativas (por módulos de negocio y por capas técnicas), el cuadro de E1 a E6 y usar como criterio de desempate la prioridad de los escenarios que ya fijaba el informe (tabla 2.7), en vez de inventar uno nuevo. También que la elegida sea la que el informe de acoplamiento ya se comprometió a medir en la semana 13.
-- **Qué se descartó y por qué:** Un ejemplo del borrador que ponía `multer` como dependencia exclusiva de `documentos`: al revisar `server.js`, lo usan también Tefi y reclamos, y se cambió por `firebase-admin`, que solo usa `acceso`. La forma exacta del build y de las reglas no se fijó en el documento, porque la decide Ricco al implementarla.
+- **Para qué se usó:** Comparar dos formas de dividir el backend según los escenarios de calidad.
+- **Qué se aceptó:** La partición por negocio, elegida con las prioridades que ya tenía el informe. Ver [particiones](particiones.md).
+- **Qué se descartó o corrigió:** Se corrigió un ejemplo que presentaba como exclusiva una dependencia que compartían varios módulos.
 - **Registra:** Christopher Albino
 
 ### Entrada del 20 de noviembre, plantilla de confirmación del reclamo
 
-- **Fecha y tarea:** 20 de noviembre. Sacar de `server.js` la plantilla del correo de confirmación (`componerConfirmacion`) a su propio archivo, a pedido de Ricco, para que él solo la importe al conectar el bus de eventos.
-- **Herramienta y versión:** Claude Code (Sonnet 5.5).
-- **Qué se le pidió:** Mover la plantilla y el cálculo de `primerNombre` de `POST /api/reclamos/confirmar` a `backend/presentacion/`, sin cambiar el mensaje que recibe el estudiante, y probarla.
-- **Qué se aceptó:** `componerConfirmacion` y `plantillaCorreo.js` (`emailTemplate`, `escaparHtml`, URL de las imágenes), con 6 pruebas. La IA comparó la salida con el código original de `server.js` en seis casos, incluidos nombres sin coma y con HTML en la categoría: el contenido es idéntico y solo cambia la sangría del HTML. Se verificó con `npm test` (49 pruebas) y `npm run arch:check`.
-- **Qué se descartó y por qué:** La firma pedida, `componerConfirmacion({ id, nombre, categoria })`, no alcanzaba: cuando el nombre no trae coma, el saludo se arma con el correo. Se agregó `email` como campo opcional, que el consumidor ya recibe en el evento. No se tocó `server.js`: la copia de `emailTemplate` que sigue ahí la usan el código de verificación y la respuesta del Tercio, y la reemplaza quien conecta el bus.
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code (Sonnet 5.5)
+- **Para qué se usó:** Extraer y probar la plantilla de confirmación del reclamo.
+- **Qué se aceptó:** La plantilla común y seis pruebas que confirmaron que el estudiante recibe el mismo contenido.
+- **Qué se descartó o corrigió:** Se añadió el correo como respaldo para el saludo porque el nombre no siempre viene con el formato esperado.
 - **Registra:** Roy Puris
 
 ### Entrada del 20 de noviembre, inmutabilidad real de CursosResueltos
 
-- **Fecha y tarea:** 20 de noviembre. Issue #55, que abrió Lenin: la entidad `CursosResueltos` del #26 se decía inmutable, pero compartía listas y objetos con las entradas y con lo que devuelve `aPlano()`.
-- **Herramienta y versión:** Claude Code (Sonnet 5.5).
-- **Qué se le pidió:** Comprobar si la observación de Lenin era cierta y corregir la entidad sin cambiar la forma persistida, el límite de 50 entradas ni los códigos HTTP.
-- **Qué se aceptó:** Reproducir primero las tres mutaciones (cambiar la lista de entrada, cambiar el resultado de `aPlano()` y cambiar el historial devuelto): las tres alteraban la instancia. Después, copiar con `structuredClone` al construir, congelar todo el árbol, y devolver una copia desde `aPlano()`. Se agregaron 6 pruebas; 5 fallan con el código anterior y las 58 pasan con el nuevo, con `arch:check` limpio.
-- **Qué se descartó y por qué:** Dejar el `Object.freeze` de primer nivel, que fue lo que la IA propuso en el #26: congelaba el contenedor y no lo que contiene. Tampoco se devuelven copias del historial en cada lectura: el historial ya queda congelado y modificarlo lanza `TypeError`.
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code (Sonnet 5.5)
+- **Para qué se usó:** Reproducir el problema por el que se podían cambiar los cursos resueltos desde fuera de la entidad (#55).
+- **Qué se aceptó:** Copiar los datos que entran y salen, proteger el historial y cubrir los casos con pruebas.
+- **Qué se descartó o corrigió:** Se descartó proteger solo el objeto principal porque las listas internas todavía se podían modificar.
 - **Registra:** Roy Puris
 
 ## Semana 11 · 14 de noviembre
@@ -197,18 +181,18 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Codex
-- **Para qué se usó:** Revisar las identidades del historial remoto, contrastar las equivalencias propuestas por Roy en el PR #48 y preparar el `.mailmap` que pidió el docente.
-- **Qué se aceptó:** Los correos institucionales y las equivalencias verificadas en el historial. Se comprobó que las 13 combinaciones de nombre y correo quedan agrupadas en seis identidades, correspondientes al equipo y al docente.
-- **Qué se descartó y por qué:** Reescribir commits para cambiar su autor. Git puede agrupar las contribuciones con `.mailmap` y conservar los commits publicados.
+- **Para qué se usó:** Revisar las identidades duplicadas del historial y preparar el archivo de equivalencias pedido por el docente.
+- **Qué se aceptó:** Las equivalencias comprobadas y los correos institucionales.
+- **Qué se descartó o corrigió:** Se descartó cambiar la autoría de commits ya publicados porque Git puede agrupar las contribuciones sin reescribirlos.
 - **Registra:** Lenin Castro
 
 ### Entrada del 21 de noviembre, arranque reproducible de TEFIIS con Compose
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Codex
-- **Para qué se usó:** Preparar el Dockerfile de dos etapas y el entorno de Compose de Lab11, y verificar el arranque del portal, la API y PostgreSQL desde un clon limpio.
-- **Qué se aceptó:** Servir el portal compilado y conectar la API a PostgreSQL por PostgREST con los datos y las sesiones sintéticas del laboratorio. Se probó el arranque, el registro y consulta de reclamos, el rechazo de un token vencido y la siembra de 1 500 filas.
-- **Qué se corrigió y por qué:** En la primera compilación el backend no pudo crear el directorio de adjuntos como usuario sin privilegios. La imagen ahora lo prepara con el propietario correcto. Tras la revisión del PR #29, se actualizaron las imágenes con su nombre completo y se repitió el arranque en una copia limpia.
+- **Para qué se usó:** Preparar el arranque completo con Docker Compose y probarlo desde un clon limpio.
+- **Qué se aceptó:** El portal, la API y la base local con datos y sesiones de prueba. Se comprobó el registro y la consulta de reclamos.
+- **Qué se descartó o corrigió:** Se corrigieron los permisos del directorio de adjuntos y, tras el PR #29, se repitió el arranque desde una copia limpia.
 - **Evidencia:** [Portal de TEFIIS levantado en Compose](evidencias/img/lab11-compose.jpg).
 - **Registra:** Lenin Castro
 
@@ -216,44 +200,44 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Conectar en `server.js` el registro de reclamos con el evento `ReclamoRegistrado` (#27), sus consumidores de correo y M2 y el enviador de correo con timeout (#34); preparar la transición entre el front anterior y el nuevo (#46), que pidió Lenin; escribir las pruebas de esa transición y `pruebas/probar-registro-con-bus.mjs`, que levanta el servidor real contra servicios falsos; y corregir los tres errores de ESLint que `server.js` ya tenía en `develop` (dos variables sin usar y una función que nadie llamaba), sin cambiar su comportamiento.
-- **Qué se aceptó:** Reemplazar la ruta anterior de `POST /api/reclamos` por el caso de uso, después de compararlas y ver que hacen las mismas comprobaciones con los mismos mensajes; quitar de `server.js` su copia de `emailTemplate` y de las funciones de envío; avisar al arrancar si falta `M2_URL` o si `EMAIL_TIMEOUT_MS` no es un número; darle a M2 hasta 60 s, porque al abrir su URL se vio que Render tarda más de 25 s en despertarlo; y, para la transición, la opción que la IA llamó B: el front nuevo manda `avisos: "api"`, la API lo confirma en la respuesta, y para el front anterior se usa un segundo caso de uso que registra sin publicar el evento. Se comprobó con `npm test` (65 pruebas), `npm run arch:check`, `validar-openapi.cjs` y la prueba de punta a punta (15 de 15), con la salida en `docs/evidencias/lab10-bus-conectado.txt`.
-- **Qué se descartó y por qué:** La opción A de la IA para la transición, con la bandera solo en la petición: si Cloudflare publicaba el front nuevo antes que Railway la API nueva, esos reclamos se quedaban sin correo. También su recomendación de no conectar M2 porque no responde: el #51 incluye M2, y retirarlo es una decisión del equipo, no de este PR. Y su propuesta de que los cambios del front entraran como un commit de Roy en esta rama: van en el PR de Roy (#46).
+- **Para qué se usó:** Integrar el registro por eventos y preparar la convivencia entre las versiones del portal y la API.
+- **Qué se aceptó:** La API confirma si se hará cargo de los avisos. Las [pruebas](evidencias/lab10-bus-conectado.txt) verificaron el registro y el envío de correo y expediente.
+- **Qué se descartó o corrigió:** Se descartó depender solo de la solicitud del portal porque, si se desplegaba antes que la API, el reclamo podía quedarse sin confirmación. Se mantuvo M2 en el alcance.
 - **Registra:** Ricco Rashuaman
 
 ### Entrada del 21 de noviembre, el front le pide a la API el correo y el expediente
 
-- **Fecha y tarea:** 20 y 21 de noviembre. Ajustar `useReclamos.ts` y `ReclamosPanel.tsx` para que, con el bus conectado en `server.js` (#58), el correo de confirmación y el expediente a M2 los envíe la API, sin duplicados mientras convivan el front anterior y el nuevo.
-- **Herramienta y versión:** Claude Code (Sonnet 5.5).
-- **Qué se le pidió:** Quitar las dos llamadas del navegador, como pedía `docs/api/eventos.md`, y reescribir el aviso de la pantalla de éxito.
-- **Qué se aceptó:** El primer cambio de la IA quitaba las dos llamadas por completo. Al revisar el #58 de Ricco apareció que su transición exige otra cosa: el front manda `avisos: "api"` y solo envía por su cuenta si la respuesta no lo confirma. Con el cambio original, un reclamo habría quedado sin correo ni expediente. Quedó así: se agrega `avisos: "api"` a la petición, y la llamada a `/api/reclamos/confirmar` y el `fetch` a M2 se hacen solo si la API no confirma. Se conserva `avisoCorreo`, que sigue sirviendo en ese camino. El aviso de la pantalla dice que la confirmación llegará al correo, sin asegurarlo. Se verificó con `tsc --noEmit` y `npm run build`.
-- **Qué se descartó y por qué:** Quitar las llamadas sin condición y quitar `avisoCorreo`: eso es lo que habría dejado a los estudiantes sin correo si el front nuevo se desplegaba antes que la API nueva, o al revés. El cambio se prueba de punta a punta solo contra el servidor del #58; el front no tiene pruebas automáticas, así que los cuatro cruces de front y API se describen en `docs/api/eventos.md` pero no se corrieron en un navegador.
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code (Sonnet 5.5)
+- **Para qué se usó:** Actualizar el portal para que la API envíe los avisos y ajustar el mensaje de confirmación.
+- **Qué se aceptó:** El portal delega el envío cuando la API lo confirma y usa el camino anterior si no recibe esa confirmación. Se comprobó la compilación.
+- **Qué se descartó o corrigió:** Quitar las dos llamadas de inmediato habría dejado reclamos sin correo ni expediente durante la transición. Los cruces de versiones se documentaron, pero no se probaron en un navegador.
 
 ### Entrada del 21 de noviembre, contrato acordado de POST /api/reclamos
 
-- **Fecha y tarea:** 21 de noviembre. Issue #61: implementar en el manejador y el caso de uso el contrato de `POST /api/reclamos` que Christopher cerró con el equipo consumidor.
-- **Herramienta y versión:** Claude Code (Sonnet 5.5).
-- **Qué se le pidió:** Aplicar las siete decisiones de la revisión (códigos estables, 201 y 200 con `Location`, `cursos_descartados`, validación del código UNI y de los documentos, 409 y 503 con `Retry-After`, y 5 000 caracteres) sin tocar lo que se decidió dejar igual, y mantener `avisos`.
-- **Qué se aceptó:** Los errores del dominio llevan `codigo`; la política de recepción devuelve el rechazo con su código (pausa 503, ciclo y ventana 409); `sanearCursos` pasó a `clasificarCursos`, que además dice qué descartó y por qué; y se inyecta `esDocumentoPropio`, que en `server.js` es la misma comprobación de `/api/docs/signed-url`. Después de la revisión de Christopher sobre el #62 se agregaron `estado` y `creado_en` al 201, `creado_en` al 200 (el del reclamo original) y el `codigo` del 401 (`SESION_REQUERIDA` y `SESION_INVALIDA`). Para que `creado_en` coincida con lo guardado, el caso de uso escribe `created_at` en la fila, y `buscarDuplicado` ahora devuelve el id y la fecha. Con el contrato acordado ya en `develop` (#63 y #64), se quitaron las tres marcas `x-pendiente` que el validador pedía quitar: descripción larga, código UNI y documento ajeno. Quedan cero pendientes. Se verificó con 80 pruebas, `arch:check`, el validador del contrato y la prueba de punta a punta de Ricco ampliada (22 de 22 contra `server.js` real; `docs/evidencias/lab10-contrato-post-reclamos.txt`).
-- **Qué se descartó y por qué:** Aceptar sin verificar las referencias de `documentos` cuando no se inyecta el verificador: ahora se rechazan, para que un olvido no abra la puerta. Tampoco se dejó pasar una clave `evidencias` dentro de `documentos`, que se guardaba sin revisar y permitía apuntar al archivo de otro estudiante. Dos cosas no estaban en el contrato y se decidieron con una suposición, que se pregunta a Christopher: el código de error de una descripción de más de 5 000 caracteres (`DESCRIPCION_DEMASIADO_LARGA`) y que el código UNI solo se valida si viene. Al cambiar la respuesta de crear a 201, los guiones `experimento-resiliencia.js` y `probar-registro-con-bus.mjs` contaban respuestas 200 y habrían dado cero sin avisar; se corrigieron.
+- **¿Se usó IA?** Sí
+- **Herramienta:** Claude Code (Sonnet 5.5)
+- **Para qué se usó:** Aplicar el contrato de registro acordado con el equipo consumidor (#61).
+- **Qué se aceptó:** Los códigos de respuesta acordados, la información del reclamo y la validación de los documentos. Se actualizó la [prueba de punta a punta](evidencias/lab10-contrato-post-reclamos.txt) del PR #62.
+- **Qué se descartó o corrigió:** Se rechazaron documentos sin comprobación de propiedad. También se corrigieron los guiones que seguían contando solo respuestas 200 después de que el registro pasó a 201.
 - **Registra:** Roy Puris
 
 ### Entrada del 21 de noviembre, Lab10: contrato acordado y acta de ambigüedades
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Comparar la versión de `POST /api/reclamos` acordada con el equipo consumidor contra el código y contra el primer contrato (#35); pasarla a `docs/api/openapi.yaml`, junto con el campo `avisos` del #58; redactar `docs/api/acta-ambiguedades.md` y el mensaje con el que se le pidió al consumidor su lista de observaciones; y ampliar el validador para que entienda los errores con `codigo` y los ejemplos marcados `x-pendiente`.
-- **Qué parte del contrato salió de la IA:** la redacción en `openapi.yaml` de la versión acordada y de la resolución de los cinco huecos, el esquema `ErrorDeReclamo` (separado del `Error` de las rutas del panel), el orden de las comprobaciones verificado contra el código (el JSON inválido se rechaza antes que la sesión) y la redacción del acta. La versión acordada la trabajaron Ricco y el consumidor.
-- **Qué corrigió el equipo:** Christopher decidió cómo se resuelve cada hueco que levantó el consumidor: aclarar el reenvío, mantener la comparación solo por descripción, fijar el orden de las comprobaciones, un máximo de 5 000 caracteres y `Location` en el 200. También decidió qué se implementa (#61) y qué se documenta. El consumidor corrigió dos errores del resumen que le mandamos: que los 409 no se reintentan y que el 200 no desapareció, sino que ahora es el reenvío. Al comparar con la versión acordada, salió que los ejemplos del primer contrato usaban una categoría que no existe («Cruce de horarios») y cursos con secciones que no están en el catálogo; se cambiaron por «Matrícula» y cursos reales. El validador detectó un error de sintaxis YAML en dos descripciones, que se corrigió antes de subir.
+- **Para qué se usó:** Documentar el acuerdo con el consumidor y preparar el acta y sus comprobaciones.
+- **Qué se aceptó:** La redacción del contrato y del acta. Las decisiones fueron del equipo y del consumidor. Ver [acta de ambigüedades](api/acta-ambiguedades.md).
+- **Qué se descartó o corrigió:** El consumidor aclaró que el 200 se conserva para reenvíos y que los 409 no se reintentan. El equipo corrigió ejemplos con categorías y secciones que no existían.
 - **Registra:** Christopher Albino
 
 ### Entrada del 21 de noviembre, códigos de error del cuerpo inválido y del panel (#40)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Corregir en `server.js` los tres problemas que el contrato documentaba tal como estaban: el cuerpo inválido respondía 500, el modo mantenimiento no creaba su fila, y `signed-url` y los datos del estudiante devolvían el código equivocado. También para sacar la traducción del cuerpo inválido a `presentacion/cuerpoInvalido.js`, con su prueba, y para actualizar el contrato y el acta.
-- **Qué se aceptó:** Un solo 400 `CUERPO_INVALIDO` para el JSON roto y para el que pasa de 1 MB, como dice el contrato acordado, en vez de un 400 y un 413. La prueba con `express.json()` de verdad, que comprueba que los tipos de error son los que pone Express y no solo los que supone la prueba. Se probó contra el `server.js` real: JSON roto con y sin sesión, cuerpo de 1,1 MB y una ruta de admin dan 400, y el JSON roto se rechaza antes de mirar la sesión, como dice el contrato.
-- **Qué se descartó y por qué:** Probar de punta a punta las tres rutas de admin: sin Firebase local, `requireAdminAuth` responde 500 antes de llegar a ellas, así que se revisaron leyendo el código. Queda pendiente para la suite de E3, que inyecta un verificador falso de Firebase.
+- **Para qué se usó:** Ajustar las respuestas del servidor que se habían documentado como problemas en el contrato (#40).
+- **Qué se aceptó:** La respuesta 400 acordada para cuerpos inválidos y la prueba de que se devuelve antes de revisar la sesión.
+- **Qué se descartó o corrigió:** Las rutas administrativas se revisaron en el código porque el entorno no tenía Firebase local. Esa limitación quedó registrada para E3.
 - **Registra:** Christopher Albino
 
 ## Semana 12 · 21 de noviembre
@@ -262,97 +246,97 @@ Reglas: tiene que ser lo que de verdad pasó, y concreto («le pedí la sintaxis
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Codex
-- **Para qué se usó:** Revisar el script de siembra de la issue #54, proteger las filas existentes y comprobar el cambio con Docker Compose.
-- **Qué se aceptó:** Una sola inserción en el PostgREST interno para que una colisión cancele todo el lote. La limpieza se limita a las filas identificadas como siembra E2. Se verificó con una colisión en el último ID, una siembra de 1 500 reclamos y la conservación de un reclamo de E1 después de limpiar.
-- **Qué se descartó y por qué:** Actualizar filas con IDs repetidos y borrar todos los datos sintéticos antes de sembrar. Eso podía modificar reclamos existentes o borrar evidencia de E1.
+- **Para qué se usó:** Revisar la siembra de E2 y probar que protege los reclamos existentes (#54).
+- **Qué se aceptó:** Insertar los datos de prueba juntos y limitar la limpieza a las filas marcadas como siembra de E2.
+- **Qué se descartó o corrigió:** Se descartó actualizar IDs repetidos o borrar todos los datos sintéticos porque se podían alterar reclamos previos y evidencia de E1.
 - **Registra:** Lenin Castro
 
 ### Entrada del 21 de noviembre, Lab09: backend partido en módulos y reglas de límites (#50, primera parte)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Llevar la partición B al build: declarar los workspaces de npm, mover los archivos del registro de reclamos y de los cursos resueltos a `backend/modulos/reclamos/`, crear el módulo `notificaciones` con los consumidores de `ReclamoRegistrado` y la carpeta `backend/compartido/`, ampliar las reglas de dependency-cruiser de capas a módulos, separar las pruebas por módulo, y ajustar el validador del OpenAPI, la prueba de punta a punta, el experimento de resiliencia y la documentación. También para sacar la evidencia en rojo y en verde.
-- **Qué se aceptó:** Crear `notificaciones` para los consumidores, porque el paso 6 del Lab10 pide que vivan fuera de `reclamos` y ninguno de los cinco módulos de la partición calzaba. Lo acordé con Roy, que pidió cuatro cosas más, y se aplicaron: que `notificaciones` no importe el `eventos.js` de reclamos y lea solo `id`, `email`, `nombre` y `categoria`, con una prueba fuera de los módulos que lo compruebe; que la plantilla de los correos vaya a `compartido`; que el puerto de M2 lo defina `notificaciones` y lo implemente `reclamos` (`obtenerParaExpediente`), pasado por `server.js`; y que el evento siga en la versión 1. También se aceptó importar cada módulo por su paquete, con un `exports` que solo deja entrar por `index.js`, para que Node también rechace los imports a partes internas. Antes de escribir las reglas se probó en un proyecto aparte cómo trata dependency-cruiser los workspaces: detecta el cruce entre módulos por paquete y por ruta relativa, y los paquetes que el módulo no declara. Se comprobó con `npm test` (91 pruebas), cada módulo solo con `npm run test:modulos`, `arch:check` en rojo con un import prohibido por regla y en verde sin ellos, ESLint, tsc, el build, `validar-openapi.cjs`, la prueba de punta a punta (22 de 22), el experimento de resiliencia y una copia limpia instalada con `npm ci`. La salida está en `docs/evidencias/lab09-reglas-de-limites.txt`.
-- **Qué se descartó y por qué:** Mover en este mismo PR las 39 rutas que siguen en `server.js`: casi no tienen pruebas y el cambio sería demasiado grande para revisarlo de una vez; van en la segunda parte del #50. Que el evento lleve la descripción: cambiaría su contrato, y el puerto alcanza (Roy también lo descartó). El nombre `avisos` que propuso la IA para el módulo: se quedó `notificaciones`, como en el C4. Y mover el catálogo de cursos, porque también lo importa el front.
+- **Para qué se usó:** Preparar los módulos del backend y sus reglas de dependencias para la primera parte del #50.
+- **Qué se aceptó:** Separar las notificaciones de reclamos, mantener la versión del evento y comprobar los límites con casos permitidos y prohibidos. Ver [partición](particiones.md) y [pruebas de las reglas](evidencias/lab09-reglas-de-limites.txt).
+- **Qué se descartó o corrigió:** Se dejó el traslado de las rutas restantes para otro PR. Se descartó ampliar el evento con datos que el consumidor ya podía consultar.
 - **Registra:** Ricco Rashuaman
 
 ### Entrada del 22 de noviembre, Lab09 y partición completa del backend (#50)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Codex
-- **Para qué se usó:** Mover las 39 rutas que seguían en `server.js` y conectar los módulos a través del arranque.
-- **Qué se aceptó:** La distribución de la partición B y las dependencias que dejó el #67. PostgREST, Storage y actividad quedaron en `compartido`. La confirmación anterior y el contrato del evento se conservaron durante la migración. Se compararon los métodos, las URLs y el middleware de sesión de las 41 rutas antes y después.
-- **Qué se descartó y por qué:** Retirar la confirmación heredada durante el traslado. El portal todavía contempla `/api/reclamos/confirmar` en su transición, así que moverla a `reclamos` permitió conservar el contrato HTTP.
+- **Para qué se usó:** Trasladar las rutas restantes a sus módulos y conectarlas desde el arranque (#50).
+- **Qué se aceptó:** La distribución por negocio. Se compararon rutas y requisitos de sesión antes y después del traslado.
+- **Qué se descartó o corrigió:** Se mantuvo la confirmación anterior porque el portal todavía la usa durante la transición.
 - **Registra:** Lenin Castro
 
 ### Entrada del 23 de noviembre, registro por eventos en Compose (#51)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Codex
-- **Para qué se usó:** Configurar en Compose proveedores HTTP simulados de correo y M2, y comprobar el registro desde la API del laboratorio.
-- **Qué se aceptó:** Una configuración adicional de Compose y un guion que comprueba el registro, el contenido del expediente y el reintento. Los simuladores permiten cambiar las respuestas y la latencia del correo para repetir la medición de resiliencia.
-- **Qué se descartó y por qué:** Arrancar los simuladores con el Compose base. La configuración adicional permite activarlos para las pruebas de correo y M2 y conservar el arranque habitual del laboratorio.
+- **Para qué se usó:** Preparar proveedores simulados de correo y M2 y probar el registro por eventos en Compose (#51).
+- **Qué se aceptó:** La configuración de pruebas que permite verificar el expediente, el reintento y los distintos tiempos de respuesta del correo.
+- **Qué se descartó o corrigió:** Se descartó activar los simuladores en el Compose base para que el arranque habitual del laboratorio siga siendo el mismo.
 - **Registra:** Lenin Castro
 
 ### Entrada del 24 de noviembre, interfaces de la API generadas desde el contrato (Lab10, paso 4)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code (Sonnet 5.5)
-- **Para qué se usó:** Generar con openapi-generator las interfaces TypeScript de `docs/api/openapi.yaml`, dejar el comando para regenerarlas y verificarlas, y comprobarlas contra la API de Docker Compose.
-- **Qué se aceptó:** El generador `typescript-fetch` 7.14.0 con una interfaz por grupo de operaciones (19 operaciones y 42 modelos en `src/api/generado/`), `npm run api:generar` y `npm run api:verificar` con las versiones fijas, y un envoltorio a mano (`src/api/reclamos.ts`). La verificación se probó en rojo y en verde: con un valor del enum de errores cambiado a propósito falla y nombra el archivo, y sin el cambio pasa. El cliente compila (también en modo estricto) y `pruebas/probar-cliente-generado.ts` pasó 9 de 9 casos contra la API de Compose. La IA encontró que el generador escribe un solo tipo de retorno para `POST /api/reclamos`, el del reenvío (200), así que un 201 perdía `estado` y `cursosDescartados`: por eso existe el envoltorio, que separa los dos casos por el código HTTP. Después, en la revisión del #72, Lenin encontró dos fallos y se corrigieron con la IA: si el generador fallaba, `api:generar` ya había borrado el cliente anterior (ahora genera en una carpeta temporal y lo reemplaza solo si termina bien), y desde el navegador `Location` llegaba vacío porque CORS no lo exponía (ahora `server.js` expone `Location` y `Retry-After`). La prueba del cliente no vio lo segundo porque corre en Node, que no aplica CORS; se agregó un caso a la prueba de punta a punta y se comprobó en Chrome.
-- **Qué se descartó y por qué:** Generar un servidor (`nodejs-express-server`): crearía su propia estructura de rutas, que duplicaría los módulos del backend y chocaría con la partición. Cambiar el contrato para que el generador acierte el tipo del 201: las dos respuestas son las acordadas con el equipo consumidor. Agregar `api:verificar` al CI: necesita Java y red, y volvería rojo el build por una dependencia externa. La primera versión de la prueba del cliente se caía por un error propio, no del cliente: las promesas de los casos de error se creaban todas juntas y una rechazaba antes de que el bucle la atendiera; se pasaron a funciones.
+- **Para qué se usó:** Generar y verificar el cliente TypeScript a partir del contrato del Lab10.
+- **Qué se aceptó:** La generación del cliente y su [comprobación contra la API de Compose](evidencias/lab10-interfaces-generadas.txt). El equipo mantuvo la distinción entre registro y reenvío.
+- **Qué se descartó o corrigió:** En el PR #72 se corrigió la pérdida del cliente anterior cuando fallaba la generación y la falta de acceso a la cabecera Location desde el navegador.
 - **Registra:** Roy Puris
 
 ### Entrada del 24 de noviembre, validación del modelo C4 contra la partición modular y el flujo de eventos (#53)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Antigravity
-- **Para qué se usó:** Contrastar `docs/c4/workspace.dsl`, `docs/c4/leyenda.md`, `docs/c4/README.md` y la sección 3 de `docs/arquitectura.md` contra la partición real del backend en 7 workspaces (`#50`, `#67`, `#68`) y el flujo de eventos y correo con timeout conectados en `server.js` (`#58`, `#46`), y regenerar las vistas SVG y las figuras 3.1 a 3.3 del informe.
-- **Qué se aceptó:** Alinear 1 a 1 los 7 componentes de `API TEFIIS` con los 7 workspaces de npm (`@tefiis/acceso`, `@tefiis/reclamos`, `@tefiis/notificaciones`, `@tefiis/configuracion`, `@tefiis/documentos`, `@tefiis/tefi` y `@tefiis/compartido`), retirar las marcas `(objetivo #27)` ahora que el bus y M2 están activos en `server.js`, y aplicar las correcciones de revisión de Ricco y Roy en el PR #70: corregir `EMAIL_TIMEOUT_MS`, retirar números de línea y conteo fijo de líneas de `server.js`, agregar las relaciones faltantes (`panel -> documentos`, `panel -> tefi`, middlewares de sesión hacia `acceso`, consultas de `documentos`/`tefi` hacia `configuracion`, `reclamos -> notificaciones` para `/api/reclamos/confirmar` y `documentos -> archivos`), precisar que la subida de evidencias entra por `reclamos` y se almacena mediante los puertos de `documentos`, invertir la flecha a `notificaciones -> compartido` para respetar `compartido-no-importa-modulos`, y regenerar las tres vistas con los textos exactos del `workspace.dsl`.
-- **Qué se descartó y por qué:** Mantener cajas genéricas de la entrega anterior (`Adaptadores de Persistencia`, `Bus de Eventos y Consumidor M2`) que ya no reflejaban la estructura real de paquetes verificada por `dependency-cruiser`, mantener la flecha `compartido -> notificaciones` que sugería una dependencia prohibida por `compartido-no-importa-modulos`, o abreviar etiquetas en `Componentes.svg` respecto al DSL.
+- **Para qué se usó:** Comparar el C4 con la división real del backend y el flujo de avisos (#53).
+- **Qué se aceptó:** Los siete módulos y sus dependencias verificadas. La revisión del PR #70 corrigió las relaciones y se actualizaron las vistas.
+- **Qué se descartó o corrigió:** Se retiraron cajas de la arquitectura anterior y se corrigió una flecha que indicaba una dependencia prohibida. Ver [modelo C4](c4/README.md).
 - **Registra:** Franz Nuñez
 
 ### Entrada del 24 de noviembre, Circuit Breaker con opossum y experimento antes y después en Compose (#33)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Antigravity
-- **Para qué se usó:** Agregar el patrón Circuit Breaker con la librería `opossum` (`^10.0.0`) por proveedor en `@tefiis/compartido` (`backend/compartido/correo/enviadorCorreo.js`), redactar la hipótesis falsable en `docs/resiliencia.md`, ampliar `backend/tests/resiliencia.test.js` y `pruebas/experimento-resiliencia.js`, y ejecutar el experimento comparativo antes/después en Docker Compose sobre `compose.eventos.yaml`.
-- **Qué se aceptó:** Declarar `opossum` en `backend/compartido/package.json` (cumpliendo la regla `paquetes-declarados` de `dependency-cruiser`), controlar cada proveedor (`Brevo`, `Resend`, `Mailjet`) con su propio `CircuitBreaker` configurado con `timeout: false` para que `AbortSignal.timeout(EMAIL_TIMEOUT_MS)` siga siendo la única fuente del corte HTTP, excluir mediante `errorFilter` los códigos `400` y `422` para que una dirección mal formada no abra los tres circuitos ni bloquee a otros usuarios, ampliar la ventana deslizante por defecto a `60 000 ms` (`EMAIL_CB_WINDOW_MS`) para que también abra con tráfico espaciado (como 1 reclamo cada 6 s), y exponer `EMAIL_CB_ENABLED`, `EMAIL_CB_VOLUME_THRESHOLD`, `EMAIL_CB_ERROR_THRESHOLD`, `EMAIL_CB_RESET_MS` y `EMAIL_CB_WINDOW_MS`. Se verificó con `npm test` (100 de 100 pruebas en verde), el experimento de 100 envíos en proceso y las corridas reales en Docker Compose (`docker/probar-resiliencia-compose.mjs`), incluyendo la **Corrida E** de recuperación del circuito (`open -> halfOpen -> close`, con la hipótesis publicada previamente en la issue #33 y en el commit `cfa4c6e` antes de medir, y los resultados en `976ffe4` recreando `simuladores` con `--no-deps` tras `EMAIL_CB_RESET_MS=5000`). Asimismo, tras integrar el #73 se actualizó el modelo C4 (`workspace.dsl`, leyendas, sección 3 de `docs/arquitectura.md` y las tres vistas SVG/PNG) para reflejar el circuit breaker en el envío de correo.
-- **Qué se descartó y por qué:** Contar cualquier error HTTP en el circuit breaker (tres respuestas `400` por una dirección inválida abrían los tres circuitos y dejaban sin correo a direcciones válidas) o conservar la ventana por defecto de `10 s` de `opossum` (con reclamos espaciados cada 6 s el circuito nunca alcanzaba `volumeThreshold: 3` dentro de la ventana).
+- **Para qué se usó:** Añadir un circuito de protección por proveedor y apoyar el experimento de resiliencia del correo (#33).
+- **Qué se aceptó:** El cambio pasó las pruebas con tráfico continuo y espaciado, y se comprobó que el envío se recupera cuando vuelve el proveedor. Ver [informe de resiliencia](resiliencia.md).
+- **Qué se descartó o corrigió:** Se descartó contar direcciones inválidas como fallos del proveedor y se amplió la ventana de observación porque la anterior no detectaba bien los fallos espaciados.
 - **Registra:** Franz Nuñez
 
 ### Entrada del 25 de noviembre, carga de E2, línea base, diagnóstico y mejora (Lab12, #77 y #78)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code (Opus 5.5)
-- **Para qué se usó:** Revisar la hipótesis del #80 y proponerle ajustes antes de que entrara a `main`. Después, escribir el script de k6 de E2, el entorno de medición en Compose y el script que hace las tres corridas, correr la línea base y ordenar los datos del diagnóstico en `docs/mediciones/informe.md`. Por último, aplicar la mejora del #78 en su propio commit, que pagina la consulta de la bandeja con `sbRestTodo`, y correr las tres corridas del después en la misma máquina y con los mismos datos.
-- **Qué se aceptó:** La carga y el umbral, copiados de E2: 10 usuarios virtuales, 3 minutos, p95 menor a 1 500 ms y 0 faltantes. Los faltantes se cuentan por `id` distinto en cada respuesta, contra `count(*)` leído de PostgREST y no de la API medida. La sesión de admin, con el emulador oficial de Firebase: la API la verifica con el mismo `verifyIdToken` de producción, sin secretos, y una firma falsa se rechaza. Los tiempos de PostgREST salen de nginx y de su `Server-Timing`, sin tocar el código medido. La mejora usa la lectura por páginas que ya existía en `compartido`, con el `id` como desempate del orden, y tiene dos pruebas nuevas en el módulo. En el después hubo que corregir `carga/correr.mjs`: buscaba la URL exacta de la consulta de antes y no reconocía las páginas nuevas. Los tiempos de PostgREST del después se rehicieron desde el registro de nginx con `--resumir`; `carga/escenario.js` no cambió. Revisé cada número del informe contra los archivos de `docs/mediciones/corridas/` y confirmé en la base cuáles son los 500 que faltan. También que la consulta sola tarda 1,3 ms y que con el JSON tarda 6,7 ms.
-- **Qué se descartó y por qué:** Un verificador falso de sesiones dentro de la API: sería una puerta trasera en el código de producción. Un proyecto real de Firebase: obliga a manejar secretos y tokens que vencen en una hora. Un middleware de tiempos en la API, porque cambiaría el código medido antes de la línea base; nginx y PostgREST ya dan el desglose. Instalar k6 en la máquina: con la imagen de Docker corre dentro de la red de Compose y no depende del reenvío de puertos de Docker Desktop. En el informe se corrigió una lectura: la hipótesis acertó el componente, pero el p95 que esperábamos (200 ms) fue unas 7 veces mayor que el medido (28 ms), y así quedó escrito.
+- **Para qué se usó:** Preparar la carga, medir la línea base y probar la paginación de la bandeja (#77 y #78).
+- **Qué se aceptó:** La medición antes y después en las mismas condiciones. El equipo comprobó los reclamos faltantes y corrigió el recolector para que reconociera las páginas nuevas. Ver [informe E2](mediciones/informe.md).
+- **Qué se descartó o corrigió:** Se descartó simular la autenticación dentro de la API y se usó el emulador de Firebase. La hipótesis ubicó el problema, pero estimó una latencia mayor que la observada.
 - **Registra:** Ricco Rashuaman
 
 ### Entrada del 25 de noviembre, cierre del informe de medición antes y después de E2 y decisión (Lab12, #79)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Antigravity
-- **Para qué se usó:** Contrastar los resúmenes y archivos crudos de las tres corridas del antes (`a3a73c2`) y del después (`ae01f19`) en `docs/mediciones/corridas/`, completar la sección del después, la tabla comparativa «Antes y después» y la decisión arquitectónica en `docs/mediciones/informe.md`, y preparar el PR de cierre de `#77`, `#78` y `#79` hacia `develop`.
-- **Qué se aceptó:** Tomar las corridas 2 y 3 del después (descartando la corrida 1 en frío de `52,1 ms`) con p95 de `38,3 ms` y `41,5 ms`, mediana de `29,8 ms` y `30,1 ms`, throughput de `9,56` y `9,54 solicitudes/s`, `0 %` de errores en las `3 456` respuestas y `0` reclamos faltantes. Se explicó por qué el p95 sube `~10–14 ms` respecto al antes (`28,1` y `27,7 ms`): cada apertura hace ahora `2,00` consultas paginadas a PostgREST con `sbRestTodo` y mueve `1 394 KB` (los `1 500` reclamos completos) en vez de `930 KB` (`1 000` reclamos truncados). Se dejó la decisión de conservar la mejora porque cumple E2 con amplio margen (`~36×` por debajo de `1 500 ms`) y se propusieron los dos pasos siguientes basados en la evidencia del diagnóstico: proyectar solo las columnas necesarias en la bandeja (evitando serializar `select=*` en cada recarga) y paginar de extremo a extremo desde el panel si el histórico creciera a varios miles de reclamos. Tras la revisión de Ricco en el #84, se corrigió el intervalo horario de las corridas del después (`18:50 a 18:59`), la redacción `2 consultas, una por página` y la lista real de columnas pesadas de la tabla `reclamos` (`descripcion`, `datos_estudiante`, `datos_academicos`, `documentos`, `urls` y `cursos_resueltos`, ya que `evidencias` no es columna de la tabla).
-- **Qué se descartó y por qué:** Promediar las tres corridas incluyendo la primera en frío (la pauta del Lab12 exige descartar la corrida 1 de calentamiento) o proponer un índice en PostgreSQL como siguiente mejora (el `EXPLAIN ANALYZE` del diagnóstico ya demostró que el `Seq Scan + Sort` tarda solo `1,3 ms` y que el costo real está en armar y transferir el JSON de `1,39 MB`).
+- **Para qué se usó:** Contrastar las corridas de E2 y completar la comparación y la decisión del Lab12 (#79).
+- **Qué se aceptó:** Conservar la paginación. Las corridas válidas cumplieron el umbral y devolvieron los 1 500 reclamos. Tras el PR #84 se corrigieron el horario de la medición y la explicación de las consultas. Ver [resultados](mediciones/informe.md).
+- **Qué se descartó o corrigió:** Se excluyó la primera corrida, como pide la pauta, y se descartó agregar un índice porque la mayor parte del tiempo se gastaba al preparar la respuesta.
 - **Registra:** Franz Nuñez
 
 ### Entrada del 25 de noviembre, el generador de interfaces sin el envoltorio de npm (Lab10)
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code (Sonnet 5.5)
-- **Para qué se usó:** Hacer que `scripts/generar-interfaces.mjs` ejecute el `.jar` de openapi-generator con `java -jar`, porque Christopher vio que el envoltorio de npm se quedaba colgado sin mostrar nada. En la máquina donde se hizo el cambio no se reprodujo: `npx … version` respondió en 9 s.
-- **Qué se aceptó:** Descargar el `.jar` 7.14.0 de Maven Central si falta, guardarlo en `~/.cache/openapi-generator/` y comprobar su SHA-256 antes de usarlo (su SHA-1 coincide con el que publica Maven), poner un tiempo límite a la descarga y al generador, llamar a Java sin shell y quitar `openapitools.json`. Se probó sin el `.jar`, con el guardado, con uno dañado, con tres fallos de descarga, con un contrato roto y con un contrato cambiado, y con carpetas con espacios. Con el contrato 2.0.0 lo generado no cambia, y `api:verificar` también pasa con el contrato y el cliente 2.0.1 del #82.
-- **Qué se descartó y por qué:** Seguir pasando por el envoltorio, porque deja el comando dependiendo de algo que se puede colgar sin explicación. Usar el `.jar` descargado sin comprobar su suma, porque se ejecutaría un archivo incompleto o distinto sin avisar.
+- **Para qué se usó:** Corregir el bloqueo que Christopher observó al verificar el cliente generado.
+- **Qué se aceptó:** Ejecutar el generador directamente, comprobar el archivo descargado y fijar un tiempo límite. Se verificó con las dos versiones del contrato que se usaban en los PR #82 y #83.
+- **Qué se descartó o corrigió:** Se descartó conservar el envoltorio de npm y usar una descarga sin verificar. El bloqueo original no se reprodujo en la máquina de Roy.
 - **Registra:** Roy Puris
 
 ### Entrada del 25 de noviembre, Lab10: respuestas de los interruptores con nombre y equipo consumidor en el acta
 
 - **¿Se usó IA?** Sí
 - **Herramienta:** Claude Code
-- **Para qué se usó:** Revisar el #72 (el script del generador, el envoltorio de `reclamos.ts` y la sección 7 del acta); darles nombre en el contrato a las respuestas de los cinco interruptores (`InterruptorActivoGuardado` e `InterruptorEnabledGuardado`, hallazgo G3) y subir la versión a 2.0.1; actualizar el acta y el README de `src/api/`; y averiguar por qué `npm run api:verificar` se quedaba colgado.
-- **Qué se aceptó:** Los dos esquemas con nombre, sin cambiar lo que viaja, y la versión 2.0.1 como parche, según las reglas de versionado del contrato. Como `api:verificar` no terminaba, se verificó generando con el mismo `.jar` de openapi-generator 7.14.0 llamado directo con `java -jar`, con las mismas opciones del script: lo generado desde el contrato 2.0.1 es idéntico, archivo por archivo, a `src/api/generado/`. El diagnóstico (el envoltorio de npm se cuelga, el `.jar` no) llevó al #83.
-- **Qué corrigió el equipo:** El número del equipo consumidor no salía de la IA ni del repositorio: Christopher se lo preguntó a Benjamín, que confirmó que es el Equipo 4. Un primer intento de comparar el cliente regenerado salió mal, porque se comparó contra la copia ya regenerada y no contra lo commiteado; se repitió contra el contrato 2.0.1.
+- **Para qué se usó:** Nombrar las respuestas de los interruptores en OpenAPI y completar el acta del Lab10.
+- **Qué se aceptó:** Los nombres nuevos y la versión 2.0.1. El cliente regenerado coincidió con el contrato. Ver [acta](api/acta-ambiguedades.md).
+- **Qué se descartó o corrigió:** Christopher confirmó con Benjamín que el consumidor era el Equipo 4. También repitió la comparación contra la versión guardada en Git.
 - **Registra:** Christopher Albino

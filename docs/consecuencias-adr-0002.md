@@ -2,9 +2,7 @@
 
 En el [ADR-0002](adr/0002-puerto-persistencia-cursos-resueltos.md) decidimos que el caso de uso de cursos resueltos no hable directamente con Supabase, sino a través de un puerto, `RepositorioCursosResueltos`, con dos adaptadores: uno para Supabase, que es el que usa producción, y otro en memoria para las pruebas. Lo implementamos en el Lab06 (commits [da5ce5c](https://github.com/ricco-drs/sistema-reclamos/commit/da5ce5c) a [a6cd1e1](https://github.com/ricco-drs/sistema-reclamos/commit/a6cd1e1)), y la regla `dominio-limpio` de dependency-cruiser lo vigila en la integración continua.
 
-Aquí explicamos qué ganamos y qué nos cuesta esa decisión. Para cada consecuencia indicamos dónde se ve en el código y qué escenario de [escenarios.md](escenarios.md) toca. El análisis y los enlaces corresponden al commit `70d76d3` del Lab06. En esa revisión pasaron las 12 pruebas y la regla de arquitectura.
-
-En resumen, encontramos dos beneficios, tres costos y un riesgo:
+El análisis y los enlaces corresponden al commit `70d76d3` del Lab06. Pasaron las 12 pruebas y la regla de arquitectura.
 
 | | Consecuencia | Tipo | Escenario |
 |---|---|---|---|

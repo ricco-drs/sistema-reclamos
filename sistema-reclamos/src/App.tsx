@@ -215,8 +215,6 @@ function App() {
             </>
           )}
 
-
-
           {/* ── Sesión ── */}
           {auth.emailVerificado && (
             <button onClick={() => { setPrevView(activeView); setActiveView('perfil'); }}

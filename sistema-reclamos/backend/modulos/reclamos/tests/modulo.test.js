@@ -24,15 +24,22 @@ function postgrestFalso() {
     }
     return json({ error: `ruta no simulada: ${ruta}` }, 500);
   };
-  return { sbRest, filas, llamadas };
+  // Lectura paginada: devuelve la tabla entera, como sbRestTodo, y anota qué se pidió.
+  const tabla = [];
+  const sbRestTodo = async (ruta) => {
+    llamadas.push(`TODO ${ruta}`);
+    return { ok: true, filas: [...tabla] };
+  };
+  return { sbRest, sbRestTodo, filas, tabla, llamadas };
 }
 
-async function levantar({ abierta = true } = {}) {
+async function levantar({ abierta = true, admin = false } = {}) {
   const pg = postgrestFalso();
   const publicador = crearPublicadorMemoria();
   const modulo = crearModuloReclamos({
     limiteEnvioCodigo: (_req, _res, next) => next(),
     sbRest: pg.sbRest,
+    sbRestTodo: pg.sbRestTodo,
     publicador,
     interruptores: {
       tefiDurmiendoActivo: async () => false,
@@ -48,7 +55,7 @@ async function levantar({ abierta = true } = {}) {
     exigirEstudiante: (req, res, next) => (req.headers['x-estudiante']
       ? (req.studentEmail = req.headers['x-estudiante'], next())
       : res.status(401).json({ codigo: 'SESION_REQUERIDA' })),
-    exigirAdmin: (req, res) => res.status(403).json({ error: 'solo admin' }),
+    exigirAdmin: admin ? (_req, _res, next) => next() : (req, res) => res.status(403).json({ error: 'solo admin' }),
   });
   const app = express();
   app.use(express.json());
@@ -117,5 +124,28 @@ test('módulo solo: la fuente de expedientes lee del mismo repositorio lo que ne
     assert.equal(fila.descripcion, 'Me cruzan dos cursos');
     assert.equal(fila.codigo_estudiante, '20240001A');
     assert.ok(s.llamadas.at(-1).startsWith('GET /reclamos?select=id,codigo_estudiante,email,nombre,categoria,descripcion&id=eq.REC-2026-0007'));
+  } finally { await s.cerrar(); }
+});
+
+test('módulo solo: la bandeja trae todos los reclamos por páginas, con un orden que no repite ni salta filas (E2)', async () => {
+  const s = await levantar({ admin: true });
+  try {
+    // Más de las 1 000 filas en que PostgREST corta cada respuesta.
+    for (let i = 1500; i >= 1; i--) s.tabla.push({ id: `REC-2026-${String(i).padStart(4, '0')}` });
+    const r = await fetch(`${s.base}/api/admin/reclamos`);
+    const bandeja = await r.json();
+    assert.equal(r.status, 200);
+    assert.equal(bandeja.length, 1500);
+    assert.equal(new Set(bandeja.map((x) => x.id)).size, 1500);
+    // Sin `limit`, que chocaría con el Range de sbRestTodo, y con el id como desempate.
+    assert.deepEqual(s.llamadas, ['TODO /reclamos?select=*&order=created_at.desc,id.desc']);
+  } finally { await s.cerrar(); }
+});
+
+test('módulo solo: la bandeja exige la sesión de admin que le pasan', async () => {
+  const s = await levantar();
+  try {
+    assert.equal((await fetch(`${s.base}/api/admin/reclamos`)).status, 403);
+    assert.equal(s.llamadas.length, 0);
   } finally { await s.cerrar(); }
 });

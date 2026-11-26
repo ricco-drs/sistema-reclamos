@@ -12,7 +12,7 @@ El contrato de la API es `docs/api/openapi.yaml`. De él se generan las interfac
 
 ## Regenerar y verificar
 
-Desde `sistema-reclamos/`. Hace falta Java 11 o superior, y red la primera vez para bajar el generador.
+Desde `sistema-reclamos/`. Hace falta Java 11 o superior, y red la primera vez para bajar el generador. El script ejecuta el `.jar` de openapi-generator con `java -jar`, sin el envoltorio de npm (en una máquina del equipo se quedaba colgado sin mostrar nada). Si falta, lo descarga de Maven Central a `~/.cache/openapi-generator/` y comprueba su suma SHA-256 antes de usarlo; sin acceso a Maven desde Node, se puede descargar a mano y dejarlo en esa carpeta.
 
 ```bash
 npm run api:generar     # escribe src/api/generado/ a partir de docs/api/openapi.yaml
@@ -21,7 +21,7 @@ npm run api:verificar   # falla si src/api/generado/ no corresponde al contrato
 
 `api:generar` genera en una carpeta temporal y reemplaza `generado/` solo si el generador termina bien: si falla, queda el cliente que había.
 
-Si cambias el contrato, corre `npm run api:generar` y sube el resultado junto con el cambio. Las versiones están fijas (`openapitools.json` para el generador y `scripts/generar-interfaces.mjs` para su envoltorio de npm), para que el resultado sea el mismo en cualquier máquina.
+Si cambias el contrato, corre `npm run api:generar` y sube el resultado junto con el cambio. La versión del generador y la suma de su `.jar` están fijas en `scripts/generar-interfaces.mjs`, para que el resultado sea el mismo en cualquier máquina.
 
 ## Cómo se usa
 

@@ -1,0 +1,46 @@
+# Entorno de medición de E2 (Lab12). Se suma al compose.yaml de la raíz y no
+# cambia la API, la base ni PostgREST: solo agrega la sesión de admin de prueba,
+# los tiempos de PostgREST y k6. Ver carga/README.md.
+#
+#   docker compose -f compose.yaml -f carga/compose.yaml up --build --detach --wait
+services:
+  api:
+    # La bandeja exige una sesión de admin de Firebase. Con el emulador oficial
+    # la API la verifica con el mismo código de producción (verifyIdToken), sin
+    # cuentas reales: la cuenta de servicio desechable la arma cuenta-de-prueba.mjs.
+    command: ["node", "--import", "/app/cuenta-de-prueba.mjs", "iniciar.mjs"]
+    environment:
+      FIREBASE_AUTH_EMULATOR_HOST: firebase-auth:9099
+      ADMIN_EMAILS: tercio-carga@prueba.test
+    volumes:
+      - ./carga/cuenta-de-prueba.mjs:/app/cuenta-de-prueba.mjs:ro
+    depends_on:
+      firebase-auth:
+        condition: service_healthy
+
+  rest:
+    volumes:
+      - ./carga/rest.conf:/etc/nginx/conf.d/default.conf:ro
+
+  postgrest:
+    environment:
+      PGRST_SERVER_TIMING_ENABLED: "true"
+
+  firebase-auth:
+    build: ./carga/emulador-auth
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9099/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  k6:
+    image: docker.io/grafana/k6:1.8.2
+    profiles: [carga]
+    environment:
+      BASE: http://api:3005
+      REST: http://rest:8080
+      AUTH: http://firebase-auth:9099
+    volumes:
+      - ./carga:/carga:ro
+      - ./docs/mediciones/corridas:/resultados

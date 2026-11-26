@@ -11,6 +11,9 @@
 //   node carga/correr.mjs --etiqueta antes
 //   node carga/correr.mjs --etiqueta despues
 //
+// Con --resumir no se mide: rehace los tiempos de PostgREST y el resumen de
+// corridas ya hechas, leyendo otra vez el registro de nginx de cada ventana.
+//
 // La primera corrida se descarta en el resumen: el sistema todavía está frío.
 import { spawn, execFileSync } from 'node:child_process';
 import { createWriteStream, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
@@ -22,6 +25,7 @@ const { values: args } = parseArgs({
   options: {
     etiqueta: { type: 'string' },
     corridas: { type: 'string', default: '3' },
+    resumir: { type: 'boolean', default: false },
   },
 });
 if (!args.etiqueta || !/^[a-z0-9-]+$/.test(args.etiqueta)) {
@@ -31,6 +35,8 @@ if (!args.etiqueta || !/^[a-z0-9-]+$/.test(args.etiqueta)) {
 const CORRIDAS = Number(args.corridas);
 const COMPOSE = ['compose', '-f', 'compose.yaml', '-f', 'carga/compose.yaml'];
 const SALIDA = path.join('docs', 'mediciones', 'corridas');
+// Prefijo de la consulta de la bandeja: después de la mejora el orden lleva además
+// el id (`order=created_at.desc,id.desc`) y se pide por páginas.
 const RUTA_BANDEJA = '/rest/v1/reclamos?select=*&order=created_at.desc';
 mkdirSync(SALIDA, { recursive: true });
 
@@ -106,9 +112,9 @@ function correrK6(n) {
 }
 
 // Tiempos de PostgREST que registra nginx (carga/rest.conf), solo de la consulta de la bandeja.
-function guardarTiemposPostgrest(desde, destino) {
-  const log = docker(...COMPOSE, 'logs', 'rest', '--no-log-prefix', '--since', desde);
-  const filas = log.split('\n').filter((l) => l.includes(`"${RUTA_BANDEJA}"`)).map((l) => {
+function guardarTiemposPostgrest(desde, hasta, destino) {
+  const log = docker(...COMPOSE, 'logs', 'rest', '--no-log-prefix', '--since', desde, '--until', hasta);
+  const filas = log.split('\n').filter((l) => l.includes(`"${RUTA_BANDEJA}`)).map((l) => {
     const [hora, estado, totalNginx, postgrest, bytes] = l.split(' ');
     const transaccion = /transaction;dur=([\d.]+)/.exec(l)?.[1] ?? '';
     return `${hora},${estado},${+totalNginx * 1000},${+postgrest * 1000},${transaccion},${bytes}`;
@@ -147,7 +153,9 @@ function resumirCorrida(n) {
       .map((c) => [c, { media: promedio(cpu(c)), max: Math.max(...cpu(c)) }])),
     pgP95: percentil(pg.map((f) => +f.postgrest_ms), 95),
     bdP95: percentil(pg.map((f) => +f.transaccion_bd_ms), 95),
-    bytes: +pg[0]?.bytes,
+    // Bytes que PostgREST le manda a la API por cada apertura de la bandeja, sumando las páginas.
+    bytes: pg.reduce((a, f) => a + +f.bytes, 0) / reqs.count,
+    consultasPorPeticion: pg.length / reqs.count,
   };
 }
 
@@ -162,7 +170,7 @@ Generado por \`node carga/correr.mjs --etiqueta ${args.etiqueta}\` el ${entorno.
 - **Máquina:** ${entorno.maquina.procesador}, ${entorno.maquina.nucleosLogicos} núcleos lógicos, ${entorno.maquina.memoriaGB} GB, ${entorno.maquina.sistema}.
 - **Docker:** ${entorno.docker.version}, ${entorno.docker.cpusAsignadas} CPU y ${entorno.docker.memoriaAsignadaGB} GB asignados (${entorno.docker.sistema}).
 - **Carga:** \`carga/escenario.js\`, 10 usuarios virtuales durante 3 minutos con 1 s de pausa, dentro de la red de Compose.
-- **Respuesta de la bandeja:** ${num(corridas[0].bytes / 1000, 0)} KB.
+- **Respuesta de la bandeja:** ${num(corridas.at(-1).bytes / 1000, 0)} KB de PostgREST a la API por cada apertura, en ${num(corridas.at(-1).consultasPorPeticion, 2)} consultas.
 
 ## k6 y PostgREST
 
@@ -170,7 +178,7 @@ Generado por \`node carga/correr.mjs --etiqueta ${args.etiqueta}\` el ${entorno.
 |---|---|---|---|---|---|---|---|
 ${corridas.map(fila).join('\n')}
 
-«PostgREST» es lo que tardó PostgREST en responderle a la API, medido por nginx; «Base» es la transacción en PostgreSQL, según PostgREST (\`Server-Timing\`).
+«PostgREST» es lo que tardó PostgREST en cada consulta de la bandeja, medido por nginx (si la bandeja pide por páginas, cada página es una consulta); «Base» es la transacción en PostgreSQL, según PostgREST (\`Server-Timing\`).
 
 ## CPU de cada contenedor durante la carga (% medio / % máximo)
 
@@ -184,15 +192,26 @@ ${corridas.map(cpu).join('\n')}
   console.log(`\n${md}`);
 }
 
-const entorno = registrarEntorno();
 const corridas = [];
-for (let n = 1; n <= CORRIDAS; n++) {
-  console.log(`\n=== Corrida ${n} de ${CORRIDAS} («${args.etiqueta}») ===`);
-  const desde = new Date().toISOString();
-  const pararStats = capturarStats(archivo(`${n}-docker-stats.csv`));
-  await correrK6(n);
-  await pararStats();
-  guardarTiemposPostgrest(desde, archivo(`${n}-postgrest.csv`));
-  corridas.push(resumirCorrida(n));
+if (args.resumir) {
+  const entorno = JSON.parse(readFileSync(archivo('entorno.json'), 'utf8'));
+  for (let n = 1; n <= CORRIDAS; n++) {
+    // La ventana de cada corrida es la de su captura de docker stats.
+    const horas = leerCsv(archivo(`${n}-docker-stats.csv`)).map((f) => f.hora);
+    guardarTiemposPostgrest(horas[0], horas.at(-1), archivo(`${n}-postgrest.csv`));
+    corridas.push(resumirCorrida(n));
+  }
+  escribirResumen(entorno, corridas);
+} else {
+  const entorno = registrarEntorno();
+  for (let n = 1; n <= CORRIDAS; n++) {
+    console.log(`\n=== Corrida ${n} de ${CORRIDAS} («${args.etiqueta}») ===`);
+    const desde = new Date().toISOString();
+    const pararStats = capturarStats(archivo(`${n}-docker-stats.csv`));
+    await correrK6(n);
+    await pararStats();
+    guardarTiemposPostgrest(desde, new Date().toISOString(), archivo(`${n}-postgrest.csv`));
+    corridas.push(resumirCorrida(n));
+  }
+  escribirResumen(entorno, corridas);
 }
-escribirResumen(entorno, corridas);

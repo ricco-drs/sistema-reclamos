@@ -2,9 +2,9 @@
 /* eslint-disable */
 /**
  * API de TEFIIS
- * Contrato HTTP de la API de TEFIIS. El arranque de Express monta las rutas de cada módulo del backend.  **Alcance.** Las 18 rutas de `/api/admin/_*`, que usa el panel del Tercio (`sistema-admin`), y `POST /api/reclamos`, que dispara el evento `ReclamoRegistrado` descrito en [eventos.md](eventos.md). Quedan fuera las demás rutas del estudiante, las rutas públicas y `POST /api/rag/upload`.  **Cómo se escribió.** Las rutas de `/api/admin/_*` describen el comportamiento actual del código; donde el código hace algo discutible, la operación lo dice en vez de esconderlo. `POST /api/reclamos` describe la versión acordada con el equipo consumidor ([acta](acta-ambiguedades.md)), y que implementó el #61. Los ejemplos marcados con `x-pendiente` tienen mensajes que el código aún no devuelve (hoy no hay ninguno); el validador (`sistema-reclamos/pruebas/validar-openapi.cjs`) los cuenta aparte, y la marca se quita cuando su issue entra.  **Versionado.** La versión sigue el formato `MAYOR.MENOR.PARCHE`: - **Mayor:** se quita o renombra un campo, un campo opcional pasa a ser   obligatorio, cambia el tipo de un campo o un código de respuesta cambia de   significado. Quien ya usa la API tiene que enterarse antes del cambio. - **Menor:** se agrega un campo opcional, un código de error o una ruta. - **Parche:** solo cambian descripciones o ejemplos.  La 2.0.0 es la versión acordada de `POST /api/reclamos`: crear pasa de 200 a 201, y la ventana o el ciclo cerrado pasan de 503 a 409. La 2.0.1 solo les da nombre a las respuestas de los interruptores (`InterruptorActivoGuardado` e `InterruptorEnabledGuardado`); no cambia nada de lo que viaja.  **Autenticación.** - `sesionEstudiante`: JWT que firma la propia API al verificar el código de   4 dígitos (`POST /api/auth/verify-code`). Lleva `{ email }` y vence a las   24 h. El correo que decide de quién son los datos sale siempre del token,   nunca del cuerpo. - `sesionAdmin`: ID token de Firebase. Además de ser válido, su correo tiene   que estar en `ADMIN_EMAILS`. Las cuentas de `ADMIN_EMAILS_SOLO_LECTURA`   solo pueden usar `GET`. Seis interruptores y el historial de actividad   son solo del administrador principal, cuyo correo está definido por el módulo `acceso`.  **Errores.** En las rutas del panel, todo error responde `{ \"error\": \"<mensaje>\" }`, y el mensaje es para mostrarlo a una persona, no para que el cliente lo compare. `POST /api/reclamos` agrega un `codigo` estable (`ErrorDeReclamo`), que es lo que el cliente compara. Tres casos generales que valen para todas las rutas: - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde **400**   `{ \"codigo\": \"CUERPO_INVALIDO\", \"error\": \"…\" }`, antes de mirar la sesión   (#40). - Si `ALLOWED_ORIGINS` está definida, una petición desde un origen que no   está en la lista responde **403** `Origen no permitido por CORS.` - Cuando falla Supabase, el 500 puede traer en `error` el texto crudo que   devolvió PostgREST. 
+ * Contrato HTTP de la API de TEFIIS. El arranque de Express monta las rutas de cada módulo del backend.  **Alcance.** Las 18 rutas de `/api/admin/_*`, que usa el panel del Tercio (`sistema-admin`), y `POST /api/reclamos`, que dispara el evento `ReclamoRegistrado` descrito en [eventos.md](eventos.md). Quedan fuera las demás rutas del estudiante, las rutas públicas y `POST /api/rag/upload`.  **Cómo se escribió.** Las rutas de `/api/admin/_*` describen el comportamiento actual del código; donde el código hace algo discutible, la operación lo dice en vez de esconderlo. `POST /api/reclamos` describe la versión acordada con el equipo consumidor ([acta](acta-ambiguedades.md)), y que implementó el #61. Los ejemplos marcados con `x-pendiente` tienen mensajes que el código aún no devuelve (hoy no hay ninguno); el validador (`sistema-reclamos/pruebas/validar-openapi.cjs`) los cuenta aparte, y la marca se quita cuando su issue entra.  **Versionado.** La versión sigue el formato `MAYOR.MENOR.PARCHE`: - **Mayor:** se quita o renombra un campo, un campo opcional pasa a ser   obligatorio, cambia el tipo de un campo o un código de respuesta cambia de   significado. Quien ya usa la API tiene que enterarse antes del cambio. - **Menor:** se agrega un campo opcional, un código de error o una ruta. - **Parche:** solo cambian descripciones o ejemplos.  La 2.0.0 es la versión acordada de `POST /api/reclamos`: crear pasa de 200 a 201, y la ventana o el ciclo cerrado pasan de 503 a 409. La 2.0.1 solo les da nombre a las respuestas de los interruptores (`InterruptorActivoGuardado` e `InterruptorEnabledGuardado`). La 2.0.2 documenta la lectura paginada de la bandeja. El panel sigue recibiendo un único arreglo.  **Autenticación.** - `sesionEstudiante`: JWT que firma la propia API al verificar el código de   4 dígitos (`POST /api/auth/verify-code`). Lleva `{ email }` y vence a las   24 h. El correo que decide de quién son los datos sale siempre del token,   nunca del cuerpo. - `sesionAdmin`: ID token de Firebase. Además de ser válido, su correo tiene   que estar en `ADMIN_EMAILS`. Las cuentas de `ADMIN_EMAILS_SOLO_LECTURA`   solo pueden usar `GET`. Seis interruptores y el historial de actividad   son solo del administrador principal, cuyo correo está definido por el módulo `acceso`.  **Errores.** En las rutas del panel, todo error responde `{ \"error\": \"<mensaje>\" }`, y el mensaje es para mostrarlo a una persona, no para que el cliente lo compare. `POST /api/reclamos` agrega un `codigo` estable (`ErrorDeReclamo`), que es lo que el cliente compara. Tres casos generales que valen para todas las rutas: - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde **400**   `{ \"codigo\": \"CUERPO_INVALIDO\", \"error\": \"…\" }`, antes de mirar la sesión   (#40). - Si `ALLOWED_ORIGINS` está definida, una petición desde un origen que no   está en la lista responde **403** `Origen no permitido por CORS.` - Cuando falla Supabase, el 500 puede traer en `error` el texto crudo que   devolvió PostgREST. 
  *
- * The version of the OpenAPI document: 2.0.1
+ * The version of the OpenAPI document: 2.0.2
  * 
  *
  * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
@@ -107,8 +107,8 @@ export interface ReclamosEnElPanelApiInterface {
     guardarCursosResueltos(requestParameters: GuardarCursosResueltosOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GuardarCursosResueltos200Response>;
 
     /**
-     * Devuelve las filas completas de la tabla `reclamos`, sin paginar. PostgREST corta la respuesta en 1 000 filas sin avisar: con más reclamos, los más antiguos no aparecen (escenario E2). 
-     * @summary Lista todos los reclamos, del más nuevo al más antiguo
+     * La API consulta PostgREST por páginas y devuelve hasta 50 000 reclamos en un único arreglo. El cliente no envía parámetros de paginación. 
+     * @summary Lista los reclamos del más nuevo al más antiguo
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ReclamosEnElPanelApiInterface
@@ -116,8 +116,8 @@ export interface ReclamosEnElPanelApiInterface {
     listarReclamosRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Reclamo>>>;
 
     /**
-     * Devuelve las filas completas de la tabla `reclamos`, sin paginar. PostgREST corta la respuesta en 1 000 filas sin avisar: con más reclamos, los más antiguos no aparecen (escenario E2). 
-     * Lista todos los reclamos, del más nuevo al más antiguo
+     * La API consulta PostgREST por páginas y devuelve hasta 50 000 reclamos en un único arreglo. El cliente no envía parámetros de paginación. 
+     * Lista los reclamos del más nuevo al más antiguo
      */
     listarReclamos(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Reclamo>>;
 
@@ -291,8 +291,8 @@ export class ReclamosEnElPanelApi extends runtime.BaseAPI implements ReclamosEnE
     }
 
     /**
-     * Devuelve las filas completas de la tabla `reclamos`, sin paginar. PostgREST corta la respuesta en 1 000 filas sin avisar: con más reclamos, los más antiguos no aparecen (escenario E2). 
-     * Lista todos los reclamos, del más nuevo al más antiguo
+     * La API consulta PostgREST por páginas y devuelve hasta 50 000 reclamos en un único arreglo. El cliente no envía parámetros de paginación. 
+     * Lista los reclamos del más nuevo al más antiguo
      */
     async listarReclamosRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Reclamo>>> {
         const queryParameters: any = {};
@@ -321,8 +321,8 @@ export class ReclamosEnElPanelApi extends runtime.BaseAPI implements ReclamosEnE
     }
 
     /**
-     * Devuelve las filas completas de la tabla `reclamos`, sin paginar. PostgREST corta la respuesta en 1 000 filas sin avisar: con más reclamos, los más antiguos no aparecen (escenario E2). 
-     * Lista todos los reclamos, del más nuevo al más antiguo
+     * La API consulta PostgREST por páginas y devuelve hasta 50 000 reclamos en un único arreglo. El cliente no envía parámetros de paginación. 
+     * Lista los reclamos del más nuevo al más antiguo
      */
     async listarReclamos(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Reclamo>> {
         const response = await this.listarReclamosRaw(initOverrides);

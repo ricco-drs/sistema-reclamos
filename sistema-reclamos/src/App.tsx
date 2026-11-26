@@ -132,8 +132,8 @@ function App() {
       <div className="h-[100dvh] w-full flex flex-col items-center justify-center gap-6 px-4 text-center">
         <img src={tefiDescansoImg} alt="Tefi está descansando" className="w-64 h-64 object-contain" />
         <div>
-          <h1 className="text-xl font-bold text-claude-text">Tefi se está tomando un descanso</h1>
-          <p className="text-claude-muted text-sm mt-1">Vuelve más tarde.</p>
+          <h1 className="text-xl font-bold text-tefiis-text">Tefi se está tomando un descanso</h1>
+          <p className="text-tefiis-muted text-sm mt-1">Vuelve más tarde.</p>
         </div>
       </div>
     );
@@ -144,8 +144,8 @@ function App() {
       <div className="h-[100dvh] w-full flex flex-col items-center justify-center gap-6 px-4 text-center">
         <img src={tefiDurmiendoImg} alt="Tefi está durmiendo" className="w-64 h-64 object-contain" />
         <div>
-          <h1 className="text-xl font-bold text-claude-text">Tefi está durmiendo, su horario de descanso es desde la 1 a.m. hasta las 8 a.m.</h1>
-          <p className="text-claude-muted text-sm mt-1">Tú también deberías ir a dormir :D</p>
+          <h1 className="text-xl font-bold text-tefiis-text">Tefi está durmiendo, su horario de descanso es desde la 1 a.m. hasta las 8 a.m.</h1>
+          <p className="text-tefiis-muted text-sm mt-1">Tú también deberías ir a dormir :D</p>
         </div>
       </div>
     );
@@ -169,7 +169,7 @@ function App() {
               franjas vacías arriba y abajo. */}
           <img src={tefiDespidiendoseImg} alt="Tefi se despide"
             className="w-72 sm:w-96 max-w-full h-auto object-contain" />
-          <p className="text-claude-text text-base sm:text-lg max-w-md leading-relaxed">
+          <p className="text-tefiis-text text-base sm:text-lg max-w-md leading-relaxed">
             Ha sido un gusto acompañarte en este proceso de matrícula, nos vemos el siguiente ciclo :D
           </p>
           <button
@@ -180,7 +180,7 @@ function App() {
               setAutoConsultarReclamo(true);
               setActiveView('reclamos');
             }}
-            className="w-full max-w-xs py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+            className="w-full max-w-xs py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
           >
             Consultar el estado de mi reclamo
           </button>
@@ -192,7 +192,7 @@ function App() {
         {/* Logo */}
         <div onClick={handleHomeClick} className="flex items-center gap-2 sm:gap-3 cursor-pointer group">
           <img src={iconoImg} alt="Icono" className="w-6 h-6 sm:w-7 sm:h-7 object-contain opacity-90 group-hover:opacity-100 transition-opacity" />
-          <span className="font-sans font-bold uppercase text-lg sm:text-xl group-hover:text-claude-accent transition-colors">
+          <span className="font-sans font-bold uppercase text-lg sm:text-xl group-hover:text-tefiis-accent transition-colors">
             TEFIIS
           </span>
         </div>
@@ -202,15 +202,15 @@ function App() {
           {auth.emailVerificado && (
             <>
               <button onClick={() => setActiveView('chat')}
-                className={`relative py-1 transition-colors ${activeView === 'chat' ? 'text-claude-accent' : 'text-claude-muted hover:text-claude-text'}`}>
+                className={`relative py-1 transition-colors ${activeView === 'chat' ? 'text-tefiis-accent' : 'text-tefiis-muted hover:text-tefiis-text'}`}>
                 Conversación
-                {activeView === 'chat' && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-claude-accent rounded-full animate-fade-in" />}
+                {activeView === 'chat' && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-tefiis-accent rounded-full animate-fade-in" />}
               </button>
 
               <button onClick={() => setActiveView('reclamos')}
-                className={`relative py-1 transition-colors ${activeView === 'reclamos' ? 'text-claude-accent' : 'text-claude-muted hover:text-claude-text'}`}>
+                className={`relative py-1 transition-colors ${activeView === 'reclamos' ? 'text-tefiis-accent' : 'text-tefiis-muted hover:text-tefiis-text'}`}>
                 Reclamos
-                {activeView === 'reclamos' && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-claude-accent rounded-full animate-fade-in" />}
+                {activeView === 'reclamos' && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-tefiis-accent rounded-full animate-fade-in" />}
               </button>
             </>
           )}
@@ -220,7 +220,7 @@ function App() {
           {/* ── Sesión ── */}
           {auth.emailVerificado && (
             <button onClick={() => { setPrevView(activeView); setActiveView('perfil'); }}
-              className="w-8 h-8 rounded-full bg-claude-accent/20 border border-claude-accent/40 flex items-center justify-center text-xs font-bold text-claude-accent hover:bg-claude-accent/30 transition-colors cursor-pointer">
+              className="w-8 h-8 rounded-full bg-tefiis-accent/20 border border-tefiis-accent/40 flex items-center justify-center text-xs font-bold text-tefiis-accent hover:bg-tefiis-accent/30 transition-colors cursor-pointer">
               {auth.emailVerificado[0].toUpperCase()}
             </button>
           )}
@@ -234,14 +234,14 @@ function App() {
             <div className="flex-1 w-full max-w-xl mx-auto flex flex-col items-center justify-center gap-5 px-4 text-center">
               <img src={tefiAlmuerzoFestivoImg} alt="Tefi está almorzando con Santa Rosa de Lima" className="w-56 h-56 object-contain" />
               <div>
-                <h2 className="text-base sm:text-xl font-bold text-claude-text whitespace-nowrap">Tefi está almorzando con Santa Rosa de Lima</h2>
-                <p className="text-claude-muted text-sm mt-2 leading-relaxed">
+                <h2 className="text-base sm:text-xl font-bold text-tefiis-text whitespace-nowrap">Tefi está almorzando con Santa Rosa de Lima</h2>
+                <p className="text-tefiis-muted text-sm mt-2 leading-relaxed">
                   Así que no podrá responder a tus consultas por ahora, pero lo que sí puedes hacer es realizar tu reclamo.
                 </p>
               </div>
               <button
                 onClick={() => setActiveView('reclamos')}
-                className="w-full py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+                className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
               >
                 Ir a Reclamos
               </button>
@@ -250,14 +250,14 @@ function App() {
             <div className="flex-1 w-full max-w-md mx-auto flex flex-col items-center justify-center gap-5 px-4 text-center">
               <img src={tefiAlmuerzoImg} alt="Tefi está almorzando" className="w-56 h-56 object-contain" />
               <div>
-                <h2 className="text-xl font-bold text-claude-text">Tefi está almorzando</h2>
-                <p className="text-claude-muted text-sm mt-2 leading-relaxed">
+                <h2 className="text-xl font-bold text-tefiis-text">Tefi está almorzando</h2>
+                <p className="text-tefiis-muted text-sm mt-2 leading-relaxed">
                   No podrá responder a tus consultas por ahora, pero lo que sí puedes hacer es realizar tu reclamo.
                 </p>
               </div>
               <button
                 onClick={() => setActiveView('reclamos')}
-                className="w-full py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+                className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
               >
                 Ir a Reclamos
               </button>
@@ -295,17 +295,17 @@ function App() {
       {/* ── Login overlay centrado ── */}
       {auth.loginEtapa !== 'cerrado' && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-claude-bg/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-tefiis-bg/80 backdrop-blur-sm"
           onClick={auth.cerrarLogin}
         >
           <div
-            className="w-full max-w-sm mx-4 bg-claude-panel border border-claude-border rounded-2xl p-8 flex flex-col items-center gap-3 shadow-2xl"
+            className="w-full max-w-sm mx-4 bg-tefiis-panel border border-tefiis-border rounded-2xl p-8 flex flex-col items-center gap-3 shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
             {auth.loginEtapa === 'email' && (
               <>
                 <div className="text-center">
-                  <h2 className="text-lg font-bold text-claude-text">Iniciar sesión</h2>
+                  <h2 className="text-lg font-bold text-tefiis-text">Iniciar sesión</h2>
                 </div>
                 <div className="w-full flex flex-col gap-3">
                   <input
@@ -315,11 +315,11 @@ function App() {
                     onChange={e => auth.setLoginEmail(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && auth.handleEnviarCodigo()}
                     autoFocus
-                    className="w-full px-4 py-3 rounded-xl bg-claude-bg border border-claude-border text-claude-text text-sm placeholder-claude-muted focus:outline-none focus:border-claude-accent"
+                    className="w-full px-4 py-3 rounded-xl bg-tefiis-bg border border-tefiis-border text-tefiis-text text-sm placeholder-tefiis-muted focus:outline-none focus:border-tefiis-accent"
                   />
                   {auth.loginError && <p className="text-red-400 text-xs">{auth.loginError}</p>}
                   <button onClick={auth.handleEnviarCodigo} disabled={auth.loginLoading || !auth.loginEmail.trim()}
-                    className="w-full py-3 rounded-xl bg-claude-text text-claude-bg text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
+                    className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
                     {auth.loginLoading ? 'Enviando...' : 'Enviar código'}
                   </button>
                 </div>
@@ -329,8 +329,8 @@ function App() {
             {auth.loginEtapa === 'codigo' && (
               <>
                 <div className="text-center">
-                  <h2 className="text-lg font-bold text-claude-text">Código enviado</h2>
-                  <p className="text-xs text-claude-muted mt-1">Revisa <span className="text-claude-text font-medium">{auth.loginEmail}</span></p>
+                  <h2 className="text-lg font-bold text-tefiis-text">Código enviado</h2>
+                  <p className="text-xs text-tefiis-muted mt-1">Revisa <span className="text-tefiis-text font-medium">{auth.loginEmail}</span></p>
                 </div>
                 <div className="w-full flex flex-col gap-3">
                   <input
@@ -341,15 +341,15 @@ function App() {
                     onChange={e => auth.setLoginCodigo(e.target.value.replace(/\D/g, ''))}
                     onKeyDown={e => e.key === 'Enter' && auth.handleVerificarCodigo()}
                     autoFocus
-                    className="w-full px-4 py-3 rounded-xl bg-claude-bg border border-claude-border text-claude-text text-center text-3xl font-bold tracking-[0.5em] placeholder-claude-muted focus:outline-none focus:border-claude-accent"
+                    className="w-full px-4 py-3 rounded-xl bg-tefiis-bg border border-tefiis-border text-tefiis-text text-center text-3xl font-bold tracking-[0.5em] placeholder-tefiis-muted focus:outline-none focus:border-tefiis-accent"
                   />
                   {auth.loginError && <p className="text-red-400 text-xs">{auth.loginError}</p>}
                   <button onClick={auth.handleVerificarCodigo} disabled={auth.loginLoading || auth.loginCodigo.length < 4}
-                    className="w-full py-3 rounded-xl bg-claude-text text-claude-bg text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
+                    className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
                     {auth.loginLoading ? 'Verificando...' : 'Verificar'}
                   </button>
                   <button onClick={() => { auth.setLoginCodigo(''); auth.cerrarLogin(); setTimeout(auth.abrirLogin, 50); }}
-                    className="text-xs text-claude-muted hover:text-claude-text transition-colors text-center cursor-pointer">
+                    className="text-xs text-tefiis-muted hover:text-tefiis-text transition-colors text-center cursor-pointer">
                     Cambiar correo
                   </button>
                 </div>
@@ -361,16 +361,16 @@ function App() {
 
       {/* ── Sesión expirada: aviso proactivo, aparece solo por vencimiento ── */}
       {auth.sessionExpired && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-claude-bg/80 backdrop-blur-sm">
-          <div className="w-full max-w-sm mx-4 bg-claude-panel border border-claude-border rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-tefiis-bg/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm mx-4 bg-tefiis-panel border border-tefiis-border rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl text-center">
             <img src={restaurarSesionImg} alt="Sesión expirada" className="w-40 h-40 object-contain" />
             <div>
-              <h2 className="text-lg font-bold text-claude-text">Tu sesión ha expirado</h2>
-              <p className="text-claude-muted text-sm mt-1">Vuelve a iniciar sesión.</p>
+              <h2 className="text-lg font-bold text-tefiis-text">Tu sesión ha expirado</h2>
+              <p className="text-tefiis-muted text-sm mt-1">Vuelve a iniciar sesión.</p>
             </div>
             <button
               onClick={() => { auth.cerrarSesion(); setActiveView('chat'); setResetKey(k => k + 1); }}
-              className="w-full py-3 rounded-xl bg-claude-text text-claude-bg text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+              className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
             >
               Volver al inicio
             </button>

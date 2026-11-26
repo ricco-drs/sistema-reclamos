@@ -106,14 +106,14 @@ export default function ChatArea({ emailSesion, sessionToken, onLoginRequired, o
         <div className="flex-1 w-full flex flex-col items-center justify-center -mt-12 sm:-mt-20 animate-fade-up">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 mb-8 sm:mb-10 max-w-2xl">
             <img src={tefiUniImg} alt="Tefi" className="w-24 h-24 sm:w-32 sm:h-32 object-contain drop-shadow-xl shrink-0" />
-            <h1 className="font-serif text-2xl sm:text-4xl text-claude-text tracking-wide font-normal text-center px-4 sm:px-0">
+            <h1 className="font-serif text-2xl sm:text-4xl text-tefiis-text tracking-wide font-normal text-center px-4 sm:px-0">
               Hola, soy Tefi
             </h1>
           </div>
-          <p className="text-claude-muted text-sm mb-6 text-center">Inicia sesión con tu correo <span className="text-claude-text">@uni.pe</span> para poder registrar tu reclamo.</p>
+          <p className="text-tefiis-muted text-sm mb-6 text-center">Inicia sesión con tu correo <span className="text-tefiis-text">@uni.pe</span> para poder registrar tu reclamo.</p>
           <button
             onClick={onLoginRequired}
-            className="px-6 py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+            className="px-6 py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
           >
             Iniciar sesión
           </button>
@@ -129,12 +129,12 @@ export default function ChatArea({ emailSesion, sessionToken, onLoginRequired, o
             ("Cuéntame.") quede bajo la primera y no pegada a la izquierda. */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 mb-8 sm:mb-10 max-w-2xl">
           <img src={tefiUniImg} alt="Tefi" className="w-24 h-24 sm:w-32 sm:h-32 object-contain drop-shadow-xl shrink-0" />
-          <h1 className="font-serif text-2xl sm:text-4xl text-claude-text tracking-wide font-normal text-center px-4 sm:px-0">
+          <h1 className="font-serif text-2xl sm:text-4xl text-tefiis-text tracking-wide font-normal text-center px-4 sm:px-0">
             {greeting}
           </h1>
         </div>
 
-        <div className="w-full max-w-3xl bg-claude-panel border border-claude-border rounded-2xl p-3 sm:p-4 flex flex-col shadow-sm">
+        <div className="w-full max-w-3xl bg-tefiis-panel border border-tefiis-border rounded-2xl p-3 sm:p-4 flex flex-col shadow-sm">
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -146,15 +146,15 @@ export default function ChatArea({ emailSesion, sessionToken, onLoginRequired, o
             }}
             autoFocus
             placeholder="Escribe tu consulta aquí..."
-            className="w-full bg-transparent text-claude-text placeholder-claude-muted resize-none focus:outline-none min-h-[80px] sm:min-h-[100px] text-base sm:text-lg custom-scrollbar"
+            className="w-full bg-transparent text-tefiis-text placeholder-tefiis-muted resize-none focus:outline-none min-h-[80px] sm:min-h-[100px] text-base sm:text-lg custom-scrollbar"
           />
 
-          <div className="flex justify-end items-center mt-2 pt-2 border-t border-claude-border/50">
+          <div className="flex justify-end items-center mt-2 pt-2 border-t border-tefiis-border/50">
             <div className="flex items-center gap-3">
               <button
                 onClick={handleSend}
                 disabled={!inputValue.trim()}
-                className="bg-claude-text text-claude-bg px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 transition-opacity hover:opacity-90 cursor-pointer"
+                className="bg-tefiis-text text-tefiis-bg px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 transition-opacity hover:opacity-90 cursor-pointer"
               >
                 Enviar
               </button>
@@ -177,20 +177,20 @@ export default function ChatArea({ emailSesion, sessionToken, onLoginRequired, o
               <img src={tefiImg} alt="Tefi" className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 object-contain drop-shadow-md" />
             )}
             {msg.role === 'user' && (
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded shrink-0 bg-claude-border flex items-center justify-center font-medium text-xs text-claude-muted">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded shrink-0 bg-tefiis-border flex items-center justify-center font-medium text-xs text-tefiis-muted">
                 Tú
               </div>
             )}
 
             <div className="flex-1 pt-1.5 sm:pt-2 w-full max-w-full overflow-hidden">
               {msg.role === 'assistant' ? (
-                <div className="prose prose-p:leading-relaxed prose-pre:bg-claude-border prose-pre:border prose-pre:border-claude-border prose-ul:my-2 prose-li:my-0.5 max-w-none text-[14px] sm:text-[15px] text-claude-text">
+                <div className="prose prose-p:leading-relaxed prose-pre:bg-tefiis-border prose-pre:border prose-pre:border-tefiis-border prose-ul:my-2 prose-li:my-0.5 max-w-none text-[14px] sm:text-[15px] text-tefiis-text">
                   {msg.content === '' ? (
                     <div className="flex gap-2 items-center mt-2.5 h-6">
-                      <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      <span className="text-claude-muted text-sm italic">Pensando...</span>
+                      <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="text-tefiis-muted text-sm italic">Pensando...</span>
                     </div>
                   ) : (
                     <ReactMarkdown 
@@ -206,7 +206,7 @@ export default function ChatArea({ emailSesion, sessionToken, onLoginRequired, o
                   {msg.accion === 'ir-a-reclamos' && onSolicitarReclamo && (
                     <button
                       onClick={onSolicitarReclamo}
-                      className="not-prose mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+                      className="not-prose mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
                     >
                       Ir a Reclamos
                       <ChevronRight className="w-4 h-4" />
@@ -214,7 +214,7 @@ export default function ChatArea({ emailSesion, sessionToken, onLoginRequired, o
                   )}
                 </div>
               ) : (
-                <div className="text-[14px] sm:text-[15px] leading-relaxed text-claude-text">
+                <div className="text-[14px] sm:text-[15px] leading-relaxed text-tefiis-text">
                   {msg.content}
                 </div>
               )}
@@ -225,13 +225,13 @@ export default function ChatArea({ emailSesion, sessionToken, onLoginRequired, o
       </div>
 
       {/* Input bar */}
-      <div className="pt-3 sm:pt-4 bg-claude-bg">
+      <div className="pt-3 sm:pt-4 bg-tefiis-bg">
         {estaBloqueado && (
           <div className="mb-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs sm:text-sm text-center">
             Chat bloqueado por preguntas fuera de tema. Podrás escribir de nuevo en <strong>{tiempoRestanteTexto}</strong>.
           </div>
         )}
-        <div className="w-full bg-claude-panel border border-claude-border rounded-2xl p-2.5 sm:p-3 flex flex-col">
+        <div className="w-full bg-tefiis-panel border border-tefiis-border rounded-2xl p-2.5 sm:p-3 flex flex-col">
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -244,20 +244,20 @@ export default function ChatArea({ emailSesion, sessionToken, onLoginRequired, o
             }}
             placeholder={estaBloqueado ? 'Chat bloqueado temporalmente...' : 'Escribe tu consulta...'}
             disabled={estaBloqueado}
-            className="w-full bg-transparent text-claude-text placeholder-claude-muted resize-none focus:outline-none min-h-[40px] sm:min-h-[44px] max-h-32 text-sm sm:text-base custom-scrollbar disabled:opacity-50"
+            className="w-full bg-transparent text-tefiis-text placeholder-tefiis-muted resize-none focus:outline-none min-h-[40px] sm:min-h-[44px] max-h-32 text-sm sm:text-base custom-scrollbar disabled:opacity-50"
             rows={1}
           />
           <div className="flex justify-end items-center mt-1.5 sm:mt-2">
             <button
               onClick={handleSend}
               disabled={!inputValue.trim() || estaBloqueado}
-              className="bg-claude-text text-claude-bg px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 transition-opacity hover:opacity-90 cursor-pointer"
+              className="bg-tefiis-text text-tefiis-bg px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 transition-opacity hover:opacity-90 cursor-pointer"
             >
               Enviar
             </button>
           </div>
         </div>
-        <div className="text-center mt-2 text-[10px] sm:text-[11px] text-claude-muted">
+        <div className="text-center mt-2 text-[10px] sm:text-[11px] text-tefiis-muted">
           Tefi puede cometer errores. Considera verificar la información oficial.
         </div>
       </div>

@@ -1,6 +1,4 @@
-// El módulo se monta solo, sin server.js ni las demás rutas: lo que necesita de afuera
-// (PostgREST, sesiones, interruptores, bus) se le pasa con dobles. Es lo que
-// docs/particiones.md promete para E3: probar las rutas de reclamos sin levantar todo.
+// Las pruebas montan el módulo de reclamos con dobles para sus dependencias.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';

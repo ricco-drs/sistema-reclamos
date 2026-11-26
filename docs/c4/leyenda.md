@@ -1,6 +1,6 @@
 # Leyenda de Responsabilidades y Análisis – Modelo C4 (TEFIIS)
 
-Este documento detalla la responsabilidad de cada componente y elemento modelado en los diagramas C4 del sistema TEFIIS en [workspace.dsl](workspace.dsl), junto con las decisiones de alcance, las observaciones arquitectónicas y las revisiones de cada nivel tras la partición modular del backend (`#50`/`#67`/`#68`) y la integración del flujo por eventos y correo resiliente (`#58`/`#46`).
+Responsabilidades y decisiones de alcance de los diagramas C4 de TEFIIS. El modelo está en [workspace.dsl](workspace.dsl).
 
 ---
 
@@ -17,7 +17,7 @@ TEFIIS como una sola caja negra de software central, los tres actores que intera
 * **Infraestructura de red y hosting:** No se detallan servidores de despliegue, DNS ni proxies reversos (Cloudflare Workers, Railway, Render), manteniendo el diagrama en un nivel puramente funcional y de negocio.
 
 ### Observación del equipo
-> **Estrategia de respaldo en cascada, timeout y circuit breaker integrados en correos y M2:** Brevo **no constituye un punto único de falla**: el adaptador `crearEnviadorCorreo` (`backend/compartido/correo/enviadorCorreo.js`, integrado al arranque en `server.js` en `#58` y ampliado en `#73`) intenta el envío por `Brevo`, aplica un corte por tiempo de espera (`AbortSignal.timeout`, 3 000 ms por defecto, `#34`) y protege cada proveedor con un **Circuit Breaker** (`opossum`, `#73`, excluyendo errores `400`/`422` del destinatario). Si un proveedor falla o abre su circuito, conmuta automáticamente a `Resend` y luego a `Mailjet`.
+> El adaptador `crearEnviadorCorreo` prueba Brevo, Resend y Mailjet en ese orden. Cada proveedor tiene un timeout de 3 000 ms por defecto y su propio circuit breaker. Los errores 400 y 422 del destinatario quedan fuera del conteo del circuito.
 >
 > En el registro de reclamos, el flujo por eventos `ReclamoRegistrado` (`#27`/`#58`) desacopla el correo de confirmación y el envío del expediente a M2 mediante `busEnProceso`, de modo que un proveedor lento o M2 dormido en Render (con timeout de 60 s en `crearClienteM2Http`) no demoran ni abortan el `201 Created` al estudiante.
 >

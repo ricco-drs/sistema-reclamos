@@ -1,6 +1,6 @@
 # Patrón de resiliencia y experimento antes y después (Lab11 / E5)
 
-Este documento describe el patrón de resiliencia aplicado en `@tefiis/compartido` (`crearEnviadorCorreo` con **Timeout** por proveedor y **Circuit Breaker** usando la librería `opossum` `^10.0.0` sobre la cadena `Brevo -> Resend -> Mailjet`), su integración con los consumidores del evento `ReclamoRegistrado`, la hipótesis experimental, los riesgos/trade-offs del diseño y los resultados del experimento comparativo **antes y después** con proveedores simulados en proceso y en Docker Compose.
+El Lab11 compara el envío de correo con y sin timeout y circuit breaker. El experimento usa proveedores simulados en proceso y en Docker Compose.
 
 ---
 

@@ -12,10 +12,7 @@ export function crearRutasDeReclamos({
 }) {
   const rutas = Router();
 
-  // Confirmación del reclamo recién creado. Exige sesión y saca el destinatario y
-  // los datos del caso de la base, no del cuerpo: sin eso cualquiera podía enviar
-  // un correo a la dirección que quisiera, con HTML propio dentro, saliendo del
-  // remitente TEFIIS verificado. Verificado explotándolo antes de cerrarlo.
+  // Obtiene el destinatario del reclamo asociado a la sesión del estudiante.
   rutas.post('/api/reclamos/confirmar', requireStudentAuth, limiteEnvioCodigo, async (req, res) => {
     const { caseId } = req.body;
     if (!caseId) {
@@ -275,11 +272,7 @@ export function crearRutasDeReclamos({
     } catch (err) { res.status(500).json({ error: err.message }); }
   });
 
-  // Admin: ver todos los reclamos. PostgREST corta cada respuesta en 1 000 filas
-  // (PGRST_DB_MAX_ROWS) sin avisar, y con más reclamos la bandeja perdía los más
-  // antiguos (E2, Lab12: faltaban 500 de 1 500). Se piden por páginas hasta
-  // traerlos todos. El id desempata el orden: sin él, dos reclamos con la misma
-  // fecha podrían repetirse o saltarse entre una página y la siguiente.
+  // PostgREST limita cada página a 1 000 filas. El id desempata el orden entre páginas.
   rutas.get('/api/admin/reclamos', requireAdminAuth, async (req, res) => {
     try {
       const r = await sbRestTodo('/reclamos?select=*&order=created_at.desc,id.desc');

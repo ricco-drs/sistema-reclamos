@@ -1,6 +1,6 @@
 # Informe de medición: E2, bandeja del panel del Tercio
 
-Lab12. La hipótesis está en [`hipotesis.md`](hipotesis.md) y entró a `main` antes del script y de cualquier medición (#80). Este informe reúne la línea base (#77), el diagnóstico y la única mejora aplicada (#78), y la segunda medición con la decisión final (#79).
+Lab12. La hipótesis está en [`hipotesis.md`](https://github.com/ricco-drs/sistema-reclamos/blob/d06db90bc0c425839ad9d8100922f4ec86d58cfa/docs/mediciones/hipotesis.md) y entró a `main` antes del script y de cualquier medición (#80). Este informe reúne la línea base (#77), el diagnóstico y la única mejora aplicada (#78), y la segunda medición con la decisión final (#79).
 
 ## Escenario, carga y umbral
 

@@ -8,13 +8,8 @@ export const sbRest = (path, opts = {}) => fetch(`${process.env.SUPABASE_URL}/re
   },
 });
 
-// PostgREST corta la respuesta en 1000 filas y se SALTA el `limit` mayor que se
-// le pida, sin error y sin avisar: simplemente devuelve menos. Combinado con un
-// `order=...asc` eso no recorta lo viejo sino lo NUEVO, que es como la columna
-// "atendido por" acabó perdiendo justo el trabajo del día en cuanto el registro
-// pasó de las 1000 filas. Aquí se pide por páginas con Range hasta agotar.
-//
-// El `path` no debe llevar `limit`: chocaría con el Range y volvería a truncar.
+// PostgREST limita cada respuesta a 1 000 filas. El path debe omitir limit
+// para que la cabecera Range pueda avanzar de una página a otra.
 const PAGINA_SB = 1000;
 export async function sbRestTodo(path, tope = 50000) {
   const filas = [];

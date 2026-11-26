@@ -145,7 +145,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
     if (estado === 'ACEPTADO_PARCIALMENTE') return 'bg-orange-500/15 text-orange-400 border-orange-500/30';
     if (estado === 'RECHAZADO') return 'bg-red-500/15 text-red-400 border-red-500/30';
     if (estado === 'EN_REVISION') return 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
-    return 'bg-claude-border text-claude-muted border-claude-border';
+    return 'bg-tefiis-border text-tefiis-muted border-tefiis-border';
   };
 
   // En la base van con guion bajo; al estudiante se le muestran legibles.
@@ -160,14 +160,14 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
       <div className="flex-1 w-full flex flex-col items-center justify-center -mt-12 sm:-mt-20 animate-fade-up">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 mb-8 sm:mb-10">
           <img src={tefiUniImg} alt="Tefi" className="w-24 h-24 sm:w-32 sm:h-32 object-contain drop-shadow-xl" />
-          <h1 className="font-serif text-2xl sm:text-4xl text-claude-text tracking-wide font-normal text-center sm:text-left px-4 sm:px-0">
+          <h1 className="font-serif text-2xl sm:text-4xl text-tefiis-text tracking-wide font-normal text-center sm:text-left px-4 sm:px-0">
             Hola, soy Tefi
           </h1>
         </div>
-        <p className="text-claude-muted text-sm mb-6 text-center">Inicia sesión con tu correo <span className="text-claude-text">@uni.pe</span> para gestionar tus reclamos.</p>
+        <p className="text-tefiis-muted text-sm mb-6 text-center">Inicia sesión con tu correo <span className="text-tefiis-text">@uni.pe</span> para gestionar tus reclamos.</p>
         <button
           onClick={onLoginRequired}
-          className="px-6 py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+          className="px-6 py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
         >
           Iniciar sesión
         </button>
@@ -181,9 +181,9 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
       <div className="flex-1 w-full max-w-md mx-auto flex flex-col items-center justify-center gap-6 px-4">
         <img src={tefiUniImg} alt="Tefi" className="w-16 h-16 object-contain drop-shadow-md" />
         <div className="text-center">
-          <h2 className="text-xl font-bold text-claude-text">Código enviado</h2>
-          <p className="text-claude-muted text-sm mt-1">
-            Revisa tu correo <span className="text-claude-text font-medium">{emailInput}</span> e ingresa el código que te enviamos.
+          <h2 className="text-xl font-bold text-tefiis-text">Código enviado</h2>
+          <p className="text-tefiis-muted text-sm mt-1">
+            Revisa tu correo <span className="text-tefiis-text font-medium">{emailInput}</span> e ingresa el código que te enviamos.
           </p>
         </div>
         <div className="w-full flex flex-col gap-3">
@@ -194,19 +194,19 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
             value={codigoInput}
             onChange={e => setCodigoInput(e.target.value.replace(/\D/g, ''))}
             onKeyDown={e => e.key === 'Enter' && handleVerificarCodigo()}
-            className="w-full px-4 py-3 rounded-xl bg-claude-panel border border-claude-border text-claude-text text-center text-2xl font-bold tracking-[0.5em] placeholder-claude-muted focus:outline-none focus:border-claude-accent"
+            className="w-full px-4 py-3 rounded-xl bg-tefiis-panel border border-tefiis-border text-tefiis-text text-center text-2xl font-bold tracking-[0.5em] placeholder-tefiis-muted focus:outline-none focus:border-tefiis-accent"
           />
           {verifyError && <p className="text-red-400 text-xs px-1">{verifyError}</p>}
           <button
             onClick={handleVerificarCodigo}
             disabled={verifyLoading || codigoInput.length < 4}
-            className="w-full py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
+            className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
           >
             {verifyLoading ? 'Verificando...' : 'Verificar código'}
           </button>
           <button
             onClick={() => { setEtapa('verificacion_email'); setCodigoInput(''); setVerifyError(''); }}
-            className="text-xs text-claude-muted hover:text-claude-text transition-colors text-center"
+            className="text-xs text-tefiis-muted hover:text-tefiis-text transition-colors text-center"
           >
             Cambiar correo o reenviar código
           </button>
@@ -220,12 +220,12 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
     return (
       <div className="flex-1 w-full max-w-md mx-auto flex flex-col items-center justify-center gap-6 px-4">
         <img src={tefiUniImg} alt="Tefi" className="w-24 h-24 object-contain drop-shadow-md" />
-        <h2 className="text-xl font-bold text-claude-text">¿Qué deseas hacer?</h2>
+        <h2 className="text-xl font-bold text-tefiis-text">¿Qué deseas hacer?</h2>
         <div className="w-full flex flex-col gap-3">
           {ventanaAbierta === false ? (
-            <div className="w-full px-4 py-3.5 rounded-xl border border-claude-border bg-claude-panel text-center">
-              <p className="text-sm font-medium text-claude-text">La ventana de reclamos está cerrada</p>
-              <p className="text-xs text-claude-muted mt-1 leading-relaxed">
+            <div className="w-full px-4 py-3.5 rounded-xl border border-tefiis-border bg-tefiis-panel text-center">
+              <p className="text-sm font-medium text-tefiis-text">La ventana de reclamos está cerrada</p>
+              <p className="text-xs text-tefiis-muted mt-1 leading-relaxed">
                 El Tercio no está recibiendo reclamos nuevos por ahora. Puedes seguir consultando los que ya enviaste.
               </p>
             </div>
@@ -233,14 +233,14 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
             <button
               onClick={handleNuevoReclamo}
               disabled={ventanaAbierta === null}
-              className="w-full py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+              className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
             >
               {ventanaAbierta === null ? 'Cargando...' : 'Hacer un reclamo'}
             </button>
           )}
           <button
             onClick={handleConsultarReclamos}
-            className="w-full py-3 rounded-xl border border-claude-border text-claude-muted text-sm hover:text-claude-text hover:border-claude-text transition-all cursor-pointer"
+            className="w-full py-3 rounded-xl border border-tefiis-border text-tefiis-muted text-sm hover:text-tefiis-text hover:border-tefiis-text transition-all cursor-pointer"
           >
             Consultar mis reclamos anteriores
           </button>
@@ -276,33 +276,33 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
 
     return (
       <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col gap-4 mt-4 px-2 overflow-y-auto pb-8">
-        <div className="flex items-center gap-3 pb-4 border-b border-claude-border">
+        <div className="flex items-center gap-3 pb-4 border-b border-tefiis-border">
           <button
             onClick={cerrarDetalleReclamo}
-            className="p-2 -ml-2 rounded-lg text-claude-muted hover:text-claude-text hover:bg-claude-border/50 transition-colors cursor-pointer"
+            className="p-2 -ml-2 rounded-lg text-tefiis-muted hover:text-tefiis-text hover:bg-tefiis-border/50 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h2 className="text-xl font-bold text-claude-text">{d?.id || 'Cargando…'}</h2>
+            <h2 className="text-xl font-bold text-tefiis-text">{d?.id || 'Cargando…'}</h2>
             {d && !d.error && (
-              <p className="text-claude-muted text-xs mt-0.5">{d.categoria} · enviado el {fecha(d.created_at)}</p>
+              <p className="text-tefiis-muted text-xs mt-0.5">{d.categoria} · enviado el {fecha(d.created_at)}</p>
             )}
           </div>
         </div>
 
         {loadingDetalle ? (
           <div className="flex gap-1.5 items-center mt-4">
-            <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
         ) : d?.error ? (
           <p className="text-red-400 text-sm mt-4">{d.error}</p>
         ) : d ? (
           <>
-            <div className="bg-claude-panel border border-claude-border rounded-2xl p-5">
-              <p className="text-[11px] uppercase tracking-widest text-claude-muted mb-4">Estado del trámite</p>
+            <div className="bg-tefiis-panel border border-tefiis-border rounded-2xl p-5">
+              <p className="text-[11px] uppercase tracking-widest text-tefiis-muted mb-4">Estado del trámite</p>
               <div className="flex flex-col">
                 {FASES.map((fase, i) => {
                   const alcanzada = i <= faseActual;
@@ -311,27 +311,27 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                   // se vería en verde incluso cuando el reclamo fue rechazado.
                   const color = esUltima && resuelto
                     ? desenlace.color
-                    : alcanzada ? 'text-claude-accent' : 'text-claude-muted';
+                    : alcanzada ? 'text-tefiis-accent' : 'text-tefiis-muted';
                   const borde = esUltima && resuelto
                     ? desenlace.borde
-                    : alcanzada ? 'border-claude-accent bg-claude-accent/10' : 'border-claude-border';
+                    : alcanzada ? 'border-tefiis-accent bg-tefiis-accent/10' : 'border-tefiis-border';
                   return (
                     <div key={i} className="flex gap-3">
                       <div className="flex flex-col items-center">
                         <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${borde}`}>
                           {alcanzada
                             ? <Check className={`w-3.5 h-3.5 ${color}`} />
-                            : <span className="w-1.5 h-1.5 rounded-full bg-claude-muted" />}
+                            : <span className="w-1.5 h-1.5 rounded-full bg-tefiis-muted" />}
                         </div>
                         {!esUltima && (
-                          <div className={`w-0.5 flex-1 min-h-[28px] ${i < faseActual ? 'bg-claude-accent' : 'bg-claude-border'}`} />
+                          <div className={`w-0.5 flex-1 min-h-[28px] ${i < faseActual ? 'bg-tefiis-accent' : 'bg-tefiis-border'}`} />
                         )}
                       </div>
                       <div className={esUltima ? 'pb-0' : 'pb-4'}>
-                        <p className={`text-sm font-medium ${alcanzada ? 'text-claude-text' : 'text-claude-muted'}`}>
+                        <p className={`text-sm font-medium ${alcanzada ? 'text-tefiis-text' : 'text-tefiis-muted'}`}>
                           {esUltima && resuelto ? desenlace.texto : fase.titulo}
                         </p>
-                        <p className="text-xs text-claude-muted mt-0.5">{fase.detalle}</p>
+                        <p className="text-xs text-tefiis-muted mt-0.5">{fase.detalle}</p>
                       </div>
                     </div>
                   );
@@ -340,23 +340,23 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
             </div>
 
             {d.respuesta && (
-              <div className="bg-claude-panel border border-claude-border rounded-2xl p-5">
-                <p className="text-[11px] uppercase tracking-widest text-claude-muted mb-2">Respuesta del Tercio</p>
-                <p className="text-sm text-claude-text whitespace-pre-wrap">{d.respuesta}</p>
+              <div className="bg-tefiis-panel border border-tefiis-border rounded-2xl p-5">
+                <p className="text-[11px] uppercase tracking-widest text-tefiis-muted mb-2">Respuesta del Tercio</p>
+                <p className="text-sm text-tefiis-text whitespace-pre-wrap">{d.respuesta}</p>
               </div>
             )}
 
-            <div className="bg-claude-panel border border-claude-border rounded-2xl p-5">
-              <p className="text-[11px] uppercase tracking-widest text-claude-muted mb-2">Tu reclamo</p>
-              <p className="text-sm text-claude-text whitespace-pre-wrap">{d.descripcion}</p>
+            <div className="bg-tefiis-panel border border-tefiis-border rounded-2xl p-5">
+              <p className="text-[11px] uppercase tracking-widest text-tefiis-muted mb-2">Tu reclamo</p>
+              <p className="text-sm text-tefiis-text whitespace-pre-wrap">{d.descripcion}</p>
             </div>
 
             {/* Lo que pidió sobre cursos. Va tras la descripción porque es la
                 parte concreta del trámite, y le sirve para comprobar que las
                 secciones que marcó son las que quería. */}
             {(d.cursosRetirar?.length > 0 || d.cursosMatricular?.length > 0) && (
-              <div className="bg-claude-panel border border-claude-border rounded-2xl p-5">
-                <p className="text-[11px] uppercase tracking-widest text-claude-muted mb-3">Cursos que solicitaste</p>
+              <div className="bg-tefiis-panel border border-tefiis-border rounded-2xl p-5">
+                <p className="text-[11px] uppercase tracking-widest text-tefiis-muted mb-3">Cursos que solicitaste</p>
                 <div className="flex flex-col gap-4">
                   {d.cursosRetirar?.length > 0 && (
                     <div>
@@ -364,9 +364,9 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                       <div className="flex flex-col gap-1.5">
                         {d.cursosRetirar.map((c: any, i: number) => (
                           <div key={`r-${i}`} className="flex items-center gap-2 text-sm">
-                            <span className="text-xs font-mono text-claude-accent shrink-0">{c.codigo}</span>
-                            <span className="text-claude-text truncate flex-1">{c.nombre}</span>
-                            <span className="text-xs text-claude-muted shrink-0">Sec. {c.seccion}</span>
+                            <span className="text-xs font-mono text-tefiis-accent shrink-0">{c.codigo}</span>
+                            <span className="text-tefiis-text truncate flex-1">{c.nombre}</span>
+                            <span className="text-xs text-tefiis-muted shrink-0">Sec. {c.seccion}</span>
                           </div>
                         ))}
                       </div>
@@ -378,9 +378,9 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                       <div className="flex flex-col gap-1.5">
                         {d.cursosMatricular.map((c: any, i: number) => (
                           <div key={`m-${i}`} className="flex items-center gap-2 text-sm">
-                            <span className="text-xs font-mono text-claude-accent shrink-0">{c.codigo}</span>
-                            <span className="text-claude-text truncate flex-1">{c.nombre}</span>
-                            <span className="text-xs text-claude-muted shrink-0">Sec. {c.seccion}</span>
+                            <span className="text-xs font-mono text-tefiis-accent shrink-0">{c.codigo}</span>
+                            <span className="text-tefiis-text truncate flex-1">{c.nombre}</span>
+                            <span className="text-xs text-tefiis-muted shrink-0">Sec. {c.seccion}</span>
                           </div>
                         ))}
                       </div>
@@ -391,18 +391,18 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
             )}
 
             {d.evidencias?.length > 0 && (
-              <div className="bg-claude-panel border border-claude-border rounded-2xl p-5">
-                <p className="text-[11px] uppercase tracking-widest text-claude-muted mb-3">
+              <div className="bg-tefiis-panel border border-tefiis-border rounded-2xl p-5">
+                <p className="text-[11px] uppercase tracking-widest text-tefiis-muted mb-3">
                   Pruebas adjuntas ({d.evidencias.length})
                 </p>
                 <div className="flex flex-col gap-2">
                   {d.evidencias.map((ev: any, i: number) => (
                     <div key={i} className="flex items-center gap-2 text-sm">
                       {ev.tipo?.startsWith('image/')
-                        ? <ImageIcon className="w-4 h-4 shrink-0 text-claude-accent" />
-                        : <FileText className="w-4 h-4 shrink-0 text-claude-accent" />}
-                      <span className="text-claude-text truncate flex-1">{ev.nombre}</span>
-                      <span className="text-xs text-claude-muted shrink-0">{formatearTamano(ev.bytes)}</span>
+                        ? <ImageIcon className="w-4 h-4 shrink-0 text-tefiis-accent" />
+                        : <FileText className="w-4 h-4 shrink-0 text-tefiis-accent" />}
+                      <span className="text-tefiis-text truncate flex-1">{ev.nombre}</span>
+                      <span className="text-xs text-tefiis-muted shrink-0">{formatearTamano(ev.bytes)}</span>
                     </div>
                   ))}
                 </div>
@@ -410,15 +410,15 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
             )}
 
             {d.historial?.length > 0 && (
-              <div className="bg-claude-panel border border-claude-border rounded-2xl p-5">
-                <p className="text-[11px] uppercase tracking-widest text-claude-muted mb-3">Historial</p>
+              <div className="bg-tefiis-panel border border-tefiis-border rounded-2xl p-5">
+                <p className="text-[11px] uppercase tracking-widest text-tefiis-muted mb-3">Historial</p>
                 <div className="flex flex-col gap-2">
                   {d.historial.map((h: any, i: number) => (
                     <div key={i} className="flex justify-between gap-4 text-xs">
-                      <span className="text-claude-text">
+                      <span className="text-tefiis-text">
                         {h.tipo === 'creado' ? 'Reclamo enviado' : `Estado: ${estadoTexto(h.estado)}`}
                       </span>
-                      <span className="text-claude-muted shrink-0">{fecha(h.fecha)}</span>
+                      <span className="text-tefiis-muted shrink-0">{fecha(h.fecha)}</span>
                     </div>
                   ))}
                 </div>
@@ -434,36 +434,36 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
   if (etapa === 'consulta') {
     return (
       <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col gap-4 mt-4 px-2">
-        <div className="flex items-center justify-between pb-4 border-b border-claude-border">
+        <div className="flex items-center justify-between pb-4 border-b border-tefiis-border">
           <div>
-            <h2 className="text-xl font-bold text-claude-text">Mis reclamos</h2>
-            <p className="text-claude-muted text-xs mt-0.5">{emailVerificado}</p>
+            <h2 className="text-xl font-bold text-tefiis-text">Mis reclamos</h2>
+            <p className="text-tefiis-muted text-xs mt-0.5">{emailVerificado}</p>
           </div>
           <button
             onClick={() => setEtapa('menu')}
-            className="text-xs text-claude-muted hover:text-claude-text transition-colors border border-claude-border px-3 py-1.5 rounded-lg cursor-pointer"
+            className="text-xs text-tefiis-muted hover:text-tefiis-text transition-colors border border-tefiis-border px-3 py-1.5 rounded-lg cursor-pointer"
           >
             Volver
           </button>
         </div>
         {loadingConsulta ? (
           <div className="flex gap-1.5 items-center mt-4">
-            <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
         ) : reclamosExistentes.length === 0 ? (
-          <p className="text-claude-muted text-sm mt-4">No tienes reclamos registrados aún.</p>
+          <p className="text-tefiis-muted text-sm mt-4">No tienes reclamos registrados aún.</p>
         ) : (
           <div className="flex flex-col gap-3">
             {reclamosExistentes.map(r => (
               <button
                 key={r.id}
                 onClick={() => abrirDetalleReclamo(r.id)}
-                className="w-full text-left bg-claude-panel border border-claude-border rounded-xl px-4 py-3 flex items-center justify-between gap-4 hover:border-claude-accent/50 transition-colors cursor-pointer">
+                className="w-full text-left bg-tefiis-panel border border-tefiis-border rounded-xl px-4 py-3 flex items-center justify-between gap-4 hover:border-tefiis-accent/50 transition-colors cursor-pointer">
                 <div>
-                  <p className="text-claude-text font-medium text-sm">{r.id}</p>
-                  <p className="text-claude-muted text-xs mt-0.5">{r.categoria} · {new Date(r.created_at).toLocaleDateString('es-PE')}</p>
+                  <p className="text-tefiis-text font-medium text-sm">{r.id}</p>
+                  <p className="text-tefiis-muted text-xs mt-0.5">{r.categoria} · {new Date(r.created_at).toLocaleDateString('es-PE')}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {/* El parcial también es una aceptación, así que lleva la
@@ -474,7 +474,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${badgeColor(r.estado)}`}>
                     {estadoTexto(r.estado)}
                   </span>
-                  <ChevronRight className="w-4 h-4 text-claude-muted" />
+                  <ChevronRight className="w-4 h-4 text-tefiis-muted" />
                 </div>
               </button>
             ))}
@@ -490,13 +490,13 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
       <div className="flex-1 w-full max-w-md mx-auto flex flex-col items-center justify-center gap-6 px-4">
         <img src={reclamoAceptadoImg} alt="Reclamo aceptado" className="w-28 h-28 object-contain drop-shadow-md" />
         <div className="text-center">
-          <h2 className="text-xl font-bold text-claude-text">Reclamo registrado</h2>
-          <p className="text-claude-muted text-sm mt-1">Tu caso fue enviado correctamente a la FIIS.</p>
+          <h2 className="text-xl font-bold text-tefiis-text">Reclamo registrado</h2>
+          <p className="text-tefiis-muted text-sm mt-1">Tu caso fue enviado correctamente a la FIIS.</p>
         </div>
-        <div className="w-full bg-claude-panel border border-claude-border rounded-xl px-6 py-4 text-center">
-          <p className="text-xs text-claude-muted mb-1">ID de tu caso</p>
-          <p className="text-2xl font-bold text-claude-text tracking-wide">{reclamoEnviado?.id}</p>
-          <p className="text-xs text-claude-muted mt-2">
+        <div className="w-full bg-tefiis-panel border border-tefiis-border rounded-xl px-6 py-4 text-center">
+          <p className="text-xs text-tefiis-muted mb-1">ID de tu caso</p>
+          <p className="text-2xl font-bold text-tefiis-text tracking-wide">{reclamoEnviado?.id}</p>
+          <p className="text-xs text-tefiis-muted mt-2">
             {avisoCorreo
               ? 'Guarda este ID. Tu reclamo quedó registrado, aunque el correo de confirmación no pudo enviarse.'
               : 'Guarda este ID. La confirmación llegará a tu correo.'}
@@ -505,13 +505,13 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
         <div className="w-full flex flex-col gap-3">
           <button
             onClick={handleNuevoReclamo}
-            className="w-full py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+            className="w-full py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
           >
             Hacer otro reclamo
           </button>
           <button
             onClick={() => setEtapa('menu')}
-            className="w-full py-3 rounded-xl border border-claude-border text-claude-muted text-sm hover:text-claude-text transition-all cursor-pointer"
+            className="w-full py-3 rounded-xl border border-tefiis-border text-tefiis-muted text-sm hover:text-tefiis-text transition-all cursor-pointer"
           >
             Volver al menú
           </button>
@@ -525,10 +525,10 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
     const camposCompletos = camposManual.telefono?.trim() && camposManual.turno;
     return (
       <div className="flex-1 w-full max-w-3xl mx-auto flex flex-col h-full mt-4">
-        <div className="mb-4 pb-4 border-b border-claude-border flex items-center justify-between">
+        <div className="mb-4 pb-4 border-b border-tefiis-border flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-claude-text">Datos de contacto</h2>
-            <p className="text-claude-muted text-xs mt-0.5">Completa los siguientes campos para continuar.</p>
+            <h2 className="text-2xl font-bold text-tefiis-text">Datos de contacto</h2>
+            <p className="text-tefiis-muted text-xs mt-0.5">Completa los siguientes campos para continuar.</p>
           </div>
         </div>
 
@@ -540,10 +540,10 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                 <img src={tefiImg} alt="Tefi" className="w-11 h-11 shrink-0 object-contain drop-shadow-md" />
               )}
               {msg.role === 'user' && (
-                <div className="w-9 h-9 rounded shrink-0 bg-claude-accent/20 border border-claude-accent/40 flex items-center justify-center font-bold text-xs text-claude-accent">{emailVerificado ? emailVerificado[0].toUpperCase() : 'T'}</div>
+                <div className="w-9 h-9 rounded shrink-0 bg-tefiis-accent/20 border border-tefiis-accent/40 flex items-center justify-center font-bold text-xs text-tefiis-accent">{emailVerificado ? emailVerificado[0].toUpperCase() : 'T'}</div>
               )}
               <div className="flex-1 pt-2 overflow-hidden">
-                <div className="prose prose-p:leading-relaxed max-w-none text-[15px] text-claude-text">
+                <div className="prose prose-p:leading-relaxed max-w-none text-[15px] text-tefiis-text">
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
                 </div>
               </div>
@@ -552,23 +552,23 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
         </div>
 
         {/* Formulario */}
-        <div className="pt-4 border-t border-claude-border">
+        <div className="pt-4 border-t border-tefiis-border">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
-              <label className="text-xs text-claude-muted mb-1 block">Teléfono</label>
+              <label className="text-xs text-tefiis-muted mb-1 block">Teléfono</label>
               <input
                 placeholder="9 dígitos"
                 value={camposManual.telefono || ''}
                 onChange={e => setCamposManual((p: any) => ({ ...p, telefono: e.target.value.replace(/\D/g, '').slice(0, 9) }))}
-                className="w-full px-3 py-2.5 rounded-lg bg-claude-panel border border-claude-border text-claude-text text-sm placeholder-claude-muted focus:outline-none focus:border-claude-accent"
+                className="w-full px-3 py-2.5 rounded-lg bg-tefiis-panel border border-tefiis-border text-tefiis-text text-sm placeholder-tefiis-muted focus:outline-none focus:border-tefiis-accent"
               />
             </div>
             <div>
-              <label className="text-xs text-claude-muted mb-1 block">Turno</label>
+              <label className="text-xs text-tefiis-muted mb-1 block">Turno</label>
               <select
                 value={camposManual.turno || ''}
                 onChange={e => setCamposManual((p: any) => ({ ...p, turno: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-lg bg-claude-panel border border-claude-border text-claude-text text-sm focus:outline-none focus:border-claude-accent"
+                className="w-full px-3 py-2.5 rounded-lg bg-tefiis-panel border border-tefiis-border text-tefiis-text text-sm focus:outline-none focus:border-tefiis-accent"
               >
                 <option value="0">Riesgo Académico</option>
                 <option value="promocion">Promoción</option>
@@ -581,7 +581,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
           <button
             onClick={handleConfirmarDatos}
             disabled={!camposCompletos}
-            className="w-full py-2.5 rounded-xl bg-claude-text text-claude-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
+            className="w-full py-2.5 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
           >
             Continuar
           </button>
@@ -593,14 +593,14 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
   // ── Flujo principal del reclamo (chat) ────────────────────────────────────
   return (
     <div className="flex-1 w-full max-w-3xl mx-auto flex flex-col h-full mt-4">
-      <div className="mb-4 pb-4 border-b border-claude-border flex items-center justify-between">
+      <div className="mb-4 pb-4 border-b border-tefiis-border flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-claude-text">Reclamos</h2>
-          <p className="text-claude-muted text-xs mt-0.5">Tefi te guiará para registrar tu reclamo.</p>
+          <h2 className="text-2xl font-bold text-tefiis-text">Reclamos</h2>
+          <p className="text-tefiis-muted text-xs mt-0.5">Tefi te guiará para registrar tu reclamo.</p>
         </div>
         <button
           onClick={() => setEtapa('menu')}
-          className="text-xs text-claude-muted hover:text-claude-text transition-colors border border-claude-border px-2.5 py-1 rounded-lg cursor-pointer"
+          className="text-xs text-tefiis-muted hover:text-tefiis-text transition-colors border border-tefiis-border px-2.5 py-1 rounded-lg cursor-pointer"
         >
           Atrás
         </button>
@@ -614,23 +614,23 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
               <img src={tefiImg} alt="Tefi" className="w-11 h-11 shrink-0 object-contain drop-shadow-md" />
             )}
             {msg.role === 'user' && (
-              <div className="w-9 h-9 rounded shrink-0 bg-claude-border flex items-center justify-center font-medium text-xs text-claude-muted">Tú</div>
+              <div className="w-9 h-9 rounded shrink-0 bg-tefiis-border flex items-center justify-center font-medium text-xs text-tefiis-muted">Tú</div>
             )}
             <div className="flex-1 pt-2 overflow-hidden">
               {msg.role === 'assistant' ? (
-                <div className="prose prose-p:leading-relaxed prose-ul:my-2 prose-li:my-0.5 max-w-none text-[15px] text-claude-text">
+                <div className="prose prose-p:leading-relaxed prose-ul:my-2 prose-li:my-0.5 max-w-none text-[15px] text-tefiis-text">
                   {msg.content === '' ? (
                     <div className="flex gap-1.5 items-center mt-2.5 h-6">
-                      <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-claude-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-tefiis-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   ) : (
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   )}
                 </div>
               ) : (
-                <div className="text-[15px] leading-relaxed text-claude-text">{msg.content}</div>
+                <div className="text-[15px] leading-relaxed text-tefiis-text">{msg.content}</div>
               )}
             </div>
           </div>
@@ -640,14 +640,14 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
 
       {/* Panel: ¿llegaste a matricularte? */}
       {etapa === 'pregunta_matricula' && (
-        <div className="pt-4 border-t border-claude-border">
+        <div className="pt-4 border-t border-tefiis-border">
           <div className="flex gap-3">
             <button onClick={() => handleRespuestaMatricula(true)}
-              className="flex-1 py-2.5 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer">
+              className="flex-1 py-2.5 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer">
               Sí, me matriculé
             </button>
             <button onClick={() => handleRespuestaMatricula(false)}
-              className="flex-1 py-2.5 rounded-xl border border-claude-border text-claude-text font-medium text-sm hover:bg-claude-border/50 transition-colors cursor-pointer">
+              className="flex-1 py-2.5 rounded-xl border border-tefiis-border text-tefiis-text font-medium text-sm hover:bg-tefiis-border/50 transition-colors cursor-pointer">
               No me matriculé
             </button>
           </div>
@@ -658,13 +658,13 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
           corre en esta app, y sin ella el panel admin no podría filtrar por
           carrera los reclamos nuevos. */}
       {etapa === 'pregunta_carrera' && (
-        <div className="pt-4 border-t border-claude-border">
+        <div className="pt-4 border-t border-tefiis-border">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {CARRERAS_FIIS.map(nombre => (
               <button
                 key={nombre}
                 onClick={() => handleRespuestaCarrera(nombre)}
-                className="py-2.5 px-3 rounded-xl border border-claude-border text-claude-text text-sm text-left hover:border-claude-accent hover:bg-claude-accent/5 transition-colors cursor-pointer"
+                className="py-2.5 px-3 rounded-xl border border-tefiis-border text-tefiis-text text-sm text-left hover:border-tefiis-accent hover:bg-tefiis-accent/5 transition-colors cursor-pointer"
               >
                 {nombre}
               </button>
@@ -675,7 +675,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
 
       {/* Código UNI */}
       {etapa === 'pregunta_codigo' && (
-        <div className="pt-4 border-t border-claude-border flex flex-col gap-2">
+        <div className="pt-4 border-t border-tefiis-border flex flex-col gap-2">
           <input
             value={codigoUni}
             onChange={e => setCodigoUni(e.target.value.toUpperCase())}
@@ -683,20 +683,20 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
             placeholder="20231158C"
             maxLength={9}
             autoFocus
-            className="w-full px-4 py-2.5 rounded-xl bg-claude-panel border border-claude-border text-claude-text text-sm placeholder-claude-muted focus:outline-none focus:border-claude-accent"
+            className="w-full px-4 py-2.5 rounded-xl bg-tefiis-panel border border-tefiis-border text-tefiis-text text-sm placeholder-tefiis-muted focus:outline-none focus:border-tefiis-accent"
           />
           {errorPaso && <p className="text-red-400 text-xs px-1">{errorPaso}</p>}
           <div className="flex gap-2">
             <button
               onClick={() => retrocederA('carrera')}
-              className="px-4 py-2.5 rounded-xl border border-claude-border text-claude-muted text-sm hover:text-claude-text transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-tefiis-border text-tefiis-muted text-sm hover:text-tefiis-text transition-colors cursor-pointer"
             >
               Atrás
             </button>
             <button
               onClick={handleRespuestaCodigo}
               disabled={!codigoUni.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-claude-text text-claude-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
             >
               Continuar
             </button>
@@ -706,27 +706,27 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
 
       {/* Nombre completo */}
       {etapa === 'pregunta_nombre' && (
-        <div className="pt-4 border-t border-claude-border flex flex-col gap-2">
+        <div className="pt-4 border-t border-tefiis-border flex flex-col gap-2">
           <input
             value={nombreCompleto}
             onChange={e => setNombreCompleto(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleRespuestaNombre()}
             placeholder="Nombres y apellidos"
             autoFocus
-            className="w-full px-4 py-2.5 rounded-xl bg-claude-panel border border-claude-border text-claude-text text-sm placeholder-claude-muted focus:outline-none focus:border-claude-accent"
+            className="w-full px-4 py-2.5 rounded-xl bg-tefiis-panel border border-tefiis-border text-tefiis-text text-sm placeholder-tefiis-muted focus:outline-none focus:border-tefiis-accent"
           />
           {errorPaso && <p className="text-red-400 text-xs px-1">{errorPaso}</p>}
           <div className="flex gap-2">
             <button
               onClick={() => retrocederA('codigo')}
-              className="px-4 py-2.5 rounded-xl border border-claude-border text-claude-muted text-sm hover:text-claude-text transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-tefiis-border text-tefiis-muted text-sm hover:text-tefiis-text transition-colors cursor-pointer"
             >
               Atrás
             </button>
             <button
               onClick={handleRespuestaNombre}
               disabled={!nombreCompleto.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-claude-text text-claude-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
             >
               Continuar
             </button>
@@ -763,10 +763,10 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
         const faltaBoletaGuardada = boletaObligatoria && !archivosUrls?.['boleta'];
 
         return (
-          <div className="pt-4 border-t border-claude-border">
+          <div className="pt-4 border-t border-tefiis-border">
             {yaGuardados ? (
               <div className="flex flex-col gap-3">
-                <p className="text-xs text-claude-muted">Ya tienes estos documentos guardados en tu perfil:</p>
+                <p className="text-xs text-tefiis-muted">Ya tienes estos documentos guardados en tu perfil:</p>
                 <div className={`grid grid-cols-1 ${gridCols} gap-3`}>
                   {documentosRequeridos.map(({ key, label, opcional }) => {
                     // Lo guardado se muestra como tal; lo opcional que falta se
@@ -774,7 +774,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                     // volver a cargar la ficha y el avance que ya estaban.
                     if (archivosUrls[key]) {
                       return (
-                        <div key={key} className="flex flex-col items-center justify-center gap-1 p-4 border border-claude-accent/30 bg-claude-accent/5 rounded-xl text-sm text-center text-claude-accent">
+                        <div key={key} className="flex flex-col items-center justify-center gap-1 p-4 border border-tefiis-accent/30 bg-tefiis-accent/5 rounded-xl text-sm text-center text-tefiis-accent">
                           <span>{label}</span>
                           <span className="text-xs">✓ Guardado</span>
                         </div>
@@ -787,10 +787,10 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                     return (
                       <label key={key} className={`flex flex-col items-center justify-center gap-1 p-4 border-2 border-dashed rounded-xl text-sm text-center transition-all ${
                         subiendoBoleta
-                          ? 'border-claude-border text-claude-muted cursor-default'
+                          ? 'border-tefiis-border text-tefiis-muted cursor-default'
                           : opcional
-                            ? 'border-claude-border text-claude-muted hover:border-claude-text hover:text-claude-text cursor-pointer'
-                            : 'border-red-400/50 text-claude-muted hover:border-red-400 hover:text-claude-text cursor-pointer'
+                            ? 'border-tefiis-border text-tefiis-muted hover:border-tefiis-text hover:text-tefiis-text cursor-pointer'
+                            : 'border-red-400/50 text-tefiis-muted hover:border-red-400 hover:text-tefiis-text cursor-pointer'
                       }`}>
                         <span>{label}{opcional
                           ? <span className="text-xs font-normal opacity-70"> (opcional)</span>
@@ -819,11 +819,11 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                 <div className="flex gap-2">
                   <button onClick={handleUsarDocsGuardados}
                     disabled={faltaBoletaGuardada || subiendoBoleta}
-                    className="flex-1 py-2.5 rounded-xl bg-claude-text text-claude-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
+                    className="flex-1 py-2.5 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
                     Usar estos documentos
                   </button>
                   <button onClick={() => { setArchivos({ ficha: null, boleta: null, avance: null }); }}
-                    className="px-4 py-2.5 rounded-xl border border-claude-border text-claude-muted text-sm hover:text-claude-text transition-colors cursor-pointer">
+                    className="px-4 py-2.5 rounded-xl border border-tefiis-border text-tefiis-muted text-sm hover:text-tefiis-text transition-colors cursor-pointer">
                     Subir nuevos
                   </button>
                 </div>
@@ -833,7 +833,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                 <div className={`grid grid-cols-1 ${gridCols} gap-3 mb-3`}>
                   {documentosRequeridos.map(({ key, label, opcional }) => (
                     <label key={key} className={`flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all text-sm text-center
-                      ${archivos[key] ? 'border-claude-accent bg-claude-accent/10 text-claude-accent' : 'border-claude-border text-claude-muted hover:border-claude-text hover:text-claude-text'}`}>
+                      ${archivos[key] ? 'border-tefiis-accent bg-tefiis-accent/10 text-tefiis-accent' : 'border-tefiis-border text-tefiis-muted hover:border-tefiis-text hover:text-tefiis-text'}`}>
                       <span>{label}{opcional && <span className="text-xs font-normal opacity-70"> (opcional)</span>}</span>
                       <span className="text-xs">{archivos[key] ? `✓ ${archivos[key].name}` : 'Haz clic para subir'}</span>
                       <input type="file" accept="application/pdf,.pdf" className="hidden"
@@ -856,12 +856,12 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                 )}
                 <button
                   onClick={() => retrocederA('nombre')}
-                  className="w-full mb-2 py-2 rounded-xl border border-claude-border text-claude-muted text-xs hover:text-claude-text transition-colors cursor-pointer"
+                  className="w-full mb-2 py-2 rounded-xl border border-tefiis-border text-tefiis-muted text-xs hover:text-tefiis-text transition-colors cursor-pointer"
                 >
                   Atrás (Corregir mis datos)
                 </button>
                 <button onClick={handleProcesarDocumentos} disabled={procesandoPdfs || faltaAlgunArchivo}
-                  className="w-full py-2.5 rounded-xl bg-claude-text text-claude-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
+                  className="w-full py-2.5 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
                   {procesandoPdfs ? 'Subiendo documentos...' : 'Subir documentos'}
                 </button>
               </>
@@ -872,17 +872,17 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
 
       {/* Panel completar datos manualmente */}
       {etapa === 'completar' && (
-        <div className="pt-4 border-t border-claude-border">
-          <p className="text-claude-muted text-xs mb-3">Completa los datos que no pudieron extraerse:</p>
+        <div className="pt-4 border-t border-tefiis-border">
+          <p className="text-tefiis-muted text-xs mb-3">Completa los datos que no pudieron extraerse:</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             {!datosEstudiante.telefono && (
               <input placeholder="Teléfono (9 dígitos)" value={camposManual.telefono || ''}
                 onChange={e => setCamposManual((p: any) => ({ ...p, telefono: e.target.value }))}
-                className="px-3 py-2 rounded-lg bg-claude-panel border border-claude-border text-claude-text text-sm placeholder-claude-muted focus:outline-none focus:border-claude-accent" />
+                className="px-3 py-2 rounded-lg bg-tefiis-panel border border-tefiis-border text-tefiis-text text-sm placeholder-tefiis-muted focus:outline-none focus:border-tefiis-accent" />
             )}
             {!datosEstudiante.turno && (
               <select value={camposManual.turno || ''} onChange={e => setCamposManual((p: any) => ({ ...p, turno: e.target.value }))}
-                className="px-3 py-2 rounded-lg bg-claude-panel border border-claude-border text-claude-text text-sm focus:outline-none focus:border-claude-accent">
+                className="px-3 py-2 rounded-lg bg-tefiis-panel border border-tefiis-border text-tefiis-text text-sm focus:outline-none focus:border-tefiis-accent">
                 <option value="0">Riesgo Académico</option>
                 <option value="promocion">Promoción</option>
                 {Array.from({ length: 20 }, (_, i) => i + 1).map(n => (
@@ -891,13 +891,13 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
               </select>
             )}
             <select value={camposManual.tipoProblem || ''} onChange={e => setCamposManual((p: any) => ({ ...p, tipoProblem: e.target.value }))}
-              className="px-3 py-2 rounded-lg bg-claude-panel border border-claude-border text-claude-text text-sm focus:outline-none focus:border-claude-accent sm:col-span-2">
+              className="px-3 py-2 rounded-lg bg-tefiis-panel border border-tefiis-border text-tefiis-text text-sm focus:outline-none focus:border-tefiis-accent sm:col-span-2">
               <option value="">-- Tipo de problema --</option>
               {TIPOS_PROBLEMA_MATRICULA.map(t => <option key={t}>{t}</option>)}
             </select>
           </div>
           <button onClick={handleConfirmarDatos} disabled={!camposManual.tipoProblem}
-            className="w-full py-2.5 rounded-xl bg-claude-text text-claude-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
+            className="w-full py-2.5 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer">
             Confirmar y continuar
           </button>
         </div>
@@ -905,36 +905,36 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
 
       {/* Chat input */}
       {etapa === 'chat' && (
-        <div className="pt-4 bg-claude-bg flex flex-col gap-2">
+        <div className="pt-4 bg-tefiis-bg flex flex-col gap-2">
           {/* Sí/No: aparece solo cuando Tefi ya respondió al usuario */}
           {!isLoading && usuarioExplicado && messages.some(m => m.role === 'assistant' && m.content.trim() && m.id !== 'bienvenida') ? (
-            <div className="bg-claude-panel border border-claude-border rounded-xl px-4 py-3 flex flex-col gap-2">
-              <p className="text-sm text-claude-muted">¿Deseas enviar un reclamo al TEFIIS?</p>
+            <div className="bg-tefiis-panel border border-tefiis-border rounded-xl px-4 py-3 flex flex-col gap-2">
+              <p className="text-sm text-tefiis-muted">¿Deseas enviar un reclamo al TEFIIS?</p>
               <div className="flex gap-2">
                 <button onClick={handleDecisionSi}
-                  className="flex-1 py-2 rounded-lg border border-claude-accent text-claude-accent text-sm font-medium hover:bg-claude-accent/10 transition-all cursor-pointer">
+                  className="flex-1 py-2 rounded-lg border border-tefiis-accent text-tefiis-accent text-sm font-medium hover:bg-tefiis-accent/10 transition-all cursor-pointer">
                   Sí, enviar reclamo
                 </button>
                 <button onClick={handleDecisionNo}
-                  className="flex-1 py-2 rounded-lg border border-claude-border text-claude-muted text-sm hover:text-claude-text transition-all cursor-pointer">
+                  className="flex-1 py-2 rounded-lg border border-tefiis-border text-tefiis-muted text-sm hover:text-tefiis-text transition-all cursor-pointer">
                   No, gracias
                 </button>
               </div>
             </div>
           ) : (
-            <div className="w-full bg-claude-panel border border-claude-border rounded-2xl p-3 flex flex-col">
+            <div className="w-full bg-tefiis-panel border border-tefiis-border rounded-2xl p-3 flex flex-col">
               <textarea value={inputValue} onChange={e => setInputValue(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                 placeholder={`Cuéntame brevemente qué pasó...`}
-                className="w-full bg-transparent text-claude-text placeholder-claude-muted resize-none focus:outline-none min-h-[44px] max-h-32 text-base custom-scrollbar"
+                className="w-full bg-transparent text-tefiis-text placeholder-tefiis-muted resize-none focus:outline-none min-h-[44px] max-h-32 text-base custom-scrollbar"
                 rows={1} />
               <div className="flex justify-between items-center mt-2">
-                <span className="text-xs text-claude-muted px-1">
-                  Reclamo: <span className="font-medium text-claude-accent">{categoriaSeleccionada?.label}</span>
+                <span className="text-xs text-tefiis-muted px-1">
+                  Reclamo: <span className="font-medium text-tefiis-accent">{categoriaSeleccionada?.label}</span>
                   {datosEstudiante.nombre && <> · {datosEstudiante.nombre.split(' ')[0]}</>}
                 </span>
                 <button onClick={handleSend} disabled={!inputValue.trim() || isLoading}
-                  className="bg-claude-text text-claude-bg px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 cursor-pointer">
+                  className="bg-tefiis-text text-tefiis-bg px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 cursor-pointer">
                   Enviar
                 </button>
               </div>
@@ -947,8 +947,8 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
           quería cambiar de sección —retirar un curso y llevar el mismo en
           otra— lo hacía a ciegas, sin ver lo que había puesto antes. */}
       {etapa === 'cursos' && (
-        <div className="pt-4 border-t border-claude-border flex flex-col gap-4">
-          <p className="text-xs text-claude-muted leading-relaxed">
+        <div className="pt-4 border-t border-tefiis-border flex flex-col gap-4">
+          <p className="text-xs text-tefiis-muted leading-relaxed">
             Si no quieres desmatricularte de ningún curso, déjalo vacío. Lo mismo
             para matricularte: si no necesitas ninguno, déjalo vacío.
           </p>
@@ -962,7 +962,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
               onAgregar={(c: any) => agregarCurso('retirar', c)}
               onQuitar={(cod: string, sec: string) => quitarCurso('retirar', cod, sec)}
             />
-            <div className="hidden sm:block w-px bg-claude-border shrink-0" />
+            <div className="hidden sm:block w-px bg-tefiis-border shrink-0" />
             <SelectorCursos
               tono="matricular"
               titulo="Matricularme en"
@@ -976,13 +976,13 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
           <div className="flex gap-2">
             <button
               onClick={volverADescripcion}
-              className="px-4 py-2.5 rounded-xl border border-claude-border text-claude-muted text-sm hover:text-claude-text transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-tefiis-border text-tefiis-muted text-sm hover:text-tefiis-text transition-colors cursor-pointer"
             >
               Atrás
             </button>
             <button
               onClick={irAConfirmar}
-              className="flex-1 py-2.5 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
             >
               {cursosRetirar.length + cursosMatricular.length === 0
                 ? 'Continuar sin seleccionar cursos'
@@ -1004,20 +1004,20 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
         };
 
         const Fila = ({ etiqueta, children }: any) => (
-          <div className="flex items-center gap-4 py-3 border-b border-claude-border/40 last:border-0">
-            <span className="w-32 sm:w-44 shrink-0 text-[13px] text-claude-muted leading-snug">{etiqueta}</span>
+          <div className="flex items-center gap-4 py-3 border-b border-tefiis-border/40 last:border-0">
+            <span className="w-32 sm:w-44 shrink-0 text-[13px] text-tefiis-muted leading-snug">{etiqueta}</span>
             <div className="flex-1 min-w-0 flex">{children}</div>
           </div>
         );
         const Valor = ({ children }: any) => (
-          <span className="text-[15px] text-claude-text font-medium">{children || '—'}</span>
+          <span className="text-[15px] text-tefiis-text font-medium">{children || '—'}</span>
         );
-        const entrada = "w-full max-w-[20rem] text-[15px] text-claude-text text-left bg-claude-bg border border-claude-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-claude-accent";
+        const entrada = "w-full max-w-[20rem] text-[15px] text-tefiis-text text-left bg-tefiis-bg border border-tefiis-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-tefiis-accent";
 
         const Seccion = ({ titulo, children }: any) => (
-          <div className="shrink-0 bg-claude-panel border border-claude-border rounded-2xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-claude-border bg-claude-border/20">
-              <span className="text-xs uppercase tracking-widest text-claude-muted font-medium">{titulo}</span>
+          <div className="shrink-0 bg-tefiis-panel border border-tefiis-border rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-tefiis-border bg-tefiis-border/20">
+              <span className="text-xs uppercase tracking-widest text-tefiis-muted font-medium">{titulo}</span>
             </div>
             <div className="px-5 py-2.5">{children}</div>
           </div>
@@ -1027,15 +1027,15 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
         const nombreDoc: any = { ficha: 'Ficha Académica', boleta: 'Boleta de Matrícula', avance: 'Avance Curricular' };
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-claude-bg/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-2xl h-full max-h-[92dvh] bg-claude-bg border border-claude-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-tefiis-bg/80 backdrop-blur-sm p-4">
+            <div className="w-full max-w-2xl h-full max-h-[92dvh] bg-tefiis-bg border border-tefiis-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
 
-              <div className="px-6 py-5 border-b border-claude-border shrink-0 flex items-start gap-4">
+              <div className="px-6 py-5 border-b border-tefiis-border shrink-0 flex items-start gap-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-claude-text leading-tight">
+                  <h3 className="text-base font-bold text-tefiis-text leading-tight">
                     {editandoResumen ? 'Corrige tu información' : 'Verifica si la información proporcionada es correcta'}
                   </h3>
-                  <p className="text-xs text-claude-muted mt-1">
+                  <p className="text-xs text-tefiis-muted mt-1">
                     {editandoResumen
                       ? 'Cambia lo que necesites y guarda para volver al resumen.'
                       : 'Una vez enviado no podrás modificarlo, así que revísalo con calma.'}
@@ -1046,7 +1046,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                 <button
                   onClick={() => { setEditandoResumen(false); setErrorResumen(''); cerrarConfirmacion(); }}
                   title="Cerrar y volver al reclamo"
-                  className="shrink-0 p-1.5 -mr-1.5 -mt-1 rounded-lg text-claude-muted hover:text-claude-text hover:bg-claude-border/50 transition-colors cursor-pointer"
+                  className="shrink-0 p-1.5 -mr-1.5 -mt-1 rounded-lg text-tefiis-muted hover:text-tefiis-text hover:bg-tefiis-border/50 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1101,10 +1101,10 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                   {docs.length
                     ? docs.map(k => (
                         <Fila key={k} etiqueta={nombreDoc[k]}>
-                          <span className="text-[15px] text-claude-accent font-medium">✓ Adjunto</span>
+                          <span className="text-[15px] text-tefiis-accent font-medium">✓ Adjunto</span>
                         </Fila>
                       ))
-                    : <p className="py-2 text-sm text-claude-muted">Ningún documento adjunto</p>}
+                    : <p className="py-2 text-sm text-tefiis-muted">Ningún documento adjunto</p>}
                   {evidencias.map((ev: any) => (
                     <Fila key={ev.ref} etiqueta={ev.nombre}>
                       <Valor>{formatearTamano(ev.bytes)}</Valor>
@@ -1126,7 +1126,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                         onAgregar={(c: any) => agregarCurso('retirar', c)}
                         onQuitar={(cod: string, sec: string) => quitarCurso('retirar', cod, sec)}
                       />
-                      <div className="hidden sm:block w-px bg-claude-border shrink-0" />
+                      <div className="hidden sm:block w-px bg-tefiis-border shrink-0" />
                       <SelectorCursos
                         tono="matricular"
                         titulo="Matricularme en"
@@ -1155,18 +1155,18 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                 <Seccion titulo="Tu reclamo">
                   {editandoResumen
                     ? <textarea value={descripcionFormal} onChange={e => setDescripcionFormal(e.target.value)} rows={5}
-                        className="w-full my-2 text-[15px] text-claude-text bg-claude-bg border border-claude-border rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-claude-accent custom-scrollbar" />
-                    : <p className="py-2 text-[15px] text-claude-text whitespace-pre-wrap leading-relaxed">{descripcionFormal}</p>}
+                        className="w-full my-2 text-[15px] text-tefiis-text bg-tefiis-bg border border-tefiis-border rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-tefiis-accent custom-scrollbar" />
+                    : <p className="py-2 text-[15px] text-tefiis-text whitespace-pre-wrap leading-relaxed">{descripcionFormal}</p>}
                 </Seccion>
 
                 {errorResumen && <p className="text-red-400 text-xs px-1">{errorResumen}</p>}
               </div>
 
-              <div className="shrink-0 flex gap-3 px-6 py-5 border-t border-claude-border">
+              <div className="shrink-0 flex gap-3 px-6 py-5 border-t border-tefiis-border">
                 {editandoResumen ? (
                   <button
                     onClick={guardarEdicion}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm hover:opacity-90 transition-opacity cursor-pointer"
                   >
                     <Check className="w-4 h-4" />
                     Guardar cambios
@@ -1176,7 +1176,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                     <button
                       onClick={() => { setErrorResumen(''); setEditandoResumen(true); }}
                       disabled={enviandoFormal}
-                      className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-claude-border text-claude-text text-sm font-medium hover:bg-claude-border/50 transition-colors disabled:opacity-40 cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-tefiis-border text-tefiis-text text-sm font-medium hover:bg-tefiis-border/50 transition-colors disabled:opacity-40 cursor-pointer"
                     >
                       <Pencil className="w-4 h-4" />
                       Editar
@@ -1184,7 +1184,7 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
                     <button
                       onClick={handleEnviarFormal}
                       disabled={enviandoFormal}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-claude-text text-claude-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-tefiis-text text-tefiis-bg font-medium text-sm disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer"
                     >
                       {enviandoFormal ? 'Enviando...' : <><Send className="w-4 h-4" />Todo correcto, enviar</>}
                     </button>
@@ -1198,13 +1198,13 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
 
       {/* Descripción final del reclamo */}
       {etapa === 'descripcion_final' && (
-        <div className="pt-4 bg-claude-bg flex flex-col gap-2">
-          <div className="w-full bg-claude-panel border border-claude-border rounded-2xl p-3 flex flex-col">
+        <div className="pt-4 bg-tefiis-bg flex flex-col gap-2">
+          <div className="w-full bg-tefiis-panel border border-tefiis-border rounded-2xl p-3 flex flex-col">
             <textarea
               value={descripcionFormal}
               onChange={e => setDescripcionFormal(e.target.value)}
               placeholder="Describe tu reclamo con tus propias palabras..."
-              className="w-full bg-transparent text-claude-text placeholder-claude-muted resize-none focus:outline-none min-h-[80px] max-h-48 text-base custom-scrollbar"
+              className="w-full bg-transparent text-tefiis-text placeholder-tefiis-muted resize-none focus:outline-none min-h-[80px] max-h-48 text-base custom-scrollbar"
               rows={3}
             />
             {/* Pruebas adjuntas: opcionales, se suben al elegirlas para que el
@@ -1213,17 +1213,17 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
               <div className="flex flex-col gap-1.5 mt-2 mb-1">
                 {evidencias.map((ev: any) => (
                   <div key={ev.ref}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-claude-bg border border-claude-border">
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-tefiis-bg border border-tefiis-border">
                     {ev.tipo?.startsWith('image/')
-                      ? <ImageIcon className="w-4 h-4 shrink-0 text-claude-accent" />
-                      : <FileText className="w-4 h-4 shrink-0 text-claude-accent" />}
-                    <span className="text-xs text-claude-text truncate flex-1" title={ev.nombre}>{ev.nombre}</span>
-                    <span className="text-[10px] text-claude-muted shrink-0">{formatearTamano(ev.bytes)}</span>
+                      ? <ImageIcon className="w-4 h-4 shrink-0 text-tefiis-accent" />
+                      : <FileText className="w-4 h-4 shrink-0 text-tefiis-accent" />}
+                    <span className="text-xs text-tefiis-text truncate flex-1" title={ev.nombre}>{ev.nombre}</span>
+                    <span className="text-[10px] text-tefiis-muted shrink-0">{formatearTamano(ev.bytes)}</span>
                     <button
                       onClick={() => quitarEvidencia(ev.ref)}
                       disabled={enviandoFormal}
                       title={`Quitar ${ev.nombre}`}
-                      className="p-0.5 rounded text-claude-muted hover:text-red-400 disabled:opacity-40 cursor-pointer shrink-0"
+                      className="p-0.5 rounded text-tefiis-muted hover:text-red-400 disabled:opacity-40 cursor-pointer shrink-0"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1239,8 +1239,8 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
             <div className="flex items-center justify-between gap-3 mt-2">
               <label className={`flex items-center gap-1.5 text-xs transition-colors ${
                 subiendoEvidencia || evidencias.length >= maxEvidencias || enviandoFormal
-                  ? 'text-claude-muted cursor-default opacity-60'
-                  : 'text-claude-muted hover:text-claude-text cursor-pointer'
+                  ? 'text-tefiis-muted cursor-default opacity-60'
+                  : 'text-tefiis-muted hover:text-tefiis-text cursor-pointer'
               }`}>
                 <Paperclip className="w-4 h-4" />
                 {subiendoEvidencia
@@ -1262,13 +1262,13 @@ export default function ReclamosPanel({ onDocumentsProcessed, emailSesion, sessi
               <button
                 onClick={irACursos}
                 disabled={!descripcionFormal.trim() || subiendoEvidencia}
-                className="bg-claude-text text-claude-bg px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 cursor-pointer"
+                className="bg-tefiis-text text-tefiis-bg px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 cursor-pointer"
               >
                 Continuar
               </button>
             </div>
           </div>
-          <p className="text-center text-[11px] text-claude-muted">
+          <p className="text-center text-[11px] text-tefiis-muted">
             Puedes adjuntar un único PDF como prueba · máximo 10 MB
           </p>
         </div>

@@ -1,0 +1,27 @@
+Lab10 · Validación del contrato docs/api/openapi.yaml (versión 2.0.0)
+Fecha: 2026-11-21 00:27 · Rama: docs/31-contrato-acordado · Node v22.16.0
+
+1. Contrato real
+
+   Los ejemplos con x-pendiente tienen mensajes que el código todavía no devuelve
+   (#61 y #40): se cuentan aparte y no se exigen hasta que su issue entre.
+
+$ node pruebas/validar-openapi.cjs
+operaciones: 19 (en server.js: 19) | $ref: 131 | ejemplos validados: 197 | mensajes de error comprobados: 34 | pendientes de implementar: 4
+Sin problemas.
+
+2. Control: una copia con cuatro errores puestos a propósito
+   (id numérico en un ejemplo, mensaje de error inventado, $ref a un esquema que no existe
+   y la ruta /api/admin/activity renombrada). El validador tiene que fallar en los cuatro.
+
+$ node pruebas/validar-openapi.cjs openapi-roto.yaml
+operaciones: 19 (en server.js: 19) | $ref: 131 | ejemplos validados: 197 | mensajes de error comprobados: 34 | pendientes de implementar: 4
+
+6 problemas:
+ - $ref rota en $.paths./api/admin/conversaciones/{email}.get.responses.200.content.application/json.schema.properties.hilos.items: #/components/schemas/Hilos
+ - ejemplo inválido en POST /api/reclamos 201 application/json examples.sinDescartes: data.id should be string
+ - esquema que no compila en GET /api/admin/conversaciones/{email} 200 application/json: can't resolve reference doc#/components/schemas/Hilos from id #
+ - rutas del código que no están en el contrato: GET /api/admin/activity
+ - rutas del contrato que no están en el código: GET /api/admin/actividad
+ - mensaje que no está en el código: No hay nada que actualizar.
+(código de salida: 1)

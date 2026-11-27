@@ -1,0 +1,62 @@
+# Evidencia: interfaces de la API generadas desde el contrato (Lab10, paso 4)
+# Rama feat/interfaces-openapi-generator, sobre develop. Desde sistema-reclamos/. Node v24.13.0, openjdk version "21.0.12.1" 2026-08-18 LTS, openapi-generator 7.14.0 (envoltorio npm 2.21.0).
+
+$ npm run api:generar
+Interfaces generadas en src/api/generado/ (55 archivos).
+Avisos del generador (140):
+  - WARN  o.o.codegen.DefaultCodegen - The value (generator's option) must be either boolean or string. Default to `false`.
+  - WARN  o.o.c.l.AbstractTypeScriptClientCodegen - Error (model name matches existing language type) cannot be used as a model name. Renamed to ModelError
+  - WARN  o.o.codegen.utils.ModelUtils - Failed to get the schema name: null
+
+$ npm run api:verificar   # contra el contrato actual
+Las interfaces de src/api/generado/ corresponden al contrato (55 archivos).
+
+$ npx tsc --noEmit            # el cliente compila con la configuración del proyecto
+sin errores
+
+$ npx tsc --noEmit --strict ... src/api/reclamos.ts   # y en modo estricto
+sin errores
+
+# En rojo: se cambia a propósito un valor del enum de errores del contrato (DEMASIADAS_PRUEBAS por DEMASIADOS_ADJUNTOS)
+$ npm run api:verificar
+src/api/generado/ no corresponde a docs/api/openapi.yaml (1 diferencias):
+  - distinto models/ErrorDeReclamo.ts
+Corre `npm run api:generar` y sube el resultado.
+Código de salida 1.
+# Tras restaurar el contrato:
+Las interfaces de src/api/generado/ corresponden al contrato (55 archivos).
+
+$ npx --yes tsx@4.20.5 pruebas/probar-cliente-generado.ts   # contra la API de Docker Compose (docker compose up --build --wait)
+OK  Registrar: esperado 201: tipo creado, estado PENDIENTE, creadoEn Date, cursosDescartados [], avisos api, Location | obtenido creado; REC-2026-0004; PENDIENTE; /api/reclamos/mine/REC-2026-0004
+OK  Reenviar el mismo texto: esperado 200: tipo reenvio, el mismo id y el mismo creadoEn | obtenido reenvio; REC-2026-0004
+OK  Descripción de 5 001 caracteres: esperado 400 DESCRIPCION_DEMASIADO_LARGA | obtenido 400 DESCRIPCION_DEMASIADO_LARGA
+OK  Código UNI mal escrito: esperado 400 CODIGO_UNI_INVALIDO | obtenido 400 CODIGO_UNI_INVALIDO
+OK  Falta la categoría: esperado 400 DATOS_INCOMPLETOS | obtenido 400 DATOS_INCOMPLETOS
+OK  Documento de otro estudiante: esperado 403 DOCUMENTO_AJENO | obtenido 403 DOCUMENTO_AJENO
+OK  Sin sesión: esperado 401 SESION_REQUERIDA | obtenido 401 SESION_REQUERIDA
+OK  Token falsificado: esperado 401 SESION_INVALIDA | obtenido 401 SESION_INVALIDA
+OK  registrarReclamo() generado, sobre un 201: esperado solo id y creadoEn: pierde estado y cursosDescartados (por eso existe ./reclamos.ts) | obtenido claves: id, creadoEn, avisos
+9 de 9 correctos.
+
+# Correcciones tras la revisión del #72
+
+## 1. api:generar ya no borra el cliente si el generador falla
+# Antes, con una línea inválida agregada al contrato: api:generar salía con código 1 y src/api/generado/ ya no existía.
+# Después, con el mismo contrato roto:
+$ npm run api:generar
+openapi-generator falló (código 1): ...
+Código de salida 1. src/api/generado/ conserva sus 55 archivos, con el mismo contenido, y no queda ninguna carpeta temporal.
+# Con el contrato restaurado: api:generar reemplaza la carpeta (un archivo sobrante puesto a mano desaparece),
+# también funciona si la carpeta no existe, y api:verificar pasa.
+
+## 2. CORS expone Location y Retry-After
+$ node pruebas/probar-registro-con-bus.mjs
+OK    CORS expone Location y Retry-After: esperado Location,Retry-After | obtenido Location,Retry-After
+24 de 24 correctos.
+# Quitando exposedHeaders de la configuración abierta, ese caso falla (obtenido null): 23 de 24.
+
+# En Chrome, desde http://localhost:4173 contra http://localhost:3005 (Compose, con ALLOWED_ORIGINS), usando registrarReclamo():
+201: ubicacion = /api/reclamos/mine/REC-2026-0001
+200 (reenvío): ubicacion = /api/reclamos/mine/REC-2026-0001
+429 de POST /api/auth/verify-code: Retry-After = 900
+# Sobre esa misma imagen, pruebas/probar-cliente-generado.ts: 9 de 9 correctos.

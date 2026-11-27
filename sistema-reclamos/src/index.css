@@ -3,24 +3,24 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --color-claude-bg: #0B1120;
-  --color-claude-panel: #111827;
-  --color-claude-border: #1F2937;
-  --color-claude-text: #F3F4F6;
-  --color-claude-muted: #9CA3AF;
-  --color-claude-accent: #60A5FA;
+  --color-tefiis-bg: #0B1120;
+  --color-tefiis-panel: #111827;
+  --color-tefiis-border: #1F2937;
+  --color-tefiis-text: #F3F4F6;
+  --color-tefiis-muted: #9CA3AF;
+  --color-tefiis-accent: #60A5FA;
 
   --font-serif: "Georgia", "Cambria", "Times New Roman", serif;
   --font-sans: "Inter", "system-ui", "sans-serif";
 }
 
 :root[data-theme="light"] {
-  --color-claude-bg: #F9FAFB;
-  --color-claude-panel: #FFFFFF;
-  --color-claude-border: #E5E7EB;
-  --color-claude-text: #111827;
-  --color-claude-muted: #6B7280;
-  --color-claude-accent: #2563EB;
+  --color-tefiis-bg: #F9FAFB;
+  --color-tefiis-panel: #FFFFFF;
+  --color-tefiis-border: #E5E7EB;
+  --color-tefiis-text: #111827;
+  --color-tefiis-muted: #6B7280;
+  --color-tefiis-accent: #2563EB;
 }
 
 /* ── Markdown (prose) ────────────────────────────────────────────────────────
@@ -30,22 +30,22 @@
    "Nombre:") desaparecían. Aquí sus variables se enganchan a los tokens del
    tema, así que el markdown sigue al tema solo, sin `prose-invert`. */
 .prose {
-  --tw-prose-body: var(--color-claude-text);
-  --tw-prose-headings: var(--color-claude-text);
-  --tw-prose-lead: var(--color-claude-muted);
-  --tw-prose-links: var(--color-claude-accent);
-  --tw-prose-bold: var(--color-claude-text);
-  --tw-prose-counters: var(--color-claude-muted);
-  --tw-prose-bullets: var(--color-claude-muted);
-  --tw-prose-hr: var(--color-claude-border);
-  --tw-prose-quotes: var(--color-claude-text);
-  --tw-prose-quote-borders: var(--color-claude-border);
-  --tw-prose-captions: var(--color-claude-muted);
-  --tw-prose-code: var(--color-claude-text);
-  --tw-prose-pre-code: var(--color-claude-text);
-  --tw-prose-pre-bg: var(--color-claude-panel);
-  --tw-prose-th-borders: var(--color-claude-border);
-  --tw-prose-td-borders: var(--color-claude-border);
+  --tw-prose-body: var(--color-tefiis-text);
+  --tw-prose-headings: var(--color-tefiis-text);
+  --tw-prose-lead: var(--color-tefiis-muted);
+  --tw-prose-links: var(--color-tefiis-accent);
+  --tw-prose-bold: var(--color-tefiis-text);
+  --tw-prose-counters: var(--color-tefiis-muted);
+  --tw-prose-bullets: var(--color-tefiis-muted);
+  --tw-prose-hr: var(--color-tefiis-border);
+  --tw-prose-quotes: var(--color-tefiis-text);
+  --tw-prose-quote-borders: var(--color-tefiis-border);
+  --tw-prose-captions: var(--color-tefiis-muted);
+  --tw-prose-code: var(--color-tefiis-text);
+  --tw-prose-pre-code: var(--color-tefiis-text);
+  --tw-prose-pre-bg: var(--color-tefiis-panel);
+  --tw-prose-th-borders: var(--color-tefiis-border);
+  --tw-prose-td-borders: var(--color-tefiis-border);
 }
 
 /* ── Mobile viewport fix ── */
@@ -54,8 +54,8 @@ html, body, #root {
 }
 
 body {
-  background-color: var(--color-claude-bg);
-  color: var(--color-claude-text);
+  background-color: var(--color-tefiis-bg);
+  color: var(--color-tefiis-text);
   font-family: var(--font-sans);
   margin: 0;
   padding: 0;
@@ -119,18 +119,18 @@ body {
   background: transparent;
 }
 .scrollbar-visible::-webkit-scrollbar-thumb {
-  background: var(--color-claude-border);
+  background: var(--color-tefiis-border);
   border-radius: 999px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 .scrollbar-visible::-webkit-scrollbar-thumb:hover {
-  background: var(--color-claude-muted);
+  background: var(--color-tefiis-muted);
   background-clip: content-box;
 }
 .scrollbar-visible {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-claude-border) transparent;
+  scrollbar-color: var(--color-tefiis-border) transparent;
 }
 
 /* ── Mobile chat scroll ── */

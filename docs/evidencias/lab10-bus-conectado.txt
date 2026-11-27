@@ -1,0 +1,79 @@
+# Evidencia: bus de ReclamoRegistrado, correo con timeout y M2 conectados en server.js, con la transición entre el front anterior y el nuevo (#51)
+# Rama feat/51-conectar-bus. Comandos, desde sistema-reclamos/: npm test; npm run arch:check; node pruebas/validar-openapi.cjs; node pruebas/probar-registro-con-bus.mjs
+
+$ npm test
+# tests 65
+# suites 0
+# pass 65
+# fail 0
+
+$ node --test backend/tests/transicionAvisos.test.js
+ok 1 - front anterior (sin avisos): registra el reclamo, no publica el evento y no confirma
+ok 2 - front nuevo (avisos: "api"): publica un solo evento y lo confirma en la respuesta
+ok 3 - el campo avisos no se guarda en el reclamo
+ok 4 - reintento del front nuevo: devuelve el mismo reclamo, lo confirma y no publica otra vez
+ok 5 - un error no confirma avisos, aunque el front los haya pedido
+ok 6 - otro valor en avisos se trata como el front anterior
+ok 7 - sin transición (cuando ya no quede el front anterior): todo publica y solo se confirma si se pidió
+
+$ npm run arch:check
+✔ no dependency violations found (50 modules, 88 dependencies cruised)
+
+$ node pruebas/validar-openapi.cjs
+operaciones: 19 (en server.js: 19) | $ref: 125 | ejemplos validados: 192 | mensajes de error comprobados: 34
+Sin problemas.
+
+$ node pruebas/probar-registro-con-bus.mjs
+# server.js real contra PostgREST, Brevo y M2 falsos en localhost, sin .env (no toca servicios reales).
+=== Resultados ===
+OK  Sin sesión: esperado 401 | obtenido 401
+OK  Sin categoría: esperado 400, sin avisos en la respuesta | obtenido 400 {"error":"Categoría y descripción son requeridas."}
+OK  Prueba de otro estudiante: esperado 403 | obtenido 403 «Alguno de los archivos adjuntos no te pertenece.»
+OK  Front nuevo: registro: esperado 200 con número y avisos: "api" | obtenido 200 {"success":true,"id":"REC-2026-0042","avisos":"api"}
+OK    un correo de la API: esperado Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test | obtenido correos=1, expedientes=1; Reclamo registrado: REC-2026-0042 — TEFIIS → estudiante-001@prueba.test
+OK    un expediente en M2, con la descripción: esperado 1, «Se me cruzan dos cursos en el horario.» | obtenido 1, «Se me cruzan dos cursos en el horario.»
+OK    cursos fuera del catálogo descartados: esperado 1 curso | obtenido 1
+OK    el campo avisos no se guarda: esperado no está en la fila | obtenido no está
+OK    actividad registrada: esperado reclamo_creado | obtenido reclamo_creado
+OK  Front nuevo: reintento del mismo texto: esperado duplicado, sin envíos nuevos | obtenido 200 {"success":true,"id":"REC-2026-0042","duplicado":true,"avisos":"api"}; correos=1, expedientes=1
+OK  Front anterior: registro: esperado 200 sin avisos, y la API no envía nada | obtenido 200 {"success":true,"id":"REC-2026-0043"}; correos=1, expedientes=1
+OK    su correo sale por /api/reclamos/confirmar: esperado un solo correo de REC-2026-0043 | obtenido 200; 1 correo(s)
+OK  Correo caído: esperado 200, sin correo, con el expediente y el error registrado | obtenido 200 REC-2026-0044; correos=2, expedientes=2; error registrado=true
+OK  M2 caído: esperado 200, con el correo, sin expediente y el error registrado | obtenido 200 REC-2026-0045; correos=3, expedientes=2; error registrado=true
+OK  Tefi durmiendo: esperado 503 | obtenido 503 «Tefi está durmiendo y no se pueden enviar reclamos por ahora. Vuelve a intentarlo cuando despierte.»
+
+15 de 15 correctos.
+
+=== Avisos y errores del servidor ===
+EMAIL_TIMEOUT_MS="abc" no es un número válido; se usan 3000 ms.
+[EMAIL] Brevo falló, probando el siguiente proveedor: Brevo caído a propósito
+[EVENTOS] correo falló en REC-2026-0044:ReclamoRegistrado: Brevo caído a propósito
+[EVENTOS] m2 falló en REC-2026-0045:ReclamoRegistrado: M2 respondió 500 al registrar REC-2026-0045
+
+## Verificación en Docker Compose de la #51 (23 de noviembre)
+
+Backend de develop en fca8e51 (#68) con compose.eventos.yaml. La ruta de registro usó PostgreSQL y PostgREST del laboratorio. Correo y M2 apuntaron a simuladores HTTP de la red de Compose.
+
+$ docker compose -p tefiis-eventos51 -f compose.yaml -f compose.eventos.yaml up --build --detach --wait --wait-timeout 120
+API, PostgreSQL, PostgREST, proxy REST y simuladores en ejecución.
+
+$ docker compose -p tefiis-eventos51 -f compose.yaml -f compose.eventos.yaml exec -T api node scripts/probar-eventos-compose.mjs
+201 POST /api/reclamos (avisos: api, Location: /api/reclamos/mine/REC-2026-0001)
+Correo: brevo=200. Una confirmación aceptada.
+M2: 1 intento HTTP 200, expediente de REC-2026-0001 comprobado.
+200 reintento con el mismo ID y sin avisos adicionales.
+
+Para cada variante se volvió a ejecutar `up --detach --wait` con los valores indicados antes de correr el guion. Los comandos de reproducción están en docs/resiliencia.md, sección 6.
+
+| Ajustes sobre los valores por defecto | Argumentos del guion | Registro y reintento | Correo simulado | M2 |
+|---|---|---|---|---|
+| BREVO_MODO=lento, DEMORA_CORREO_MS=2000, EMAIL_TIMEOUT_MS=500, M2_MODO=502 | resend 502 | 201, luego 200 con el mismo ID (REC-2026-0002) | Brevo interrumpido y Resend 200. Una confirmación | 1 intento, 502 |
+| BREVO_MODO=lento, DEMORA_CORREO_MS=2000, EMAIL_TIMEOUT_MS=0, M2_MODO=502 | brevo 502 | 201, luego 200 con el mismo ID (REC-2026-0003) | Brevo 200. Una confirmación | 1 intento, 502 |
+| BREVO_MODO=401, RESEND_MODO=429 | mailjet 200 | 201, luego 200 con el mismo ID (REC-2026-0004) | Brevo 401, Resend 429 y Mailjet 200. Una confirmación | 1 intento, 200 |
+
+El guion verificó el contenido del expediente en los cuatro casos y comprobó que el reintento no originó más llamadas. El log de la API para REC-2026-0002 mostró:
+
+[EVENTOS] m2 falló en REC-2026-0002:ReclamoRegistrado: M2 respondió 502 al registrar REC-2026-0002
+[EMAIL] Brevo falló, probando el siguiente proveedor: Brevo excedió el tiempo límite de 500 ms
+
+Las 97 pruebas de Node, arch:check, el validador de OpenAPI y los 23 casos de probar-registro-con-bus.mjs también pasaron.

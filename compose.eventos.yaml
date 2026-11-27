@@ -1,0 +1,43 @@
+services:
+  api:
+    environment:
+      FROM_EMAIL: tefiis@prueba.test
+      BREVO_API_URL: http://simuladores:8081/brevo
+      BREVO_API_KEY: brevo-solo-laboratorio
+      RESEND_API_URL: http://simuladores:8081/resend
+      RESEND_API_KEY: resend-solo-laboratorio
+      MAILJET_API_URL: http://simuladores:8081/mailjet
+      MAILJET_API_KEY: mailjet-solo-laboratorio
+      MAILJET_SECRET_KEY: mailjet-secreto-laboratorio
+      EMAIL_TIMEOUT_MS: "${EMAIL_TIMEOUT_MS:-3000}"
+      EMAIL_CB_ENABLED: "${EMAIL_CB_ENABLED:-true}"
+      EMAIL_CB_VOLUME_THRESHOLD: "${EMAIL_CB_VOLUME_THRESHOLD:-3}"
+      EMAIL_CB_ERROR_THRESHOLD: "${EMAIL_CB_ERROR_THRESHOLD:-50}"
+      EMAIL_CB_RESET_MS: "${EMAIL_CB_RESET_MS:-30000}"
+      EMAIL_CB_WINDOW_MS: "${EMAIL_CB_WINDOW_MS:-60000}"
+      M2_URL: http://simuladores:8081/m2
+    volumes:
+      - ./docker/probar-eventos-compose.mjs:/app/scripts/probar-eventos-compose.mjs:ro
+      - ./docker/probar-resiliencia-compose.mjs:/app/scripts/probar-resiliencia-compose.mjs:ro
+    depends_on:
+      simuladores:
+        condition: service_healthy
+
+  simuladores:
+    image: docker.io/library/node:22-bookworm-slim
+    user: node
+    read_only: true
+    command: ["node", "/simuladores-eventos.mjs"]
+    volumes:
+      - ./docker/simuladores-eventos.mjs:/simuladores-eventos.mjs:ro
+    environment:
+      BREVO_MODO: "${BREVO_MODO:-ok}"
+      RESEND_MODO: "${RESEND_MODO:-ok}"
+      MAILJET_MODO: "${MAILJET_MODO:-ok}"
+      DEMORA_CORREO_MS: "${DEMORA_CORREO_MS:-2000}"
+      M2_MODO: "${M2_MODO:-ok}"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8081/health').then(r => { if (!r.ok) process.exitCode = 1 }).catch(() => { process.exitCode = 1 })"]
+      interval: 2s
+      timeout: 2s
+      retries: 10

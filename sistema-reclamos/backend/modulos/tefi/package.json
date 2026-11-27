@@ -1,0 +1,14 @@
+{
+  "name": "@tefiis/tefi",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": "./index.js",
+  "dependencies": {
+    "@google/genai": "^1.50.1",
+    "@tefiis/compartido": "0.0.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.6.2",
+    "multer": "^2.1.1"
+  }
+}

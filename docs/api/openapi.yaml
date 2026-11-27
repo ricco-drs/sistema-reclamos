@@ -1,0 +1,1874 @@
+openapi: 3.0.3
+info:
+  title: API de TEFIIS
+  version: 2.0.2
+  description: |
+    Contrato HTTP de la API de TEFIIS. El arranque de Express monta las rutas de cada módulo del backend.
+
+    **Alcance.** Las 18 rutas de `/api/admin/*`, que usa el panel del Tercio
+    (`sistema-admin`), y `POST /api/reclamos`, que dispara el evento
+    `ReclamoRegistrado` descrito en [eventos.md](eventos.md). Quedan fuera las
+    demás rutas del estudiante, las rutas públicas y `POST /api/rag/upload`.
+
+    **Cómo se escribió.** Las rutas de `/api/admin/*` describen el
+    comportamiento actual del código; donde el código hace algo discutible, la
+    operación lo dice en vez de esconderlo. `POST /api/reclamos` describe la
+    versión acordada con el equipo consumidor ([acta](acta-ambiguedades.md)),
+    y que implementó el #61. Los ejemplos marcados con
+    `x-pendiente` tienen mensajes que el código aún no devuelve (hoy no hay
+    ninguno); el validador
+    (`sistema-reclamos/pruebas/validar-openapi.cjs`) los cuenta aparte, y la
+    marca se quita cuando su issue entra.
+
+    **Versionado.** La versión sigue el formato `MAYOR.MENOR.PARCHE`:
+    - **Mayor:** se quita o renombra un campo, un campo opcional pasa a ser
+      obligatorio, cambia el tipo de un campo o un código de respuesta cambia de
+      significado. Quien ya usa la API tiene que enterarse antes del cambio.
+    - **Menor:** se agrega un campo opcional, un código de error o una ruta.
+    - **Parche:** solo cambian descripciones o ejemplos.
+
+    La 2.0.0 es la versión acordada de `POST /api/reclamos`: crear pasa de 200
+    a 201, y la ventana o el ciclo cerrado pasan de 503 a 409. La 2.0.1 solo les
+    da nombre a las respuestas de los interruptores (`InterruptorActivoGuardado`
+    e `InterruptorEnabledGuardado`). La 2.0.2 documenta la lectura paginada
+    de la bandeja. El panel sigue recibiendo un único arreglo.
+
+    **Autenticación.**
+    - `sesionEstudiante`: JWT que firma la propia API al verificar el código de
+      4 dígitos (`POST /api/auth/verify-code`). Lleva `{ email }` y vence a las
+      24 h. El correo que decide de quién son los datos sale siempre del token,
+      nunca del cuerpo.
+    - `sesionAdmin`: ID token de Firebase. Además de ser válido, su correo tiene
+      que estar en `ADMIN_EMAILS`. Las cuentas de `ADMIN_EMAILS_SOLO_LECTURA`
+      solo pueden usar `GET`. Seis interruptores y el historial de actividad
+      son solo del administrador principal, cuyo correo está definido por el módulo `acceso`.
+
+    **Errores.** En las rutas del panel, todo error responde
+    `{ "error": "<mensaje>" }`, y el mensaje es para mostrarlo a una persona, no
+    para que el cliente lo compare. `POST /api/reclamos` agrega un `codigo`
+    estable (`ErrorDeReclamo`), que es lo que el cliente compara.
+    Tres casos generales que valen para todas las rutas:
+    - Un cuerpo que no es JSON válido, o que pasa de 1 MB, responde **400**
+      `{ "codigo": "CUERPO_INVALIDO", "error": "…" }`, antes de mirar la sesión
+      (#40).
+    - Si `ALLOWED_ORIGINS` está definida, una petición desde un origen que no
+      está en la lista responde **403** `Origen no permitido por CORS.`
+    - Cuando falla Supabase, el 500 puede traer en `error` el texto crudo que
+      devolvió PostgREST.
+servers:
+  - url: http://localhost:3005
+    description: Local. Es el puerto por defecto de server.js y se cambia con PORT.
+tags:
+  - name: Reclamos del estudiante
+    description: Registro de un reclamo desde la aplicación de estudiantes.
+  - name: Reclamos en el panel
+    description: Bandeja, cambios de estado, cursos resueltos y respuestas por correo.
+  - name: Estudiantes
+    description: Documentos del SIGA de cada estudiante y lo que se extrajo de ellos.
+  - name: Conversaciones
+    description: Auditoría de lo que los estudiantes le preguntan a Tefi.
+  - name: Interruptores
+    description: |
+      Ventana de reclamos y modos de la plataforma. Solo el administrador principal.
+      Cada interruptor conserva su propio nombre de campo (`habilitados`, `activo`
+      o `enabled`): unificarlos rompería el panel, que ya los usa así.
+  - name: Actividad
+    description: Historial de acciones del sistema.
+security:
+  - sesionAdmin: []
+paths:
+  /api/reclamos:
+    post:
+      tags: [Reclamos del estudiante]
+      operationId: registrarReclamo
+      summary: Registra un reclamo del estudiante
+      description: |
+        Crea un reclamo a nombre del estudiante de la sesión, con el número
+        `REC-AAAA-NNNN`, que sale de la secuencia de PostgreSQL (ADR-0003) y no
+        se repite. El correo sale siempre del token, nunca del cuerpo.
+
+        Es la versión acordada con el equipo consumidor
+        ([acta](acta-ambiguedades.md)). La implementaron el #40 (el 400 del cuerpo
+        inválido) y el #62 (todo lo demás). La respuesta trae además `success` y
+        `duplicado`, que no son parte del contrato: se mantienen porque el front
+        anterior los lee.
+
+        **Orden de las comprobaciones.** Se responde el primer error que aparezca:
+        1. Un cuerpo que no es JSON válido o que pasa de 1 MB (400
+           `CUERPO_INVALIDO`). Se rechaza antes de mirar la sesión, porque Express
+           lee el cuerpo antes de llegar a la ruta.
+        2. La sesión (401).
+        3. Que la plataforma no esté en pausa (503 `SISTEMA_EN_PAUSA`).
+        4. Que el ciclo de matrícula no esté cerrado (409 `CICLO_CERRADO`).
+        5. Que la ventana de reclamos esté abierta (409 `VENTANA_CERRADA`).
+        6. Los datos: categoría y descripción, el largo de la descripción y el
+           código UNI (400).
+        7. Los adjuntos: cuántas pruebas (400), y que las pruebas y los documentos
+           sean del estudiante (403).
+
+        **Cursos.** Cada curso tiene que existir en el catálogo de la FIIS y la
+        sección tiene que pertenecerle. El nombre lo pone el servidor, desde el
+        catálogo. Los que no cumplen, o los que pasan de 30 en una lista, no
+        impiden crear el reclamo: se descartan y se informan en
+        `cursos_descartados`, con su motivo.
+
+        **Reenvío.** Si el mismo estudiante envía otro reclamo con la misma
+        descripción dentro de los 10 minutos siguientes, no se crea uno nuevo: se
+        responde 200 con el reclamo que ya existía. Se compara solo la
+        descripción, porque un estudiante puede mandar dos reclamos distintos
+        seguidos y esos sí tienen que crearse. Un reenvío no guarda nada del
+        segundo envío (ni cursos ni pruebas), y por eso su respuesta no trae
+        `cursos_descartados`: no se evaluó nada. La protección no está
+        garantizada si los dos envíos llegan al mismo tiempo (escenario E1).
+
+        **Evento.** Solo con 201 se publica `ReclamoRegistrado`
+        ([eventos.md](eventos.md)), que envía el correo de confirmación y el
+        expediente a M2. Un reenvío (200) no lo publica.
+
+        **Avisos (transición, #58).** Mientras convivan el front anterior y el
+        nuevo, el evento se publica solo si el cuerpo trae `avisos: "api"`, y la
+        respuesta lo confirma con el mismo campo. Sin él, el reclamo se registra
+        sin publicar el evento y el front envía el correo y el expediente. Si el
+        front lo pidió y la respuesta no lo trae, está hablando con una API
+        anterior y los envía él mismo. El campo se quita cuando ya no quede el
+        front anterior.
+      security:
+        - sesionEstudiante: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevoReclamo'
+            examples:
+              reclamoCompleto:
+                summary: Con un curso a retirar, uno a matricular y una prueba
+                value:
+                  nombre: PEREZ, ANA
+                  codigo_estudiante: 20240001A
+                  categoria: Matrícula
+                  descripcion: No alcancé vacante en Física I. Pido retirarme de Economía General, sección U, y matricularme en Física I, sección B, que todavía tiene cupos.
+                  datos_estudiante:
+                    especialidad: Ingeniería de Software
+                    telefono: '987654321'
+                    turno: '3'
+                    matriculado: true
+                  documentos:
+                    ficha: https://example.supabase.co/storage/v1/object/Documentos%20Tefiis/ana_perez_at_uni_pe/ficha.pdf
+                    avance: https://example.supabase.co/storage/v1/object/Documentos%20Tefiis/ana_perez_at_uni_pe/avance.pdf
+                  evidencias:
+                    - ref: https://example.supabase.co/storage/v1/object/Documentos%20Tefiis/ana_perez_at_uni_pe/evidencias/constancia.pdf
+                      nombre: constancia-de-vacantes.pdf
+                      tipo: application/pdf
+                      bytes: 245760
+                  cursos_retirar:
+                    - codigo: BEG01
+                      seccion: U
+                  cursos_matricular:
+                    - codigo: BFI01
+                      seccion: B
+                  avisos: api
+              reclamoMinimo:
+                summary: Solo los campos obligatorios
+                value:
+                  categoria: Matrícula
+                  descripcion: Mi boleta no muestra Física I, sección B, aunque me matriculé.
+      responses:
+        '201':
+          description: Reclamo creado. Se publica `ReclamoRegistrado`.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReclamoCreado'
+              examples:
+                sinDescartes:
+                  summary: Todos los cursos eran válidos (pedido con avisos)
+                  value:
+                    id: REC-2026-0412
+                    estado: PENDIENTE
+                    creado_en: '2026-11-21T15:42:10Z'
+                    cursos_descartados: []
+                    avisos: api
+                conUnCursoDescartado:
+                  summary: Una sección no pertenecía al curso (pedido sin avisos)
+                  value:
+                    id: REC-2026-0413
+                    estado: PENDIENTE
+                    creado_en: '2026-11-21T15:44:02Z'
+                    cursos_descartados:
+                      - lista: matricular
+                        codigo: BFI01
+                        seccion: Q
+                        motivo: SECCION_NO_PERTENECE
+        '200':
+          description: Reenvío dentro de los 10 minutos. Se devuelve el reclamo que ya existía; no se crea otro, no se guarda nada del segundo envío y no se publica el evento.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReclamoExistente'
+              example:
+                id: REC-2026-0412
+                creado_en: '2026-11-21T15:42:10Z'
+        '400':
+          description: El cuerpo no se puede procesar o le faltan datos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              examples:
+                cuerpoInvalido:
+                  value:
+                    codigo: CUERPO_INVALIDO
+                    error: El cuerpo de la petición no es JSON válido o pasa de 1 MB.
+                datosIncompletos:
+                  value:
+                    codigo: DATOS_INCOMPLETOS
+                    error: Categoría y descripción son requeridas.
+                descripcionDemasiadoLarga:
+                  value:
+                    codigo: DESCRIPCION_DEMASIADO_LARGA
+                    error: La descripción no puede pasar de 5000 caracteres.
+                codigoUniInvalido:
+                  value:
+                    codigo: CODIGO_UNI_INVALIDO
+                    error: El código de estudiante no tiene el formato de la UNI (por ejemplo 20240001A).
+                demasiadasPruebas:
+                  value:
+                    codigo: DEMASIADAS_PRUEBAS
+                    error: Solo puedes adjuntar un archivo PDF como prueba.
+        '401':
+          description: Falta el token de sesión o ya no es válido. El estudiante tiene que volver a verificar su correo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              examples:
+                sinSesion:
+                  value:
+                    codigo: SESION_REQUERIDA
+                    error: Sesión requerida. Verifica tu correo primero.
+                sesionVencida:
+                  value:
+                    codigo: SESION_INVALIDA
+                    error: Sesión inválida o expirada. Verifica tu correo de nuevo.
+        '403':
+          description: Una prueba o un documento no está en la carpeta del estudiante de la sesión.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              examples:
+                pruebaAjena:
+                  value:
+                    codigo: PRUEBA_AJENA
+                    error: Alguno de los archivos adjuntos no te pertenece.
+                documentoAjeno:
+                  value:
+                    codigo: DOCUMENTO_AJENO
+                    error: Alguno de los documentos indicados no te pertenece.
+        '409':
+          description: El estado del proceso no permite recibir reclamos. No sirve reintentar hasta que el Tercio vuelva a abrir.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              examples:
+                cicloCerrado:
+                  value:
+                    codigo: CICLO_CERRADO
+                    error: El proceso de matrícula ha terminado. Nos vemos el siguiente ciclo.
+                ventanaCerrada:
+                  value:
+                    codigo: VENTANA_CERRADA
+                    error: La ventana de reclamos está cerrada en este momento. Vuelve a intentarlo cuando El Tercio la habilite.
+        '500':
+          description: Falla no prevista del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              example:
+                codigo: ERROR_INTERNO
+                error: Error interno del servidor.
+        '503':
+          description: |
+            La plataforma no puede atender por ahora. Con `SIN_NUMERO_DISPONIBLE`
+            se puede reintentar después de los segundos que indica `Retry-After`.
+            Con `SISTEMA_EN_PAUSA`, la pausa dura hasta que el Tercio la desactive.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeReclamo'
+              examples:
+                sistemaEnPausa:
+                  value:
+                    codigo: SISTEMA_EN_PAUSA
+                    error: Tefi está durmiendo y no se pueden enviar reclamos por ahora. Vuelve a intentarlo cuando despierte.
+                sinNumeroDisponible:
+                  value:
+                    codigo: SIN_NUMERO_DISPONIBLE
+                    error: El sistema está recibiendo muchos reclamos a la vez. Intenta de nuevo en unos segundos.
+
+  /api/admin/reclamos:
+    get:
+      tags: [Reclamos en el panel]
+      operationId: listarReclamos
+      summary: Lista los reclamos del más nuevo al más antiguo
+      description: |
+        La API consulta PostgREST por páginas y devuelve hasta 50 000 reclamos
+        en un único arreglo. El cliente no envía parámetros de paginación.
+      responses:
+        '200':
+          description: Reclamos ordenados por `created_at` e `id` descendentes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reclamo'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminSinPermiso'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/reclamos/{id}:
+    patch:
+      tags: [Reclamos en el panel]
+      operationId: actualizarReclamo
+      summary: Cambia el estado, el comentario, la respuesta o la especialidad de un reclamo
+      description: |
+        Solo se cambian los campos que vienen en el cuerpo.
+
+        - Un reclamo `MATRICULADO` ya no puede pasar a otro estado (409). Repetir
+          `MATRICULADO` sí se permite.
+        - `especialidad` se guarda dentro de `datos_estudiante`. La primera vez
+          que se corrige, lo que había declarado el estudiante queda en
+          `especialidadDeclarada`.
+        - `comentario` es una nota interna: el estudiante no la ve. `respuesta`
+          es el texto que sí ve en el detalle de su reclamo; mandarla por correo
+          es otra operación (`POST /api/admin/reclamos/{id}/responder`).
+      parameters:
+        - $ref: '#/components/parameters/IdReclamo'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambioDeReclamo'
+            examples:
+              cambiarEstado:
+                value:
+                  estado: EN_REVISION
+                  comentario: Revisar si el cruce es real en el horario publicado.
+              corregirEspecialidad:
+                value:
+                  especialidad: Ingeniería de Sistemas
+      responses:
+        '200':
+          description: Cambios guardados.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  datos_estudiante:
+                    type: object
+                    additionalProperties: true
+                    description: Solo viene si se corrigió la especialidad; es el objeto completo ya guardado.
+              examples:
+                estado:
+                  value:
+                    success: true
+                especialidad:
+                  value:
+                    success: true
+                    datos_estudiante:
+                      especialidad: Ingeniería de Sistemas
+                      especialidadDeclarada: Ingeniería de Software
+                      cursosRetirar: []
+                      cursosMatricular: []
+        '400':
+          description: Estado o especialidad fuera de la lista, o no hay nada que cambiar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                estadoInvalido:
+                  value:
+                    error: Ese no es un estado válido de reclamo.
+                especialidadInvalida:
+                  value:
+                    error: Esa especialidad no es una de la FIIS.
+                nadaQueCambiar:
+                  value:
+                    error: Nada que actualizar.
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminNoPuedeEscribir'
+        '404':
+          $ref: '#/components/responses/ReclamoNoExiste'
+        '409':
+          description: El reclamo ya está MATRICULADO y se pidió otro estado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Este reclamo ya está MATRICULADO y no se puede volver a cambiar de estado.
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/reclamos/{id}/cursos-resueltos:
+    put:
+      tags: [Reclamos en el panel]
+      operationId: guardarCursosResueltos
+      summary: Guarda qué cursos-sección se matriculan y cuáles se retiran de verdad
+      description: |
+        Es la decisión del Tercio, no lo que pidió el estudiante, y el
+        estudiante no la ve. Reemplaza la decisión completa: una lista que no
+        viene se guarda vacía. Cada guardado se agrega al historial con su autor
+        (sale del token) y su fecha; se conservan las últimas 50 decisiones.
+        Los códigos y secciones se guardan en mayúsculas.
+      parameters:
+        - $ref: '#/components/parameters/IdReclamo'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                matricular:
+                  type: array
+                  maxItems: 40
+                  items:
+                    $ref: '#/components/schemas/CursoResueltoEntrada'
+                desmatricular:
+                  type: array
+                  maxItems: 40
+                  items:
+                    $ref: '#/components/schemas/CursoResueltoEntrada'
+            example:
+              matricular:
+                - codigo: BFI01
+                  seccion: B
+                  nombre: FISICA I
+              desmatricular:
+                - codigo: SW708
+                  seccion: U
+      responses:
+        '200':
+          description: Decisión guardada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, cursos_resueltos]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  cursos_resueltos:
+                    $ref: '#/components/schemas/CursosResueltos'
+              example:
+                success: true
+                cursos_resueltos:
+                  matricular:
+                    - codigo: BFI01
+                      seccion: B
+                      nombre: FISICA I
+                  desmatricular:
+                    - codigo: SW708
+                      seccion: U
+                      nombre: ''
+                  actualizadoPor: miembro.tercio@uni.pe
+                  actualizadoEn: '2026-11-21T16:20:00.000Z'
+                  historial:
+                    - admin: miembro.tercio@uni.pe
+                      fecha: '2026-11-21T16:20:00.000Z'
+                      matricular:
+                        - codigo: BFI01
+                          seccion: B
+                          nombre: FISICA I
+                      desmatricular:
+                        - codigo: SW708
+                          seccion: U
+                          nombre: ''
+        '400':
+          description: Alguna lista no es una lista, pasa de 40 cursos o tiene un curso sin código o sin sección.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noEsLista:
+                  value:
+                    error: '"matricular" debe ser una lista.'
+                demasiados:
+                  value:
+                    error: Demasiados cursos en "desmatricular".
+                cursoIncompleto:
+                  value:
+                    error: Cada curso de "matricular" necesita código y sección.
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminNoPuedeEscribir'
+        '404':
+          $ref: '#/components/responses/ReclamoNoExiste'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/reclamos/{id}/responder:
+    post:
+      tags: [Reclamos en el panel]
+      operationId: responderReclamo
+      summary: Envía al estudiante la respuesta de su reclamo por correo
+      description: |
+        El destinatario y los datos del caso salen de la base, no del cuerpo.
+        El correo lleva el estado actual del reclamo. Cada envío deja una fila
+        en el historial de respuestas.
+
+        **No es idempotente:** cada llamada envía otro correo. Si el correo se
+        envió pero no se pudo guardar el historial, igual responde 200.
+      parameters:
+        - $ref: '#/components/parameters/IdReclamo'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [respuesta]
+              properties:
+                respuesta:
+                  type: string
+                  pattern: \S
+                  description: Texto del correo. No puede estar vacío ni ser solo espacios.
+            example:
+              respuesta: |-
+                Revisamos tu caso y confirmamos el cruce.
+                Te retiramos de SW708 U y te matriculamos en BFI01 B.
+      responses:
+        '200':
+          description: Correo enviado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, entrada]
+                properties:
+                  ok:
+                    type: boolean
+                    enum: [true]
+                  entrada:
+                    $ref: '#/components/schemas/RespuestaEnviada'
+              example:
+                ok: true
+                entrada:
+                  reclamo_id: REC-2026-0042
+                  estado: ACEPTADO
+                  mensaje: Revisamos tu caso y confirmamos el cruce.
+                  admin_email: miembro.tercio@uni.pe
+                  created_at: '2026-11-21T16:25:00.000Z'
+        '400':
+          description: La respuesta está vacía, o el reclamo no tiene correo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                vacia:
+                  value:
+                    error: La respuesta no puede estar vacía.
+                sinCorreo:
+                  value:
+                    error: El reclamo no tiene un correo asociado.
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminNoPuedeEscribir'
+        '404':
+          description: No hay un reclamo con ese id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: No se encontró ese reclamo.
+        '500':
+          description: Fallaron los tres proveedores de correo, o falló la base al leer el reclamo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/admin/reclamos/{id}/respuestas:
+    get:
+      tags: [Reclamos en el panel]
+      operationId: listarRespuestasDeReclamo
+      summary: Historial de correos enviados para un reclamo
+      description: Del más antiguo al más nuevo. Un id sin envíos, o que no existe, devuelve una lista vacía.
+      parameters:
+        - $ref: '#/components/parameters/IdReclamo'
+      responses:
+        '200':
+          description: Correos enviados.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RespuestaEnviada'
+              example:
+                - estado: EN_REVISION
+                  mensaje: Recibimos tu reclamo y lo estamos revisando.
+                  admin_email: miembro.tercio@uni.pe
+                  created_at: '2026-11-21T10:00:00.000Z'
+                - estado: ACEPTADO
+                  mensaje: Revisamos tu caso y confirmamos el cruce.
+                  admin_email: miembro.tercio@uni.pe
+                  created_at: '2026-11-21T16:25:00.000Z'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminSinPermiso'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/reclamos-atendidos:
+    get:
+      tags: [Reclamos en el panel]
+      operationId: listarReclamosAtendidos
+      summary: Quién atendió cada reclamo
+      description: |
+        Se arma con el historial de actividad: cada cambio de reclamo y cada
+        respuesta enviada por un admin, agrupados por id de reclamo y del más
+        antiguo al más nuevo.
+      responses:
+        '200':
+          description: Un objeto cuyas claves son ids de reclamo.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AtencionDeReclamo'
+              example:
+                REC-2026-0042:
+                  - email: miembro.tercio@uni.pe
+                    accion: reclamo_actualizado
+                    estado: EN_REVISION
+                    fecha: '2026-11-21T09:55:00.000Z'
+                  - email: miembro.tercio@uni.pe
+                    accion: reclamo_respondido
+                    estado: ACEPTADO
+                    fecha: '2026-11-21T16:25:00.000Z'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminSinPermiso'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/estudiantes:
+    get:
+      tags: [Estudiantes]
+      operationId: listarEstudiantes
+      summary: Lista los estudiantes que guardaron documentos
+      description: |
+        Filas completas de `documentos_estudiante`, de la actualizada más
+        recientemente a la más antigua. Sin paginar: PostgREST corta en 1 000 filas.
+      responses:
+        '200':
+          description: Estudiantes con documentos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Estudiante'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminSinPermiso'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/estudiantes/{email}/datos:
+    put:
+      tags: [Estudiantes]
+      operationId: guardarDatosDeEstudiante
+      summary: Guarda los datos que el panel extrajo de los PDF del estudiante
+      description: |
+        El panel parsea la ficha y el avance del SIGA y esta ruta solo guarda el
+        resultado. Se conserva el contacto que escribió el estudiante
+        (`datos_parseados._contacto`), porque no sale de los PDF.
+
+        Si falla la lectura de la base, responde 500.
+      parameters:
+        - name: email
+          in: path
+          required: true
+          description: Correo del estudiante. Se pasa a minúsculas.
+          schema:
+            type: string
+          example: ana.perez@uni.pe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [datosParseados]
+              properties:
+                datosParseados:
+                  type: object
+                  additionalProperties: true
+                  description: Lo que se extrajo de los PDF; reemplaza lo guardado.
+                datosPlanos:
+                  type: object
+                  additionalProperties: true
+                  description: La misma información aplanada; se guarda en datos_academicos.
+                codigo:
+                  type: string
+                  nullable: true
+                  description: Código UNI que figura en los documentos.
+            example:
+              datosParseados:
+                codigo: 20240001A
+                nombre: PEREZ, ANA
+                especialidad: Ingeniería de Software
+                ciclo: 5
+              datosPlanos:
+                codigo: 20240001A
+                ciclo: 5
+              codigo: 20240001A
+      responses:
+        '200':
+          description: Datos guardados.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+                    enum: [true]
+              example:
+                ok: true
+        '400':
+          description: Falta datosParseados o no es un objeto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Faltan los datos extraídos.
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminNoPuedeEscribir'
+        '404':
+          description: El estudiante no tiene documentos guardados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Ese estudiante no tiene documentos guardados.
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/docs/signed-url:
+    get:
+      tags: [Estudiantes]
+      operationId: firmarUrlDeDocumento
+      summary: Firma un enlace temporal para ver el documento de un estudiante
+      description: |
+        Los buckets son privados: lo guardado en la base es una referencia
+        (bucket y ruta), no un enlace descargable. El enlace firmado vale
+        10 minutos.
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: Referencia guardada, por ejemplo record_notas_url de un estudiante.
+          schema:
+            type: string
+          example: https://example.supabase.co/storage/v1/object/documentos/ana_perez_at_uni_pe/avance.pdf
+      responses:
+        '200':
+          description: Enlace firmado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [signedUrl]
+                properties:
+                  signedUrl:
+                    type: string
+                    format: uri
+              example:
+                signedUrl: https://example.supabase.co/storage/v1/object/sign/documentos/ana_perez_at_uni_pe/avance.pdf?token=eyJhbGciOi
+        '400':
+          description: Falta el parámetro url, o la referencia no se puede interpretar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                sinUrl:
+                  value:
+                    error: url requerida
+                referenciaInvalida:
+                  value:
+                    error: Referencia de archivo inválida
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminSinPermiso'
+        '500':
+          description: Supabase no firmó el enlace.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noFirmado:
+                  value:
+                    error: 'No se pudo firmar la URL del archivo: https://example.supabase.co/storage/v1/object/documentos/ana_perez_at_uni_pe/avance.pdf'
+
+  /api/admin/conversaciones:
+    get:
+      tags: [Conversaciones]
+      operationId: listarConversaciones
+      summary: Resumen de las conversaciones con Tefi, por estudiante
+      description: Solo cuenta turnos y fechas; los textos se piden por estudiante.
+      responses:
+        '200':
+          description: Un resumen por estudiante, del que habló más recientemente al que menos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResumenDeConversaciones'
+              example:
+                - email: ana.perez@uni.pe
+                  turnos: 7
+                  conversaciones: 2
+                  ultimo: '2026-11-21T15:10:00.000Z'
+                  primero: '2026-11-19T09:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminSinPermiso'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/conversaciones/{email}:
+    get:
+      tags: [Conversaciones]
+      operationId: verConversacionesDeEstudiante
+      summary: Las conversaciones de un estudiante con Tefi, agrupadas en hilos
+      description: |
+        Hilos del más nuevo al más antiguo; dentro de cada hilo, los turnos en
+        orden. Trae hasta 2 000 turnos. Cada consulta queda registrada en el
+        historial de actividad como `conversacion_auditada`.
+      parameters:
+        - name: email
+          in: path
+          required: true
+          description: Correo del estudiante. Se pasa a minúsculas.
+          schema:
+            type: string
+          example: ana.perez@uni.pe
+      responses:
+        '200':
+          description: Hilos del estudiante. Sin conversaciones, `hilos` viene vacío.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [email, hilos]
+                properties:
+                  email:
+                    type: string
+                  hilos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Hilo'
+              example:
+                email: ana.perez@uni.pe
+                hilos:
+                  - conversacionId: c-1732200000000
+                    inicio: '2026-11-21T15:00:00.000Z'
+                    fin: '2026-11-21T15:10:00.000Z'
+                    turnos:
+                      - pregunta: ¿Hasta cuándo puedo retirar un curso?
+                        respuesta: El retiro parcial es hasta el viernes 2 de octubre de 2026 (semana 5).
+                        fecha: '2026-11-21T15:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/AdminSinPermiso'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/activity:
+    get:
+      tags: [Actividad]
+      operationId: verActividad
+      summary: Las últimas 500 acciones del sistema
+      description: Solo el administrador principal. Del más nuevo al más antiguo.
+      responses:
+        '200':
+          description: Acciones registradas.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 500
+                items:
+                  $ref: '#/components/schemas/Actividad'
+              example:
+                - actor_email: miembro.tercio@uni.pe
+                  actor_type: admin
+                  accion: reclamo_respondido
+                  detalle:
+                    caseId: REC-2026-0042
+                    estado: ACEPTADO
+                  created_at: '2026-11-21T16:25:00.000Z'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          description: La cuenta no es admin, o no es el administrador principal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noAdmin:
+                  value:
+                    error: Esta cuenta no tiene permisos de administrador.
+                noPrincipal:
+                  value:
+                    error: Solo el administrador principal puede ver el historial.
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/reclamos-habilitados:
+    post:
+      tags: [Interruptores]
+      operationId: cambiarVentanaDeReclamos
+      summary: Abre o cierra la ventana de reclamos
+      description: |
+        Con la ventana cerrada, `POST /api/reclamos` responde 503, salvo para el
+        administrador principal. Si la fila no existe, se crea.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [habilitados]
+              properties:
+                habilitados:
+                  type: boolean
+            example:
+              habilitados: false
+      responses:
+        '200':
+          description: Ventana cambiada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, habilitados]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  habilitados:
+                    type: boolean
+              example:
+                success: true
+                habilitados: false
+        '400':
+          $ref: '#/components/responses/InterruptorInvalido'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/SoloAdminPrincipal'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/modo-almuerzo:
+    post:
+      tags: [Interruptores]
+      operationId: cambiarModoAlmuerzo
+      summary: Pausa o reanuda las consultas a Tefi
+      description: Los reclamos siguen funcionando. Si la fila no existe, se crea.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterruptorActivo'
+            example:
+              activo: true
+      responses:
+        '200':
+          $ref: '#/components/responses/InterruptorActivoCambiado'
+        '400':
+          $ref: '#/components/responses/InterruptorInvalido'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/SoloAdminPrincipal'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/modo-almuerzo-festivo:
+    post:
+      tags: [Interruptores]
+      operationId: cambiarModoAlmuerzoFestivo
+      summary: Pausa o reanuda las consultas a Tefi en feriados
+      description: Independiente del modo almuerzo diario. Si la fila no existe, se crea.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterruptorActivo'
+            example:
+              activo: true
+      responses:
+        '200':
+          $ref: '#/components/responses/InterruptorActivoCambiado'
+        '400':
+          $ref: '#/components/responses/InterruptorInvalido'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/SoloAdminPrincipal'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/maintenance:
+    post:
+      tags: [Interruptores]
+      operationId: cambiarMantenimiento
+      summary: Activa o desactiva el modo mantenimiento
+      description: |
+        Pausa la aplicación de estudiantes para todos. Si la fila no existe, se
+        crea, como en los demás interruptores (#40).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterruptorEnabled'
+            example:
+              enabled: true
+      responses:
+        '200':
+          $ref: '#/components/responses/InterruptorEnabledCambiado'
+        '400':
+          $ref: '#/components/responses/InterruptorInvalido'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/SoloAdminPrincipal'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/tefi-durmiendo:
+    post:
+      tags: [Interruptores]
+      operationId: cambiarTefiDurmiendo
+      summary: Apaga o enciende la plataforma de estudiantes («Tefi durmiendo»)
+      description: Con el modo activo, `POST /api/reclamos` responde 503. Si la fila no existe, se crea.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterruptorEnabled'
+            example:
+              enabled: true
+      responses:
+        '200':
+          $ref: '#/components/responses/InterruptorEnabledCambiado'
+        '400':
+          $ref: '#/components/responses/InterruptorInvalido'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/SoloAdminPrincipal'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /api/admin/modo-despedida:
+    post:
+      tags: [Interruptores]
+      operationId: cambiarModoDespedida
+      summary: Cierra o reabre el ciclo de matrícula
+      description: |
+        Con el modo activo, `POST /api/reclamos` responde 503, salvo para los
+        correos exceptuados en el módulo `configuracion`. Si la fila no existe, se crea.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterruptorActivo'
+            example:
+              activo: true
+      responses:
+        '200':
+          $ref: '#/components/responses/InterruptorActivoCambiado'
+        '400':
+          $ref: '#/components/responses/InterruptorInvalido'
+        '401':
+          $ref: '#/components/responses/AdminNoAutenticado'
+        '403':
+          $ref: '#/components/responses/SoloAdminPrincipal'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+components:
+  securitySchemes:
+    sesionEstudiante:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT firmado por la API con JWT_SECRET. Vence a las 24 h.
+    sesionAdmin:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+      description: ID token de Firebase de una cuenta incluida en ADMIN_EMAILS.
+
+  headers:
+    Location:
+      description: Ruta para consultar el reclamo.
+      schema:
+        type: string
+      example: /api/reclamos/mine/REC-2026-0412
+    RetryAfter:
+      description: Segundos que conviene esperar antes de reintentar. Hoy siempre es 5. Solo acompaña a SIN_NUMERO_DISPONIBLE.
+      schema:
+        type: integer
+        minimum: 1
+      example: 5
+
+  parameters:
+    IdReclamo:
+      name: id
+      in: path
+      required: true
+      description: Número del reclamo.
+      schema:
+        type: string
+        pattern: ^REC-\d{4}-\d{4,}$
+      example: REC-2026-0042
+
+  responses:
+    EstudianteNoAutenticado:
+      description: Sin token, o con un token vencido o falsificado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            sinToken:
+              value:
+                error: Sesión requerida. Verifica tu correo primero.
+            tokenInvalido:
+              value:
+                error: Sesión inválida o expirada. Verifica tu correo de nuevo.
+    AdminNoAutenticado:
+      description: Sin token de Firebase, o con uno vencido o inválido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            sinToken:
+              value:
+                error: Sesión de admin requerida.
+            tokenInvalido:
+              value:
+                error: Sesión de admin inválida o expirada.
+    AdminSinPermiso:
+      description: El token es válido, pero su correo no está en ADMIN_EMAILS.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Esta cuenta no tiene permisos de administrador.
+    AdminNoPuedeEscribir:
+      description: La cuenta no es admin, o es de solo lectura.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            noAdmin:
+              value:
+                error: Esta cuenta no tiene permisos de administrador.
+            soloLectura:
+              value:
+                error: 'Esta cuenta es de solo lectura: puede consultar el panel, pero no modificar nada.'
+    SoloAdminPrincipal:
+      description: La cuenta no es admin, es de solo lectura o no es el administrador principal.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            noAdmin:
+              value:
+                error: Esta cuenta no tiene permisos de administrador.
+            soloLectura:
+              value:
+                error: 'Esta cuenta es de solo lectura: puede consultar el panel, pero no modificar nada.'
+            noPrincipal:
+              summary: El mensaje nombra el interruptor; este es el de la ventana de reclamos.
+              value:
+                error: Solo el administrador principal puede abrir o cerrar la ventana de reclamos.
+    ReclamoNoExiste:
+      description: No hay un reclamo con ese id.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Ese reclamo no existe.
+    InterruptorInvalido:
+      description: El campo del interruptor no es true ni false. El mensaje nombra el campo de cada uno (habilitados, activo o enabled).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: El campo "activo" debe ser true o false.
+    InterruptorActivoCambiado:
+      description: Interruptor cambiado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InterruptorActivoGuardado'
+          example:
+            success: true
+            activo: true
+    InterruptorEnabledCambiado:
+      description: Interruptor cambiado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InterruptorEnabledGuardado'
+          example:
+            success: true
+            enabled: true
+    ErrorInterno:
+      description: |
+        Falló la base o un servicio externo, o Firebase no está configurado en el
+        servidor.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            errorNoControlado:
+              value:
+                error: Error interno del servidor.
+            firebaseNoConfigurado:
+              summary: Solo en las rutas de admin.
+              value:
+                error: Autenticación de admin no configurada en el servidor.
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Mensaje para mostrar a una persona.
+
+    EstadoReclamo:
+      type: string
+      enum: [PENDIENTE, EN_REVISION, ACEPTADO, ACEPTADO_PARCIALMENTE, RECHAZADO, MATRICULADO]
+      description: MATRICULADO cierra el caso; después ya no cambia de estado.
+
+    Especialidad:
+      type: string
+      enum:
+        - Ingeniería Industrial
+        - Ingeniería de Sistemas
+        - Ingeniería de Software
+        - Ingeniería de Inteligencia Artificial
+
+    Curso:
+      type: object
+      required: [codigo, seccion]
+      properties:
+        codigo:
+          type: string
+          example: SW708
+        seccion:
+          type: string
+          example: U
+
+    CursoDelCatalogo:
+      type: object
+      required: [codigo, nombre, seccion]
+      properties:
+        codigo:
+          type: string
+        nombre:
+          type: string
+          description: Sale del catálogo de cursos, no de lo que mandó el cliente.
+        seccion:
+          type: string
+
+    Evidencia:
+      type: object
+      required: [ref]
+      properties:
+        ref:
+          type: string
+          description: Referencia que devolvió POST /api/reclamos/evidencias. Tiene que estar en la carpeta del estudiante de la sesión.
+        nombre:
+          type: string
+          description: Se recorta a 120 caracteres.
+        tipo:
+          type: string
+          description: Se recorta a 60 caracteres.
+        bytes:
+          type: integer
+
+    NuevoReclamo:
+      type: object
+      required: [categoria, descripcion]
+      properties:
+        categoria:
+          type: string
+          minLength: 1
+          description: El rótulo de la categoría. Hoy la aplicación siempre envía «Matrícula».
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          description: El reclamo con las palabras del estudiante. Con más de 5 000 caracteres se responde 400 `DESCRIPCION_DEMASIADO_LARGA`. Es lo que se compara para reconocer un reenvío.
+        nombre:
+          type: string
+          nullable: true
+          description: Nombre completo, en el formato «APELLIDOS, NOMBRES». Se usa para saludar al estudiante en los correos.
+        codigo_estudiante:
+          type: string
+          nullable: true
+          pattern: ^\s*\d{7,8}[A-Za-z]\s*$
+          description: |
+            Código UNI: 7 u 8 dígitos y una letra al final, como 20240001A. Se
+            admiten espacios en los bordes y la letra en minúscula; el servidor
+            lo guarda sin espacios y en mayúsculas. Si no cumple el formato, se
+            responde 400 `CODIGO_UNI_INVALIDO`. Vacío o ausente, no se valida.
+        datos_estudiante:
+          type: object
+          additionalProperties: true
+          description: Datos que declara el estudiante. Se guardan tal como llegan, y el servidor les agrega cursosRetirar y cursosMatricular ya saneados.
+        documentos:
+          type: object
+          description: Referencias a los documentos del SIGA que devolvió `POST /api/docs/upload`. Cada una tiene que estar en la carpeta del estudiante de la sesión; si no, se responde 403 `DOCUMENTO_AJENO`. Una clave `evidencias` dentro de `documentos` se ignora. Las pruebas solo valen por el campo `evidencias`, que se revalida.
+          properties:
+            ficha:
+              type: string
+              description: Ficha académica.
+            avance:
+              type: string
+              description: Avance curricular.
+            boleta:
+              type: string
+              description: Boleta de matrícula. Es opcional.
+        evidencias:
+          type: array
+          maxItems: 1
+          description: La prueba del reclamo. Se admite una sola; con más, se responde 400 `DEMASIADAS_PRUEBAS`.
+          items:
+            $ref: '#/components/schemas/Evidencia'
+        cursos_retirar:
+          type: array
+          description: Cursos de los que el estudiante pide retirarse. Lo que no pasa el catálogo, o pasa de 30, se informa en `cursos_descartados`.
+          items:
+            $ref: '#/components/schemas/Curso'
+        cursos_matricular:
+          type: array
+          description: Cursos en los que el estudiante pide matricularse. Lo que no pasa el catálogo, o pasa de 30, se informa en `cursos_descartados`.
+          items:
+            $ref: '#/components/schemas/Curso'
+        avisos:
+          type: string
+          enum: [api]
+          description: |
+            Opcional y temporal (#58). Con "api", la API publica ReclamoRegistrado,
+            que envía el correo de confirmación y el expediente a M2. Sin el
+            campo, los envía el front. Cualquier otro valor se trata como si no viniera.
+
+    ReclamoCreado:
+      type: object
+      required: [id, estado, creado_en, cursos_descartados]
+      properties:
+        id:
+          type: string
+          pattern: ^REC-\d{4}-\d{4,}$
+          description: Número del reclamo, con el año y un correlativo que no se repite.
+        estado:
+          type: string
+          enum: [PENDIENTE]
+          description: Todo reclamo nuevo empieza en PENDIENTE.
+        creado_en:
+          type: string
+          format: date-time
+        cursos_descartados:
+          type: array
+          description: Cursos del pedido que no se guardaron. Vacía si todos eran válidos.
+          items:
+            $ref: '#/components/schemas/CursoDescartado'
+        avisos:
+          type: string
+          enum: [api]
+          description: |
+            Solo viene si la petición traía `avisos: "api"`. Confirma que la API
+            se encarga del correo y del expediente.
+
+    ReclamoExistente:
+      type: object
+      description: El reclamo que ya existía. No trae el estado, que el estudiante consulta en `GET /api/reclamos/mine/{id}`, ni `cursos_descartados`, porque del segundo envío no se evaluó nada.
+      required: [id, creado_en]
+      properties:
+        id:
+          type: string
+          pattern: ^REC-\d{4}-\d{4,}$
+        creado_en:
+          type: string
+          format: date-time
+        avisos:
+          type: string
+          enum: [api]
+          description: |
+            Solo viene si la petición traía `avisos: "api"`. No se publica nada:
+            el evento corresponde al envío original.
+
+    CursoDescartado:
+      type: object
+      required: [lista, codigo, seccion, motivo]
+      properties:
+        lista:
+          type: string
+          enum: [retirar, matricular]
+          description: De qué lista del pedido venía el curso.
+        codigo:
+          type: string
+        seccion:
+          type: string
+        motivo:
+          type: string
+          enum: [NO_EXISTE_EN_CATALOGO, SECCION_NO_PERTENECE, EXCEDE_LIMITE]
+          description: |
+            - `NO_EXISTE_EN_CATALOGO`: el código no está en el catálogo de la FIIS.
+            - `SECCION_NO_PERTENECE`: el curso existe, pero no tiene esa sección.
+            - `EXCEDE_LIMITE`: la lista ya tenía 30 cursos.
+
+    ErrorDeReclamo:
+      type: object
+      description: Error de `POST /api/reclamos`. El cliente decide qué hacer con `codigo`, que no cambia entre versiones menores; `error` es el mensaje para el estudiante y puede cambiar.
+      required: [codigo, error]
+      properties:
+        codigo:
+          type: string
+          enum:
+            - CUERPO_INVALIDO
+            - DATOS_INCOMPLETOS
+            - DESCRIPCION_DEMASIADO_LARGA
+            - CODIGO_UNI_INVALIDO
+            - DEMASIADAS_PRUEBAS
+            - SESION_REQUERIDA
+            - SESION_INVALIDA
+            - PRUEBA_AJENA
+            - DOCUMENTO_AJENO
+            - CICLO_CERRADO
+            - VENTANA_CERRADA
+            - SISTEMA_EN_PAUSA
+            - SIN_NUMERO_DISPONIBLE
+            - ERROR_INTERNO
+        error:
+          type: string
+
+    Reclamo:
+      type: object
+      description: |
+        Fila completa de la tabla reclamos. La tabla puede tener más columnas;
+        aquí están las que escribe o lee la API.
+      required: [id, email, categoria, descripcion, estado, created_at]
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          pattern: ^REC-\d{4}-\d{4,}$
+        email:
+          type: string
+          description: Sale del token del estudiante al registrar.
+        nombre:
+          type: string
+          nullable: true
+        codigo_estudiante:
+          type: string
+          nullable: true
+        categoria:
+          type: string
+        descripcion:
+          type: string
+        estado:
+          $ref: '#/components/schemas/EstadoReclamo'
+        comentario:
+          type: string
+          nullable: true
+          description: Nota interna del Tercio. El estudiante no la ve.
+        respuesta:
+          type: string
+          nullable: true
+          description: Texto que el estudiante ve en el detalle de su reclamo.
+        datos_estudiante:
+          type: object
+          additionalProperties: true
+          properties:
+            cursosRetirar:
+              type: array
+              items:
+                $ref: '#/components/schemas/CursoDelCatalogo'
+            cursosMatricular:
+              type: array
+              items:
+                $ref: '#/components/schemas/CursoDelCatalogo'
+            especialidad:
+              type: string
+              nullable: true
+            especialidadDeclarada:
+              type: string
+              nullable: true
+              description: Lo que declaró el estudiante, guardado la primera vez que el Tercio corrigió la especialidad.
+        documentos:
+          type: object
+          additionalProperties: true
+          properties:
+            evidencias:
+              type: array
+              items:
+                $ref: '#/components/schemas/Evidencia'
+        cursos_resueltos:
+          allOf:
+            - $ref: '#/components/schemas/CursosResueltos'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        nombres:
+          type: string
+          nullable: true
+          deprecated: true
+          description: Columna heredada; copia de nombre.
+        codigo:
+          type: string
+          nullable: true
+          deprecated: true
+          description: Columna heredada; copia de codigo_estudiante.
+        urls:
+          type: object
+          nullable: true
+          additionalProperties: true
+          deprecated: true
+          description: Columna heredada; copia de documentos.
+        datos_academicos:
+          type: object
+          nullable: true
+          additionalProperties: true
+          deprecated: true
+          description: Columna heredada; copia de datos_estudiante sin los cursos.
+
+    CambioDeReclamo:
+      type: object
+      minProperties: 1
+      description: Hay que mandar al menos uno de los cuatro campos; los demás se ignoran.
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoReclamo'
+        comentario:
+          type: string
+          nullable: true
+        respuesta:
+          type: string
+          nullable: true
+        especialidad:
+          $ref: '#/components/schemas/Especialidad'
+
+    CursoResueltoEntrada:
+      type: object
+      required: [codigo, seccion]
+      properties:
+        codigo:
+          type: string
+          minLength: 1
+        seccion:
+          type: string
+          minLength: 1
+        nombre:
+          type: string
+          description: Opcional. Se recorta a 120 caracteres.
+
+    CursoResuelto:
+      type: object
+      required: [codigo, seccion, nombre]
+      properties:
+        codigo:
+          type: string
+        seccion:
+          type: string
+        nombre:
+          type: string
+          description: Cadena vacía si no se mandó.
+
+    CursosResueltos:
+      type: object
+      required: [matricular, desmatricular, actualizadoPor, actualizadoEn, historial]
+      properties:
+        matricular:
+          type: array
+          items:
+            $ref: '#/components/schemas/CursoResuelto'
+        desmatricular:
+          type: array
+          items:
+            $ref: '#/components/schemas/CursoResuelto'
+        actualizadoPor:
+          type: string
+          description: Correo del admin, tomado del token.
+        actualizadoEn:
+          type: string
+          format: date-time
+        historial:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required: [admin, fecha, matricular, desmatricular]
+            properties:
+              admin:
+                type: string
+              fecha:
+                type: string
+                format: date-time
+              matricular:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CursoResuelto'
+              desmatricular:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CursoResuelto'
+
+    RespuestaEnviada:
+      type: object
+      required: [estado, mensaje, admin_email, created_at]
+      properties:
+        reclamo_id:
+          type: string
+          description: Solo viene en la respuesta de POST /responder.
+        estado:
+          type: string
+          description: Estado que tenía el reclamo al enviar el correo.
+        mensaje:
+          type: string
+        admin_email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    AtencionDeReclamo:
+      type: object
+      required: [email, accion, estado, fecha]
+      properties:
+        email:
+          type: string
+          description: Admin que hizo la acción.
+        accion:
+          type: string
+          enum: [reclamo_actualizado, reclamo_respondido]
+        estado:
+          type: string
+          nullable: true
+          description: Estado que se puso o se comunicó; null si la acción no tocó el estado.
+        fecha:
+          type: string
+          format: date-time
+
+    Estudiante:
+      type: object
+      description: Fila completa de documentos_estudiante. Las URL son referencias que se abren con GET /api/admin/docs/signed-url.
+      required: [email]
+      additionalProperties: true
+      properties:
+        email:
+          type: string
+        codigo_estudiante:
+          type: string
+          nullable: true
+        datos_parseados:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Lo extraído de los PDF. `_contacto` lo escribe el estudiante.
+        datos_academicos:
+          type: object
+          nullable: true
+          additionalProperties: true
+        boleta_url:
+          type: string
+          nullable: true
+        record_notas_url:
+          type: string
+          nullable: true
+        record_matricula_url:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+
+    ResumenDeConversaciones:
+      type: object
+      required: [email, turnos, conversaciones, ultimo, primero]
+      properties:
+        email:
+          type: string
+        turnos:
+          type: integer
+          description: Preguntas que hizo en total.
+        conversaciones:
+          type: integer
+          description: Hilos distintos.
+        ultimo:
+          type: string
+          format: date-time
+        primero:
+          type: string
+          format: date-time
+
+    Hilo:
+      type: object
+      required: [conversacionId, inicio, fin, turnos]
+      properties:
+        conversacionId:
+          type: string
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        turnos:
+          type: array
+          items:
+            type: object
+            required: [pregunta, respuesta, fecha]
+            properties:
+              pregunta:
+                type: string
+              respuesta:
+                type: string
+              fecha:
+                type: string
+                format: date-time
+
+    Actividad:
+      type: object
+      required: [actor_type, accion, created_at]
+      additionalProperties: true
+      properties:
+        actor_email:
+          type: string
+          nullable: true
+        actor_type:
+          type: string
+          enum: [estudiante, admin]
+        accion:
+          type: string
+          description: Por ejemplo reclamo_creado, reclamo_actualizado, reclamo_respondido, cursos_resueltos o conversacion_auditada.
+        detalle:
+          type: object
+          nullable: true
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+
+    InterruptorActivoGuardado:
+      type: object
+      description: Respuesta de los interruptores que usan el campo activo (modo almuerzo, almuerzo festivo y despedida).
+      required: [success, activo]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        activo:
+          type: boolean
+
+    InterruptorEnabledGuardado:
+      type: object
+      description: Respuesta de los interruptores que usan el campo enabled (mantenimiento y Tefi durmiendo).
+      required: [success, enabled]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        enabled:
+          type: boolean
+
+    InterruptorActivo:
+      type: object
+      required: [activo]
+      properties:
+        activo:
+          type: boolean
+
+    InterruptorEnabled:
+      type: object
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean

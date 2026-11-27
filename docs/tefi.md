@@ -1,16 +1,10 @@
-# Analisis del modulo inteligente Tefi
+# Análisis del módulo Tefi
 
-**Sistema:** TEFIIS  
-**Fecha de analisis:** 2026-05-03  
-**Alcance revisado:** codigo fuente actual del frontend React/Vite, backend Express, scripts de RAG, parsers de PDF, paneles de reclamos, chat, base de conocimiento y planificador academico.
+Revisión del 3 de mayo de 2026. El inventario y las brechas de este documento corresponden a esa fecha. Para configurar y ejecutar la aplicación se usa el [README de la API](../sistema-reclamos/README.md).
 
-## Resumen ejecutivo
+Tefi responde consultas institucionales con Gemini y documentos de la FIIS. También extrae datos de PDF académicos con texto seleccionable y los usa para orientar al estudiante al presentar un reclamo.
 
-Tefi ya incorpora capacidades inteligentes reales, principalmente como asistente conversacional institucional con RAG y como apoyo al flujo de reclamos mediante extraccion de datos desde PDFs academicos. El sistema usa Gemini como LLM, con busqueda en documentos mediante Google File Search Stores.
-
-Sin embargo, el modulo aun no cumple por completo con toda la descripcion planteada. Cumple de forma parcial: orienta al estudiante, responde consultas con documentos oficiales, procesa PDFs con texto seleccionable, ayuda a revisar reclamos y cruza datos academicos con reglamentos y malla curricular. Todavia no implementa OCR real sobre imagenes o documentos escaneados, no tiene un modulo formal de evaluador, no registra expedientes completos con resoluciones, no automatiza dictamenes formales, no analiza evidencias generales como imagenes, y no persiste una trazabilidad completa del caso.
-
-## Funcionalidades actuales de Tefi
+## Funcionalidades revisadas
 
 ### 1. Asistente conversacional institucional
 
@@ -241,7 +235,7 @@ Ademas, `DatabasePanel` lista documentos conocidos de forma fija por una limitac
 
 1. El estudiante escribe una pregunta en la vista Conversacion.
 2. `useChat.ts` arma el historial, calendario academico y system instruction.
-3. El frontend llama a `http://localhost:3000/api/rag/ask`.
+3. El frontend llama a `/api/rag/ask` en `VITE_API_URL`. En local, el valor predeterminado es `http://localhost:3005`.
 4. `backend/server.js` envia la pregunta a Gemini con herramienta `fileSearch`.
 5. Gemini responde usando el File Search Store.
 6. El backend limpia duplicaciones y devuelve texto.
@@ -329,7 +323,7 @@ Recomendacion tecnica: para produccion, la clave del LLM no deberia exponerse co
 | Apoyo transversal a estudiante y evaluador | Parcial | Apoya sobre todo al estudiante. No hay flujo completo del evaluador. |
 | Reducir carga operativa | Parcial | Automatiza extraccion y orientacion inicial, pero falta integracion con registro, trazabilidad y resolucion oficial. |
 
-## Brechas principales
+## Brechas registradas en la revisión
 
 1. No hay OCR real para imagenes o PDFs escaneados.
 2. No hay analisis de evidencias generales, como fotos, capturas, correos o documentos no academicos.
@@ -342,17 +336,7 @@ Recomendacion tecnica: para produccion, la clave del LLM no deberia exponerse co
 9. La clave del LLM se maneja con nombre `VITE_API_KEY`, lo cual no es recomendable para secretos.
 10. No hay autenticacion, autorizacion ni separacion clara entre estudiante, administrador y evaluador.
 
-## Conclusiones
-
-Tefi, en el estado actual, funciona como un MVP avanzado de asistencia inteligente academica. Ya tiene tres capacidades valiosas:
-
-1. Chat institucional con RAG sobre documentos oficiales.
-2. Extraccion estructurada de informacion academica desde PDFs digitales.
-3. Orientacion de reclamos usando datos del estudiante, reglamentos y malla curricular.
-
-La descripcion propuesta se cumple parcialmente. Para afirmar que el modulo cumple por completo, faltaria implementar OCR real, analisis de evidencias generales, persistencia de expedientes, flujo del evaluador, resoluciones formales, trazabilidad, seguridad por roles y una integracion consistente entre la base documental administrable y el RAG usado por Gemini.
-
-## Recomendaciones para completar el modulo
+## Propuestas de la revisión
 
 | Prioridad | Recomendacion | Motivo |
 |---|---|---|

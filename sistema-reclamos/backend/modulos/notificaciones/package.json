@@ -1,0 +1,14 @@
+{
+  "name": "@tefiis/notificaciones",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Consumidores de ReclamoRegistrado: el correo de confirmación al estudiante y el expediente a M2.",
+  "exports": "./index.js",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\""
+  },
+  "dependencies": {
+    "@tefiis/compartido": "0.0.0"
+  }
+}

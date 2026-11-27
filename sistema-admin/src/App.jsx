@@ -1152,8 +1152,7 @@ function App() {
     if (!selectedReclamo && !selectedEstudiante) return;
     const alPulsar = (e) => {
       if (e.key !== 'Escape') return;
-      // Si el foco está en un campo, Esc debería salir del campo, no cerrar
-      // todo: quien está escribiendo una respuesta no quiere perderla.
+      // Quita el foco del campo antes de cerrar el reclamo para conservar el borrador.
       const t = e.target?.tagName;
       if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') {
         e.target.blur();
@@ -1933,8 +1932,6 @@ function App() {
                     LIMPIAR
                   </button>
                 )}
-                {/* Exporta lo filtrado, no todo: el número en el botón deja
-                    claro cuántos van a salir antes de pulsarlo. */}
                 <button className="btn btn-secondary btn-small"
                   onClick={exportarReclamos}
                   disabled={filteredReclamos.length === 0}
